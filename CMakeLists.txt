@@ -52,6 +52,8 @@ set(RO_SCREENSHOT_SOURCES
     src/core/CaptureEngine.cpp
     src/core/DBusService.hpp
     src/core/DBusService.cpp
+    src/core/LanguageManager.hpp
+    src/core/LanguageManager.cpp
 )
 
 qt_add_executable(ro-screenshot
@@ -101,6 +103,15 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/FloatingThumbnail.qml
     RESOURCES
         ${RO_SVG_ASSETS}
+)
+
+# Embed compiled translations as Qt resources
+qt_add_resources(ro-screenshot "i18n"
+    PREFIX "/i18n"
+    FILES
+        i18n/ro-screenshot_tr.qm
+        i18n/ro-screenshot_de.qm
+        i18n/ro-screenshot_es.qm
 )
 
 target_include_directories(ro-screenshot PRIVATE
