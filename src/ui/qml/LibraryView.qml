@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 
 Item {
     id: root
 
+    property var colors: ({})
     property int selectedIndex: -1
     property var selectedItem: selectedIndex >= 0 ? libraryManager.getItem(selectedIndex) : null
 
@@ -22,8 +24,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 64
-                color: "#131D31"
-                border.color: "#334155"
+                color: colors.shell
+                border.color: colors.border
                 border.width: 1
 
                 RowLayout {
@@ -36,8 +38,8 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 260
                         Layout.preferredHeight: 38
-                        color: "#1E293B"
-                        border.color: searchField.activeFocus ? "#3B82F6" : "#334155"
+                        color: colors.cardStrong
+                        border.color: searchField.activeFocus ? colors.accentB : colors.border
                         border.width: 1
                         radius: 6
 
@@ -53,15 +55,19 @@ Item {
                                 sourceSize.height: 13
                                 Layout.preferredWidth: 13
                                 Layout.preferredHeight: 13
-                                color: "#94A3B8"
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: colors.textSoft
+                                }
                             }
 
                             TextField {
                                 id: searchField
                                 Layout.fillWidth: true
                                 placeholderText: qsTr("Görsellerde ara...")
-                                placeholderTextColor: "#64748B"
-                                color: "#F8FAFC"
+                                placeholderTextColor: colors.placeholder
+                                color: colors.text
                                 font.pixelSize: 13
                                 background: Item {}
                                 onTextChanged: libraryManager.searchQuery = text
@@ -73,7 +79,7 @@ Item {
                                 onClicked: searchField.text = ""
                                 contentItem: Text {
                                     text: "✕"
-                                    color: "#94A3B8"
+                                    color: colors.textSoft
                                     font.pixelSize: 12
                                 }
                                 background: Item {}
@@ -99,7 +105,7 @@ Item {
                                 onClicked: libraryManager.dateFilter = modelData.filter
                                 contentItem: Text {
                                     text: parent.text
-                                    color: parent.checked ? "#FFFFFF" : "#94A3B8"
+                                    color: parent.checked ? "#FFFFFF" : colors.textSoft
                                     font.pixelSize: 12
                                     font.bold: parent.checked
                                     horizontalAlignment: Text.AlignHCenter
@@ -108,7 +114,7 @@ Item {
                                 background: Rectangle {
                                     implicitWidth: 70
                                     implicitHeight: 32
-                                    color: parent.checked ? "#3B82F6" : (parent.hovered ? "#334155" : "#1E293B")
+                                    color: parent.checked ? colors.accentB : (parent.hovered ? colors.border : colors.cardStrong)
                                     radius: 6
                                 }
                             }
@@ -122,8 +128,8 @@ Item {
                         height: 28
                         implicitWidth: storageText.implicitWidth + 22
                         radius: 6
-                        color: "#1E293B"
-                        border.color: "#334155"
+                        color: colors.cardStrong
+                        border.color: colors.border
                         border.width: 1
 
                         RowLayout {
@@ -136,14 +142,18 @@ Item {
                                 sourceSize.height: 13
                                 Layout.preferredWidth: 13
                                 Layout.preferredHeight: 13
-                                color: "#94A3B8"
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: colors.textSoft
+                                }
                             }
 
                             Text {
                                 id: storageText
                                 anchors.centerIn: parent
                                 text: qsTr("%1 Dahilinde").arg(libraryManager.totalStorageSize)
-                                color: "#94A3B8"
+                                color: colors.textSoft
                                 font.pixelSize: 11
                             }
                         }
@@ -157,12 +167,16 @@ Item {
                             source: "assets/icon-refresh.svg"
                             sourceSize.width: 16
                             sourceSize.height: 16
-                            color: "#E2E8F0"
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textMuted
+                            }
                         }
                         background: Rectangle {
                             implicitWidth: 32
                             implicitHeight: 32
-                            color: parent.hovered ? "#334155" : "transparent"
+                            color: parent.hovered ? colors.border : "transparent"
                             radius: 6
                         }
 
@@ -191,12 +205,16 @@ Item {
                         sourceSize.width: 48
                         sourceSize.height: 48
                         Layout.alignment: Qt.AlignHCenter
-                        color: "#475569"
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            colorization: 1.0
+                            colorizationColor: colors.muted
+                        }
                     }
 
                     Text {
                         text: qsTr("Henüz ekran görüntüsü bulunamadı.")
-                        color: "#F8FAFC"
+                        color: colors.text
                         font.pixelSize: 16
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -204,7 +222,7 @@ Item {
 
                     Text {
                         text: qsTr("Kayıt klasörü: %1").arg(settingsManager.saveDirectory)
-                        color: "#64748B"
+                        color: colors.placeholder
                         font.pixelSize: 12
                         Layout.alignment: Qt.AlignHCenter
                     }
@@ -224,8 +242,8 @@ Item {
                     delegate: Rectangle {
                         width: 216
                         height: 186
-                        color: root.selectedIndex === index ? "#1E3A8A" : (itemMouse.containsMouse ? "#1E293B" : "#131D31")
-                        border.color: root.selectedIndex === index ? "#3B82F6" : (itemMouse.containsMouse ? "#475569" : "#334155")
+                        color: root.selectedIndex === index ? colors.selected : (itemMouse.containsMouse ? colors.cardStrong : colors.card)
+                        border.color: root.selectedIndex === index ? colors.accentB : (itemMouse.containsMouse ? colors.muted : colors.border)
                         border.width: root.selectedIndex === index ? 2 : 1
                         radius: 8
 
@@ -250,7 +268,7 @@ Item {
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                color: "#0F172A"
+                                color: colors.shellAlt
                                 radius: 4
                                 clip: true
 
@@ -270,7 +288,7 @@ Item {
 
                                 Text {
                                     text: model.fileName
-                                    color: "#F8FAFC"
+                                    color: colors.text
                                     font.pixelSize: 11
                                     font.bold: true
                                     elide: Text.ElideMiddle
@@ -281,13 +299,13 @@ Item {
                                     Layout.fillWidth: true
                                     Text {
                                         text: model.formattedDate
-                                        color: "#64748B"
+                                        color: colors.placeholder
                                         font.pixelSize: 10
                                     }
                                     Item { Layout.fillWidth: true }
                                     Text {
                                         text: model.formattedSize
-                                        color: "#94A3B8"
+                                        color: colors.textSoft
                                         font.pixelSize: 10
                                     }
                                 }
@@ -302,8 +320,8 @@ Item {
         Rectangle {
             Layout.preferredWidth: root.selectedItem ? 300 : 0
             Layout.fillHeight: true
-            color: "#131D31"
-            border.color: "#334155"
+            color: colors.shell
+            border.color: colors.border
             border.width: 1
             visible: root.selectedItem !== null
             clip: true
@@ -322,7 +340,7 @@ Item {
                     Layout.fillWidth: true
                     Text {
                         text: qsTr("Görsel Detayları")
-                        color: "#F8FAFC"
+                        color: colors.text
                         font.pixelSize: 15
                         font.bold: true
                     }
@@ -332,7 +350,7 @@ Item {
                         onClicked: root.selectedIndex = -1
                         contentItem: Text {
                             text: "✕"
-                            color: "#94A3B8"
+                            color: colors.textSoft
                             font.pixelSize: 14
                         }
                         background: Item {}
@@ -343,9 +361,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 170
-                    color: "#0F172A"
+                    color: colors.shellAlt
                     radius: 8
-                    border.color: "#334155"
+                    border.color: colors.border
                     border.width: 1
                     clip: true
 
@@ -366,12 +384,12 @@ Item {
                         spacing: 2
                         Text {
                             text: qsTr("Dosya Adı")
-                            color: "#64748B"
+                            color: colors.placeholder
                             font.pixelSize: 11
                         }
                         Text {
                             text: root.selectedItem ? root.selectedItem.fileName : ""
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 12
                             font.bold: true
                             wrapMode: Text.WrapAnywhere
@@ -386,12 +404,12 @@ Item {
                             spacing: 2
                             Text {
                                 text: qsTr("Çözünürlük")
-                                color: "#64748B"
+                                color: colors.placeholder
                                 font.pixelSize: 11
                             }
                             Text {
                                 text: root.selectedItem ? root.selectedItem.resolution : ""
-                                color: "#E2E8F0"
+                                color: colors.textMuted
                                 font.pixelSize: 12
                             }
                         }
@@ -400,12 +418,12 @@ Item {
                             spacing: 2
                             Text {
                                 text: qsTr("Boyut")
-                                color: "#64748B"
+                                color: colors.placeholder
                                 font.pixelSize: 11
                             }
                             Text {
                                 text: root.selectedItem ? root.selectedItem.formattedSize : ""
-                                color: "#E2E8F0"
+                                color: colors.textMuted
                                 font.pixelSize: 12
                             }
                         }
@@ -415,12 +433,12 @@ Item {
                         spacing: 2
                         Text {
                             text: qsTr("Oluşturulma Tarihi")
-                            color: "#64748B"
+                            color: colors.placeholder
                             font.pixelSize: 11
                         }
                         Text {
                             text: root.selectedItem ? root.selectedItem.formattedDate : ""
-                            color: "#E2E8F0"
+                            color: colors.textMuted
                             font.pixelSize: 12
                         }
                     }
@@ -453,9 +471,14 @@ Item {
                                 sourceSize.height: 18
                                 Layout.preferredWidth: 18
                                 Layout.preferredHeight: 18
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: "#FFFFFF"
+                                }
                             }
                             Text {
-                                text: parent.Parent ? parent.text : ""
+                                text: parent.parent ? parent.parent.text : ""
                                 color: "#FFFFFF"
                                 font.bold: true
                                 horizontalAlignment: Text.AlignLeft
@@ -465,7 +488,7 @@ Item {
                         }
                         background: Rectangle {
                             implicitHeight: 36
-                            color: parent.hovered ? "#1D4ED8" : "#2563EB"
+                            color: parent.hovered ? colors.accentC : colors.accentA
                             radius: 6
                         }
                     }
@@ -490,10 +513,15 @@ Item {
                                 sourceSize.height: 18
                                 Layout.preferredWidth: 18
                                 Layout.preferredHeight: 18
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: colors.textMuted
+                                }
                             }
                             Text {
-                                text: parent.Parent ? parent.text : ""
-                                color: "#E2E8F0"
+                                text: parent.parent ? parent.parent.text : ""
+                                color: colors.textMuted
                                 horizontalAlignment: Text.AlignLeft
                                 verticalAlignment: Text.AlignVCenter
                                 Layout.fillWidth: true
@@ -501,8 +529,8 @@ Item {
                         }
                         background: Rectangle {
                             implicitHeight: 36
-                            color: parent.hovered ? "#334155" : "#1E293B"
-                            border.color: "#334155"
+                            color: parent.hovered ? colors.border : colors.cardStrong
+                            border.color: colors.border
                             radius: 6
                         }
                     }
@@ -528,10 +556,15 @@ Item {
                                 sourceSize.height: 18
                                 Layout.preferredWidth: 18
                                 Layout.preferredHeight: 18
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: colors.danger
+                                }
                             }
                             Text {
-                                text: parent.Parent ? parent.text : ""
-                                color: "#EF4444"
+                                text: parent.parent ? parent.parent.text : ""
+                                color: colors.danger
                                 horizontalAlignment: Text.AlignLeft
                                 verticalAlignment: Text.AlignVCenter
                                 Layout.fillWidth: true
@@ -539,7 +572,7 @@ Item {
                         }
                         background: Rectangle {
                             implicitHeight: 36
-                            color: parent.hovered ? "#450A0A" : "#1E293B"
+                            color: parent.hovered ? "#450A0A" : colors.cardStrong
                             border.color: "#7F1D1D"
                             radius: 6
                         }

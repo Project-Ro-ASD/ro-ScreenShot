@@ -2,9 +2,12 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import QtQuick.Effects
 
 Item {
     id: root
+
+    property var colors: ({})
 
     FolderDialog {
         id: folderDialog
@@ -37,8 +40,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec1Col.implicitHeight + 32
-                color: "#131D31"
-                border.color: "#334155"
+                color: colors.card
+                border.color: colors.border
                 border.width: 1
                 radius: 10
 
@@ -58,12 +61,16 @@ Item {
                             sourceSize.height: 18
                             Layout.preferredWidth: 18
                             Layout.preferredHeight: 18
-                            color: "#94A3B8"
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textSoft
+                            }
                         }
 
                         Text {
                             text: qsTr("Kayıt Dizini ve Klasörleme")
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 15
                             font.bold: true
                             Layout.fillWidth: true
@@ -78,12 +85,12 @@ Item {
                             id: saveDirField
                             Layout.fillWidth: true
                             text: settingsManager.saveDirectory
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 13
                             background: Rectangle {
                                 implicitHeight: 38
-                                color: "#1E293B"
-                                border.color: "#334155"
+                                color: colors.cardStrong
+                                border.color: colors.border
                                 radius: 6
                             }
                             onEditingFinished: {
@@ -104,7 +111,7 @@ Item {
                             background: Rectangle {
                                 implicitWidth: 100
                                 implicitHeight: 38
-                                color: parent.hovered ? "#2563EB" : "#1D4ED8"
+                                color: parent.hovered ? colors.accentA : colors.accentC
                                 radius: 6
                             }
                         }
@@ -116,7 +123,7 @@ Item {
                         onToggled: settingsManager.createSubfoldersByMonth = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -129,8 +136,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec2Col.implicitHeight + 32
-                color: "#131D31"
-                border.color: "#334155"
+                color: colors.card
+                border.color: colors.border
                 border.width: 1
                 radius: 10
 
@@ -150,12 +157,16 @@ Item {
                             sourceSize.height: 18
                             Layout.preferredWidth: 18
                             Layout.preferredHeight: 18
-                            color: "#94A3B8"
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textSoft
+                            }
                         }
 
                         Text {
                             text: qsTr("Dosya İsimlendirme ve Görsel Formatı")
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 15
                             font.bold: true
                             Layout.fillWidth: true
@@ -168,19 +179,19 @@ Item {
 
                         Text {
                             text: qsTr("Dosya Adı Şablonu (%Y: Yıl, %m: Ay, %d: Gün, %H: Saat, %M: Dakika, %S: Saniye)")
-                            color: "#94A3B8"
+                            color: colors.textSoft
                             font.pixelSize: 12
                         }
 
                         TextField {
                             Layout.fillWidth: true
                             text: settingsManager.fileNameTemplate
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 13
                             background: Rectangle {
                                 implicitHeight: 38
-                                color: "#1E293B"
-                                border.color: "#334155"
+                                color: colors.cardStrong
+                                border.color: colors.border
                                 radius: 6
                             }
                             onTextChanged: settingsManager.fileNameTemplate = text
@@ -189,9 +200,9 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 32
-                            color: "#0F172A"
+                            color: colors.shellAlt
                             radius: 4
-                            border.color: "#1E293B"
+                            border.color: colors.border
 
                             Text {
                                 anchors.centerIn: parent
@@ -210,7 +221,7 @@ Item {
                             spacing: 6
                             Text {
                                 text: qsTr("Görsel Formatı")
-                                color: "#94A3B8"
+                                color: colors.textSoft
                                 font.pixelSize: 12
                             }
                             RowLayout {
@@ -224,7 +235,7 @@ Item {
                                         onClicked: settingsManager.imageFormat = modelData
                                         contentItem: Text {
                                             text: parent.text
-                                            color: parent.checked ? "#FFFFFF" : "#94A3B8"
+                                            color: parent.checked ? "#FFFFFF" : colors.textSoft
                                             font.bold: parent.checked
                                             horizontalAlignment: Text.AlignHCenter
                                             verticalAlignment: Text.AlignVCenter
@@ -232,7 +243,7 @@ Item {
                                         background: Rectangle {
                                             implicitWidth: 70
                                             implicitHeight: 34
-                                            color: parent.checked ? "#3B82F6" : (parent.hovered ? "#334155" : "#1E293B")
+                                            color: parent.checked ? colors.accentB : (parent.hovered ? colors.border : colors.cardStrong)
                                             radius: 6
                                         }
                                     }
@@ -246,7 +257,7 @@ Item {
                             spacing: 4
                             Text {
                                 text: qsTr("JPEG Kalitesi: %1%").arg(settingsManager.jpegQuality)
-                                color: "#94A3B8"
+                                color: colors.textSoft
                                 font.pixelSize: 12
                             }
                             Slider {
@@ -266,8 +277,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec3Col.implicitHeight + 32
-                color: "#131D31"
-                border.color: "#334155"
+                color: colors.card
+                border.color: colors.border
                 border.width: 1
                 radius: 10
 
@@ -287,12 +298,16 @@ Item {
                             sourceSize.height: 18
                             Layout.preferredWidth: 18
                             Layout.preferredHeight: 18
-                            color: "#94A3B8"
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textSoft
+                            }
                         }
 
                         Text {
                             text: qsTr("Çekim Sonrası Otomatik İşlemler")
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 15
                             font.bold: true
                             Layout.fillWidth: true
@@ -305,7 +320,7 @@ Item {
                         onToggled: settingsManager.autoCopyToClipboard = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -318,7 +333,7 @@ Item {
                         onToggled: settingsManager.autoSaveToDisk = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -331,7 +346,7 @@ Item {
                         onToggled: settingsManager.showFloatingThumbnail = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -344,7 +359,7 @@ Item {
                         onToggled: settingsManager.showNotification = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -357,8 +372,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec4Col.implicitHeight + 32
-                color: "#131D31"
-                border.color: "#334155"
+                color: colors.card
+                border.color: colors.border
                 border.width: 1
                 radius: 10
 
@@ -378,12 +393,16 @@ Item {
                             sourceSize.height: 18
                             Layout.preferredWidth: 18
                             Layout.preferredHeight: 18
-                            color: "#94A3B8"
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textSoft
+                            }
                         }
 
                         Text {
                             text: qsTr("Sniper Seçim Katmanı ve Büyüteç (Loupe)")
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 15
                             font.bold: true
                             Layout.fillWidth: true
@@ -396,7 +415,7 @@ Item {
                         onToggled: settingsManager.magnifierEnabled = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -410,7 +429,7 @@ Item {
 
                         Text {
                             text: qsTr("Büyüteç Yakınlaştirması: %1x").arg(settingsManager.magnifierZoom)
-                            color: "#94A3B8"
+                            color: colors.textSoft
                             font.pixelSize: 12
                         }
 
@@ -430,7 +449,7 @@ Item {
                         onToggled: settingsManager.closeOverlayOnCapture = checked
                         contentItem: Text {
                             text: parent.text
-                            color: "#CBD5E1"
+                            color: colors.textMuted
                             font.pixelSize: 13
                             leftPadding: parent.indicator.width + 8
                             verticalAlignment: Text.AlignVCenter
@@ -443,8 +462,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec5Col.implicitHeight + 32
-                color: "#131D31"
-                border.color: "#334155"
+                color: colors.card
+                border.color: colors.border
                 border.width: 1
                 radius: 10
 
@@ -464,12 +483,16 @@ Item {
                             sourceSize.height: 18
                             Layout.preferredWidth: 18
                             Layout.preferredHeight: 18
-                            color: "#94A3B8"
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textSoft
+                            }
                         }
 
                         Text {
                             text: qsTr("Dil ve Arayüz Seçenekleri")
-                            color: "#F8FAFC"
+                            color: colors.text
                             font.pixelSize: 15
                             font.bold: true
                             Layout.fillWidth: true
@@ -482,22 +505,22 @@ Item {
 
                         Text {
                             text: qsTr("Uygulama Dili")
-                            color: "#94A3B8"
+                            color: colors.textSoft
                             font.pixelSize: 13
                         }
 
                         RowLayout {
                             spacing: 8
                             Repeater {
-                                model: languageManager.availableLanguages
+                                model: LanguageManager.availableLanguages
                                 delegate: Button {
                                     text: modelData.nativeLabel
                                     checkable: true
-                                    checked: languageManager.currentLanguage === modelData.code
-                                    onClicked: languageManager.setCurrentLanguage(modelData.code)
+                                    checked: LanguageManager.currentLanguage === modelData.code
+                                    onClicked: LanguageManager.setCurrentLanguage(modelData.code)
                                     contentItem: Text {
                                         text: parent.text
-                                        color: parent.checked ? "#FFFFFF" : "#94A3B8"
+                                        color: parent.checked ? "#FFFFFF" : colors.textSoft
                                         font.bold: parent.checked
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
@@ -505,7 +528,90 @@ Item {
                                     background: Rectangle {
                                         implicitWidth: 80
                                         implicitHeight: 34
-                                        color: parent.checked ? "#3B82F6" : (parent.hovered ? "#334155" : "#1E293B")
+                                        color: parent.checked ? colors.accentB : (parent.hovered ? colors.border : colors.cardStrong)
+                                        radius: 6
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Section 6: Uygulama Teması (ro-Control style theme toggle)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: sec6Col.implicitHeight + 32
+                color: colors.card
+                border.color: colors.border
+                border.width: 1
+                radius: 10
+
+                ColumnLayout {
+                    id: sec6Col
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 14
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Image {
+                            source: "assets/icon-theme.svg"
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: colors.textSoft
+                            }
+                        }
+
+                        Text {
+                            text: qsTr("Tema")
+                            color: colors.text
+                            font.pixelSize: 15
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 16
+
+                        Text {
+                            text: qsTr("Uygulama Teması")
+                            color: colors.textSoft
+                            font.pixelSize: 13
+                        }
+
+                        RowLayout {
+                            spacing: 8
+                            Repeater {
+                                model: UiPreferencesManager.availableThemeModes
+                                delegate: Button {
+                                    required property var modelData
+                                    implicitWidth: 100
+                                    implicitHeight: 34
+                                    text: modelData.label
+                                    checkable: true
+                                    checked: UiPreferencesManager.themeMode === modelData.code
+                                    onClicked: UiPreferencesManager.setThemeMode(modelData.code)
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: parent.checked ? "#FFFFFF" : colors.text
+                                        font.bold: parent.checked
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    background: Rectangle {
+                                        color: parent.checked ? colors.accentA : (parent.hovered ? colors.border : colors.cardStrong)
+                                        border.color: parent.checked ? colors.accentA : colors.border
+                                        border.width: 1
                                         radius: 6
                                     }
                                 }
@@ -522,7 +628,7 @@ Item {
                 onClicked: settingsManager.resetToDefaults()
                 contentItem: Text {
                     text: parent.text
-                    color: "#EF4444"
+                    color: colors.danger
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -530,7 +636,7 @@ Item {
                 background: Rectangle {
                     implicitWidth: 200
                     implicitHeight: 38
-                    color: parent.hovered ? "#450A0A" : "#1E293B"
+                    color: parent.hovered ? "#450A0A" : colors.cardStrong
                     border.color: "#7F1D1D"
                     radius: 6
                 }
