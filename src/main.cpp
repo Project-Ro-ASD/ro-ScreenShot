@@ -1,8 +1,10 @@
 #include "core/CaptureEngine.hpp"
 #include "core/DBusService.hpp"
+#include "core/LanguageManager.hpp"
 #include "core/LibraryManager.hpp"
 #include "core/SettingsManager.hpp"
 #include "core/Types.hpp"
+#include "core/UiPreferencesManager.hpp"
 
 #include <QCommandLineOption>
 #include <QCommandLineParser>
@@ -13,8 +15,11 @@
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
+#include <QQmlEngine>
+#include <QQmlError>
 #include <QQuickWindow>
 #include <QTimer>
+#include <QTranslator>
 
 using namespace ro_screenshot;
 
@@ -45,6 +50,8 @@ int main(int argc, char *argv[]) {
   QCommandLineOption delayOption({"d", "delay"},
                                  "Yakalama öncesi gecikme süresi (saniye).",
                                  "saniye", "0");
+  QCommandLineOption renderOption(
+      "render-to", "Main pencereyi PNG olarak çiz ve çık (doc).", "file");
 
   parser.addOption(regionOption);
   parser.addOption(fullscreenOption);
@@ -52,6 +59,7 @@ int main(int argc, char *argv[]) {
   parser.addOption(libraryOption);
   parser.addOption(settingsOption);
   parser.addOption(delayOption);
+  parser.addOption(renderOption);
 
   parser.process(app);
 
@@ -87,13 +95,31 @@ int main(int argc, char *argv[]) {
   DBusService dbusService(&captureEngine);
   dbusService.registerService();
 
+  QTranslator translator;
+
   QQmlApplicationEngine engine;
+
+  LanguageManager languageManager(&app, &engine, &translator);
+  qmlRegisterSingletonInstance("ro_screenshot", 1, 0, "LanguageManager",
+                               &languageManager);
+
+  UiPreferencesManager uiPreferencesManager;
+  qmlRegisterSingletonInstance("ro_screenshot", 1, 0, "UiPreferencesManager",
+                               &uiPreferencesManager);
 
   engine.rootContext()->setContextProperty("settingsManager", &settingsManager);
   engine.rootContext()->setContextProperty("libraryManager", &libraryManager);
   engine.rootContext()->setContextProperty("captureEngine", &captureEngine);
+  engine.rootContext()->setContextProperty("languageManager", &languageManager);
 
   // Load Main Hub using modern QML module API
+  QObject::connect(&engine, &QQmlEngine::warnings,
+                   [](const QList<QQmlError> &warnings) {
+                     for (const auto &warning : warnings) {
+                       fprintf(stderr, "[qml] %s\n",
+                               warning.toString().toUtf8().constData());
+                     }
+                   });
   engine.loadFromModule("ro_screenshot", "MainHub");
   if (engine.rootObjects().isEmpty()) {
     return -1;
@@ -204,10 +230,28 @@ int main(int argc, char *argv[]) {
     QTimer::singleShot(100, [&captureEngine, delaySec]() {
       captureEngine.requestWindowCapture(delaySec);
     });
+  } else if (parser.isSet(libraryOption)) {
+    if (rootObject) {
+      rootObject->setProperty("currentTab", 1);
+    }
   } else if (parser.isSet(settingsOption)) {
     if (rootObject) {
       rootObject->setProperty("currentTab", 2);
     }
+  }
+
+  if (parser.isSet(renderOption)) {
+    const QString renderPath = parser.value(renderOption);
+    QTimer::singleShot(2000, [mainWindow, &app, renderPath]() {
+      if (!mainWindow) {
+        app.exit(1);
+        return;
+      }
+      const QImage image = mainWindow->grabWindow();
+      const bool saved = image.save(renderPath);
+      app.exit(saved ? 0 : 1);
+    });
+    return app.exec();
   }
 
   return app.exec();
