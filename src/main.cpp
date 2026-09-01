@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("libraryManager", &libraryManager);
   engine.rootContext()->setContextProperty("captureEngine", &captureEngine);
 
-  // Load Main Hub
-  engine.load(QUrl("qrc:/ro_screenshot/qml/MainHub.qml"));
+  // Load Main Hub using modern QML module API
+  engine.loadFromModule("ro_screenshot", "MainHub");
   if (engine.rootObjects().isEmpty()) {
     return -1;
   }
@@ -103,8 +103,7 @@ int main(int argc, char *argv[]) {
   QQuickWindow *mainWindow = qobject_cast<QQuickWindow *>(rootObject);
 
   // Sniper Overlay Window Component
-  QQmlComponent sniperComponent(
-      &engine, QUrl("qrc:/ro_screenshot/qml/SniperOverlay.qml"));
+  QQmlComponent sniperComponent(&engine, "ro_screenshot", "SniperOverlay");
   QObject *sniperWindowObject = nullptr;
 
   QObject::connect(&captureEngine, &CaptureEngine::openSniperOverlay, &app,
@@ -136,8 +135,7 @@ int main(int argc, char *argv[]) {
                    });
 
   // Floating Thumbnail Toast Component
-  QQmlComponent toastComponent(
-      &engine, QUrl("qrc:/ro_screenshot/qml/FloatingThumbnail.qml"));
+  QQmlComponent toastComponent(&engine, "ro_screenshot", "FloatingThumbnail");
   QObject *toastObject = nullptr;
 
   QObject::connect(&captureEngine, &CaptureEngine::captureSuccess, &app,

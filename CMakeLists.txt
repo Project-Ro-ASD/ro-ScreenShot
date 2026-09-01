@@ -59,10 +59,15 @@ qt_add_executable(ro-screenshot
     ${RO_SCREENSHOT_SOURCES}
 )
 
+set_source_files_properties(src/ui/qml/MainHub.qml PROPERTIES QT_RESOURCE_ALIAS "MainHub.qml")
+set_source_files_properties(src/ui/qml/LibraryView.qml PROPERTIES QT_RESOURCE_ALIAS "LibraryView.qml")
+set_source_files_properties(src/ui/qml/SettingsView.qml PROPERTIES QT_RESOURCE_ALIAS "SettingsView.qml")
+set_source_files_properties(src/ui/qml/SniperOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "SniperOverlay.qml")
+set_source_files_properties(src/ui/qml/FloatingThumbnail.qml PROPERTIES QT_RESOURCE_ALIAS "FloatingThumbnail.qml")
+
 qt_add_qml_module(ro-screenshot
-    URI ro_screenshot
+    URI "ro_screenshot"
     VERSION 1.0
-    RESOURCE_PREFIX "/ro_screenshot"
     QML_FILES
         src/ui/qml/MainHub.qml
         src/ui/qml/LibraryView.qml
