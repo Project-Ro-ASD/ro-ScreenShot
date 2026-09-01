@@ -1,0 +1,59 @@
+name: CI
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Test (Fedora 44)
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:44
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+            gcc-c++ \
+            cmake \
+            ninja-build \
+            qt6-qtbase-devel \
+            qt6-qtdeclarative-devel \
+            qt6-qtwayland-devel \
+            clang-tools-extra \
+            desktop-file-utils
+
+      - name: Configure (CMake)
+        run: |
+          cmake -B build \
+            -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run unit tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Verify desktop entry
+        run: desktop-file-validate data/org.ro_asd.ro_screenshot.desktop
+
+      - name: Verify Clang-Format
+        run: |
+          find src tests -type f \( -name "*.cpp" -o -name "*.hpp" \) -print0 | xargs -0 clang-format --dry-run -Werror
