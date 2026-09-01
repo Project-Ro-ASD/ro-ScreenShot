@@ -1,0 +1,37 @@
+[Desktop Entry]
+Name=Ro-ScreenShot
+GenericName=Ekran Yakalama ve Galeri
+Comment=Modern Linux & Wayland Ekran Yakalama ve Yönetim Aracı
+Exec=ro-screenshot
+Icon=org.ro_asd.ro_screenshot
+Terminal=false
+Type=Application
+Categories=Utility;Graphics;RasterGraphics;
+Keywords=screenshot;capture;sniper;region;ekran;yakalama;galeri;
+StartupNotify=true
+Actions=CaptureRegion;CaptureFullscreen;CaptureWindow;OpenLibrary;OpenSettings;
+
+[Desktop Action CaptureRegion]
+Name=Bölge Seçimi Yakala
+Exec=ro-screenshot --region
+Icon=camera-photo
+
+[Desktop Action CaptureFullscreen]
+Name=Tam Ekran Yakala
+Exec=ro-screenshot --fullscreen
+Icon=view-fullscreen
+
+[Desktop Action CaptureWindow]
+Name=Pencere Yakala
+Exec=ro-screenshot --window
+Icon=window-duplicate
+
+[Desktop Action OpenLibrary]
+Name=Galeri / Kütüphane
+Exec=ro-screenshot --library
+Icon=folder-pictures
+
+[Desktop Action OpenSettings]
+Name=Ayarlar
+Exec=ro-screenshot --settings
+Icon=configure

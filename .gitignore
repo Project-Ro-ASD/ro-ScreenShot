@@ -1,0 +1,47 @@
+# Build directories
+build/
+build-*/
+src/build-*/
+cmake-build-*/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# Compiled binaries
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.exe
+ro-screenshot
+
+# Qt / MOC generated files
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+
+# Packaging artifacts
+*.rpm
+*.deb
+*.tar.gz
+*.tar.xz
+*.AppImage
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test output
+Testing/
+test_results/
