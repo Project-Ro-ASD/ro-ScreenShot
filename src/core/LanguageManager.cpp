@@ -109,9 +109,7 @@ bool LanguageManager::loadLanguage(const QString &code) {
   bool loaded = false;
   QString qmPath = QString(":/i18n/ro-screenshot_%1.qm").arg(code);
 
-  if (code != "en") {
-    loaded = m_translator->load(qmPath);
-  }
+  loaded = m_translator->load(qmPath);
 
   if (loaded) {
     m_app->installTranslator(m_translator);

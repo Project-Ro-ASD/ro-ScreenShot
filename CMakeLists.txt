@@ -112,6 +112,7 @@ qt_add_qml_module(ro-screenshot
 qt_add_resources(ro-screenshot "i18n"
     PREFIX "/i18n"
     FILES
+        i18n/ro-screenshot_en.qm
         i18n/ro-screenshot_tr.qm
         i18n/ro-screenshot_de.qm
         i18n/ro-screenshot_es.qm
