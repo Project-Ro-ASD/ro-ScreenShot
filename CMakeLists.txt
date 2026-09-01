@@ -65,6 +65,31 @@ set_source_files_properties(src/ui/qml/SettingsView.qml PROPERTIES QT_RESOURCE_A
 set_source_files_properties(src/ui/qml/SniperOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "SniperOverlay.qml")
 set_source_files_properties(src/ui/qml/FloatingThumbnail.qml PROPERTIES QT_RESOURCE_ALIAS "FloatingThumbnail.qml")
 
+# Flatten SVG asset paths
+set(RO_SVG_ASSETS
+    src/ui/assets/logo.svg
+    src/ui/assets/icon-capture.svg
+    src/ui/assets/icon-gallery.svg
+    src/ui/assets/icon-settings.svg
+    src/ui/assets/icon-language.svg
+    src/ui/assets/icon-fullscreen.svg
+    src/ui/assets/icon-window.svg
+    src/ui/assets/icon-timer.svg
+    src/ui/assets/icon-copy.svg
+    src/ui/assets/icon-folder.svg
+    src/ui/assets/icon-trash.svg
+    src/ui/assets/icon-search.svg
+    src/ui/assets/icon-refresh.svg
+    src/ui/assets/icon-gallery-empty.svg
+    src/ui/assets/icon-tags.svg
+    src/ui/assets/icon-bolt.svg
+    src/ui/assets/icon-crosshair.svg
+)
+foreach(_svg ${RO_SVG_ASSETS})
+    get_filename_component(_basename "${_svg}" NAME)
+    set_source_files_properties(${_svg} PROPERTIES QT_RESOURCE_ALIAS "assets/${_basename}")
+endforeach()
+
 qt_add_qml_module(ro-screenshot
     URI "ro_screenshot"
     VERSION 1.0
@@ -74,6 +99,8 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/SettingsView.qml
         src/ui/qml/SniperOverlay.qml
         src/ui/qml/FloatingThumbnail.qml
+    RESOURCES
+        ${RO_SVG_ASSETS}
 )
 
 target_include_directories(ro-screenshot PRIVATE
