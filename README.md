@@ -2,38 +2,11 @@
 
 **Modern, Wayland-Native Screen Capture & Gallery Suite for Ro-ASD and Linux.**
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
-[![Platform: Ro-ASD / Linux](https://img.shields.io/badge/Platform-Ro--ASD%20%7C%20Fedora%2044%2B%20%7C%20Wayland-green.svg)](https://github.com/Project-Ro-ASD)
-[![Framework: Qt6 & C++20](https://img.shields.io/badge/Framework-Qt%206.11%20%7C%20C%2B%2B20-blue.svg)](https://qt.io)
-[![IPC: D-Bus Native](https://img.shields.io/badge/IPC-org.ro__asd.ScreenShot-orange.svg)](docs/ARCHITECTURE.md)
-[![Ecosystem: Ro-ASD](https://img.shields.io/badge/Ecosystem-Project--Ro--ASD-red.svg)](https://github.com/Project-Ro-ASD)
-
 ---
 
 ## Overview
 
 **Ro-ScreenShot** is a next-generation screen capture, annotation, and library management tool engineered specifically for modern Linux desktop environments (Fedora 44+, KDE Plasma 6, GNOME, and Wayland compositors). It combines a zero-latency sniper capture engine with a comprehensive desktop library and flexible automation workflows.
-
-```
-+-------------------------------------------------------------------------------+
-|  📸 Ro-ScreenShot Hub                                      [—] [口] [X]       |
-+-------------------------------------------------------------------------------+
-|  [ 🔍 Search captures...       ]  [All | Today | Yesterday | This Week ▾]     |
-+-------------------------------------------------------------------------------+
-|  +--------------+  +--------------+  +--------------+  +--------------------+ |
-|  |  [ Image ]   |  |  [ Image ]   |  |  [ Image ]   |  | ℹ️ DETAILS         | |
-|  |              |  |              |  |              |  |                    | |
-|  | 1920x1080    |  | 850x640      |  | 2560x1440    |  | File: Ro-Shot_01   | |
-|  | Today, 14:20 |  | Today, 13:05 |  | Yest, 22:15  |  | Size: 1.4 MB       | |
-|  | [📋][📂][🗑️] |  | [📋][📂][🗑️] |  | [📋][📂][🗑️] |  | Res: 2560 × 1440   | |
-|  +--------------+  +--------------+  +--------------+  | [ Copy to Clp ]    | |
-|                                                        | [ Open File   ]    | |
-|                                                        | [ Show in Dir ]    | |
-|                                                        | [ Delete      ]    | |
-+--------------------------------------------------------+--------------------+ |
-|  [ 🎯 Region / Sniper ]    [ 🖥️ Fullscreen ]    [ 🪟 Window ]    [ ⚙️ Settings ] |
-+-------------------------------------------------------------------------------+
-```
 
 ### Core Capabilities
 
