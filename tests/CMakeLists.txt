@@ -12,6 +12,8 @@ macro(add_ro_test TEST_NAME TEST_SOURCE)
         ${CMAKE_SOURCE_DIR}/src/core/CaptureEngine.cpp
         ${CMAKE_SOURCE_DIR}/src/core/DBusService.hpp
         ${CMAKE_SOURCE_DIR}/src/core/DBusService.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/UiPreferencesManager.hpp
+        ${CMAKE_SOURCE_DIR}/src/core/UiPreferencesManager.cpp
     )
     target_include_directories(${TEST_NAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -30,3 +32,4 @@ endmacro()
 add_ro_test(test_settings test_settings.cpp)
 add_ro_test(test_library test_library.cpp)
 add_ro_test(test_capture test_capture.cpp)
+add_ro_test(test_ui_preferences test_ui_preferences.cpp)
