@@ -47,10 +47,13 @@ Item {
                             anchors.rightMargin: 10
                             spacing: 8
 
-                            Text {
-                                text: "🔍"
+                            Image {
+                                source: "assets/icon-search.svg"
+                                sourceSize.width: 13
+                                sourceSize.height: 13
+                                Layout.preferredWidth: 13
+                                Layout.preferredHeight: 13
                                 color: "#94A3B8"
-                                font.pixelSize: 13
                             }
 
                             TextField {
@@ -66,7 +69,6 @@ Item {
 
                             Button {
                                 visible: searchField.text.length > 0
-                                text: "✕"
                                 flat: true
                                 onClicked: searchField.text = ""
                                 contentItem: Text {
@@ -115,37 +117,59 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    // Storage Badge & Refresh
+                    // Storage Badge (icon + text)
                     Rectangle {
                         height: 28
-                        implicitWidth: storageText.implicitWidth + 16
+                        implicitWidth: storageText.implicitWidth + 22
                         radius: 6
                         color: "#1E293B"
                         border.color: "#334155"
                         border.width: 1
-                        Text {
-                            id: storageText
+
+                        RowLayout {
                             anchors.centerIn: parent
-                            text: qsTr("💾 %1").arg(libraryManager.totalStorageSize)
-                            color: "#94A3B8"
-                            font.pixelSize: 11
+                            spacing: 6
+
+                            Image {
+                                source: "assets/icon-folder.svg"
+                                sourceSize.width: 13
+                                sourceSize.height: 13
+                                Layout.preferredWidth: 13
+                                Layout.preferredHeight: 13
+                                color: "#94A3B8"
+                            }
+
+                            Text {
+                                id: storageText
+                                anchors.centerIn: parent
+                                text: qsTr("%1 Dahilinde").arg(libraryManager.totalStorageSize)
+                                color: "#94A3B8"
+                                font.pixelSize: 11
+                            }
                         }
                     }
 
+                    // Refresh Button (icon-only)
                     Button {
-                        text: qsTr("🔄 Yenile")
+                        flat: true
                         onClicked: libraryManager.refresh()
-                        contentItem: Text {
-                            text: parent.text
+                        contentItem: Image {
+                            source: "assets/icon-refresh.svg"
+                            sourceSize.width: 16
+                            sourceSize.height: 16
                             color: "#E2E8F0"
-                            font.pixelSize: 12
                         }
                         background: Rectangle {
-                            implicitWidth: 80
+                            implicitWidth: 32
                             implicitHeight: 32
-                            color: parent.hovered ? "#334155" : "#1E293B"
-                            border.color: "#334155"
+                            color: parent.hovered ? "#334155" : "transparent"
                             radius: 6
+                        }
+
+                        ToolTip {
+                            text: qsTr("Yenile")
+                            delay: 300
+                            timeout: 5000
                         }
                     }
                 }
@@ -156,17 +180,20 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                // Empty State
+                // Empty State (icon + text, no emoji)
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 12
                     visible: libraryManager.count === 0
 
-                    Text {
-                        text: "🖼️"
-                        font.pixelSize: 48
+                    Image {
+                        source: "assets/icon-gallery-empty.svg"
+                        sourceSize.width: 48
+                        sourceSize.height: 48
                         Layout.alignment: Qt.AlignHCenter
+                        color: "#475569"
                     }
+
                     Text {
                         text: qsTr("Henüz ekran görüntüsü bulunamadı.")
                         color: "#F8FAFC"
@@ -174,6 +201,7 @@ Item {
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
                     }
+
                     Text {
                         text: qsTr("Kayıt klasörü: %1").arg(settingsManager.saveDirectory)
                         color: "#64748B"
@@ -300,7 +328,6 @@ Item {
                     }
                     Item { Layout.fillWidth: true }
                     Button {
-                        text: "✕"
                         flat: true
                         onClicked: root.selectedIndex = -1
                         contentItem: Text {
@@ -401,46 +428,76 @@ Item {
 
                 Item { Layout.fillHeight: true }
 
-                // Actions
+                // Actions (icon+label buttons)
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
+                    // Copy to Clipboard
                     Button {
                         Layout.fillWidth: true
-                        text: qsTr("📋 Panoya Kopyala")
+                        text: qsTr("Panoya Kopyala")
                         onClicked: {
                             if (root.selectedIndex >= 0) {
                                 libraryManager.copyToClipboard(root.selectedIndex)
                             }
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#FFFFFF"
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        contentItem: RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 10
+                            Image {
+                                source: "assets/icon-copy.svg"
+                                sourceSize.width: 18
+                                sourceSize.height: 18
+                                Layout.preferredWidth: 18
+                                Layout.preferredHeight: 18
+                            }
+                            Text {
+                                text: parent.Parent ? parent.text : ""
+                                color: "#FFFFFF"
+                                font.bold: true
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.fillWidth: true
+                            }
                         }
                         background: Rectangle {
                             implicitHeight: 36
-                            color: parent.hovered ? "#2563EB" : "#1D4ED8"
+                            color: parent.hovered ? "#1D4ED8" : "#2563EB"
                             radius: 6
                         }
                     }
 
+                    // Open in Folder
                     Button {
                         Layout.fillWidth: true
-                        text: qsTr("📂 Klasörde Göster")
+                        text: qsTr("Klasörde Göster")
                         onClicked: {
                             if (root.selectedIndex >= 0) {
                                 libraryManager.openInFolder(root.selectedIndex)
                             }
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#E2E8F0"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        contentItem: RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 10
+                            Image {
+                                source: "assets/icon-folder.svg"
+                                sourceSize.width: 18
+                                sourceSize.height: 18
+                                Layout.preferredWidth: 18
+                                Layout.preferredHeight: 18
+                            }
+                            Text {
+                                text: parent.Parent ? parent.text : ""
+                                color: "#E2E8F0"
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.fillWidth: true
+                            }
                         }
                         background: Rectangle {
                             implicitHeight: 36
@@ -450,20 +507,35 @@ Item {
                         }
                     }
 
+                    // Delete
                     Button {
                         Layout.fillWidth: true
-                        text: qsTr("🗑️ Görseli Sil")
+                        text: qsTr("Görseli Sil")
                         onClicked: {
                             if (root.selectedIndex >= 0) {
                                 libraryManager.deleteItem(root.selectedIndex)
                                 root.selectedIndex = -1
                             }
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#EF4444"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        contentItem: RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 10
+                            Image {
+                                source: "assets/icon-trash.svg"
+                                sourceSize.width: 18
+                                sourceSize.height: 18
+                                Layout.preferredWidth: 18
+                                Layout.preferredHeight: 18
+                            }
+                            Text {
+                                text: parent.Parent ? parent.text : ""
+                                color: "#EF4444"
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.fillWidth: true
+                            }
                         }
                         background: Rectangle {
                             implicitHeight: 36

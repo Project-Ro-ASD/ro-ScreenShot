@@ -33,7 +33,7 @@ Item {
 
             Item { height: 10 }
 
-            // Section 1: Kayıt ve Dizin Ayarları
+            // Section 1: Kayıt Dizini (silgi iconuyla)
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec1Col.implicitHeight + 32
@@ -48,11 +48,26 @@ Item {
                     anchors.margins: 16
                     spacing: 14
 
-                    Text {
-                        text: qsTr("📁 Kayıt Dizini ve Klasörleme")
-                        color: "#F8FAFC"
-                        font.pixelSize: 15
-                        font.bold: true
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Image {
+                            source: "assets/icon-folder.svg"
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                            color: "#94A3B8"
+                        }
+
+                        Text {
+                            text: qsTr("Kayıt Dizini ve Klasörleme")
+                            color: "#F8FAFC"
+                            font.pixelSize: 15
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
                     }
 
                     RowLayout {
@@ -77,7 +92,7 @@ Item {
                         }
 
                         Button {
-                            text: qsTr("📂 Gözat...")
+                            text: qsTr("Gözat...")
                             onClicked: folderDialog.open()
                             contentItem: Text {
                                 text: parent.text
@@ -110,7 +125,7 @@ Item {
                 }
             }
 
-            // Section 2: İsimlendirme ve Format
+            // Section 2: İsimlendirme ve Format (etiket iconuyla)
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec2Col.implicitHeight + 32
@@ -125,11 +140,26 @@ Item {
                     anchors.margins: 16
                     spacing: 14
 
-                    Text {
-                        text: qsTr("🏷️ Dosya İsimlendirme ve Görsel Formatı")
-                        color: "#F8FAFC"
-                        font.pixelSize: 15
-                        font.bold: true
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Image {
+                            source: "assets/icon-tags.svg"
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                            color: "#94A3B8"
+                        }
+
+                        Text {
+                            text: qsTr("Dosya İsimlendirme ve Görsel Formatı")
+                            color: "#F8FAFC"
+                            font.pixelSize: 15
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
                     }
 
                     ColumnLayout {
@@ -156,13 +186,13 @@ Item {
                             onTextChanged: settingsManager.fileNameTemplate = text
                         }
 
-                        // Live Preview Box
                         Rectangle {
                             Layout.fillWidth: true
                             height: 32
                             color: "#0F172A"
                             radius: 4
                             border.color: "#1E293B"
+
                             Text {
                                 anchors.centerIn: parent
                                 text: qsTr("Canlı Önizleme: %1").arg(settingsManager.previewFileName)
@@ -172,7 +202,6 @@ Item {
                         }
                     }
 
-                    // Format Selection
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 20
@@ -211,13 +240,12 @@ Item {
                             }
                         }
 
-                        // JPEG Quality Slider
                         ColumnLayout {
                             visible: settingsManager.imageFormat === "jpg"
                             Layout.fillWidth: true
                             spacing: 4
                             Text {
-                                text: qsTr("JPEG Kalitesi: %%%1").arg(settingsManager.jpegQuality)
+                                text: qsTr("JPEG Kalitesi: %1%").arg(settingsManager.jpegQuality)
                                 color: "#94A3B8"
                                 font.pixelSize: 12
                             }
@@ -234,7 +262,7 @@ Item {
                 }
             }
 
-            // Section 3: Çekim Sonrası İş Akışı
+            // Section 3: Çekim Sonrası İş Akışı (hızlı ayarlar iconuyla)
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec3Col.implicitHeight + 32
@@ -249,11 +277,26 @@ Item {
                     anchors.margins: 16
                     spacing: 12
 
-                    Text {
-                        text: qsTr("⚡ Çekim Sonrası Otomatik İşlemler")
-                        color: "#F8FAFC"
-                        font.pixelSize: 15
-                        font.bold: true
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Image {
+                            source: "assets/icon-bolt.svg"
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                            color: "#94A3B8"
+                        }
+
+                        Text {
+                            text: qsTr("Çekim Sonrası Otomatik İşlemler")
+                            color: "#F8FAFC"
+                            font.pixelSize: 15
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
                     }
 
                     CheckBox {
@@ -283,7 +326,7 @@ Item {
                     }
 
                     CheckBox {
-                        text: qsTr("Çekim sonrası sağ altta yüzen önizleme kartı göster (Floating Thumbnail)")
+                        text: qsTr("Çekim sonrası sağ altta yüzen Önizleme kartı göster (Floating Thumbnail)")
                         checked: settingsManager.showFloatingThumbnail
                         onToggled: settingsManager.showFloatingThumbnail = checked
                         contentItem: Text {
@@ -310,7 +353,7 @@ Item {
                 }
             }
 
-            // Section 4: Sniper ve Büyüteç Tercihleri
+            // Section 4: Sniper ve Büyüteç (nişangah iconuyla)
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: sec4Col.implicitHeight + 32
@@ -325,11 +368,26 @@ Item {
                     anchors.margins: 16
                     spacing: 12
 
-                    Text {
-                        text: qsTr("🎯 Sniper Seçim Katmanı ve Büyüteç (Loupe)")
-                        color: "#F8FAFC"
-                        font.pixelSize: 15
-                        font.bold: true
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Image {
+                            source: "assets/icon-crosshair.svg"
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                            color: "#94A3B8"
+                        }
+
+                        Text {
+                            text: qsTr("Sniper Seçim Katmanı ve Büyüteç (Loupe)")
+                            color: "#F8FAFC"
+                            font.pixelSize: 15
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
                     }
 
                     CheckBox {
@@ -351,7 +409,7 @@ Item {
                         spacing: 16
 
                         Text {
-                            text: qsTr("Büyüteç Yakınlaştırması: %1x").arg(settingsManager.magnifierZoom)
+                            text: qsTr("Büyüteç Yakınlaştirması: %1x").arg(settingsManager.magnifierZoom)
                             color: "#94A3B8"
                             font.pixelSize: 12
                         }
@@ -381,9 +439,85 @@ Item {
                 }
             }
 
+            // Section 5: Dil Seçenekleri (dil iconuyla + buton grubu)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: sec5Col.implicitHeight + 32
+                color: "#131D31"
+                border.color: "#334155"
+                border.width: 1
+                radius: 10
+
+                ColumnLayout {
+                    id: sec5Col
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 14
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Image {
+                            source: "assets/icon-language.svg"
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                            color: "#94A3B8"
+                        }
+
+                        Text {
+                            text: qsTr("Dil ve Arayüz Seçenekleri")
+                            color: "#F8FAFC"
+                            font.pixelSize: 15
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 16
+
+                        Text {
+                            text: qsTr("Uygulama Dili")
+                            color: "#94A3B8"
+                            font.pixelSize: 13
+                        }
+
+                        RowLayout {
+                            spacing: 8
+                            Repeater {
+                                model: languageManager.availableLanguages
+                                delegate: Button {
+                                    text: modelData.nativeLabel
+                                    checkable: true
+                                    checked: languageManager.currentLanguage === modelData.code
+                                    onClicked: languageManager.setCurrentLanguage(modelData.code)
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: parent.checked ? "#FFFFFF" : "#94A3B8"
+                                        font.bold: parent.checked
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    background: Rectangle {
+                                        implicitWidth: 80
+                                        implicitHeight: 34
+                                        color: parent.checked ? "#3B82F6" : (parent.hovered ? "#334155" : "#1E293B")
+                                        radius: 6
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Reset Button
             Button {
-                text: qsTr("🔄 Varsayılan Ayarlara Sıfırla")
+                text: qsTr("Varsayılan Ayarlara Sıfırla")
                 Layout.alignment: Qt.AlignRight
                 onClicked: settingsManager.resetToDefaults()
                 contentItem: Text {
