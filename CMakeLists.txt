@@ -54,6 +54,8 @@ set(RO_SCREENSHOT_SOURCES
     src/core/DBusService.cpp
     src/core/LanguageManager.hpp
     src/core/LanguageManager.cpp
+    src/core/UiPreferencesManager.hpp
+    src/core/UiPreferencesManager.cpp
 )
 
 qt_add_executable(ro-screenshot
@@ -86,6 +88,7 @@ set(RO_SVG_ASSETS
     src/ui/assets/icon-tags.svg
     src/ui/assets/icon-bolt.svg
     src/ui/assets/icon-crosshair.svg
+    src/ui/assets/icon-theme.svg
 )
 foreach(_svg ${RO_SVG_ASSETS})
     get_filename_component(_basename "${_svg}" NAME)
