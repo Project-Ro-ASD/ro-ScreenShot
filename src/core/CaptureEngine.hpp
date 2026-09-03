@@ -6,6 +6,7 @@
 #include "platform/IScreenshotProvider.hpp"
 #include "platform/SafeImageWriter.hpp"
 #include "platform/ScreenGeometryManager.hpp"
+#include "platform/WlrScreencopyProvider.hpp"
 #include "platform/X11FallbackProvider.hpp"
 #include "platform/XdgPortalProvider.hpp"
 
@@ -15,6 +16,7 @@
 #include <QRect>
 #include <QString>
 #include <QTimer>
+#include <QVariantList>
 
 namespace ro_screenshot {
 
@@ -48,6 +50,10 @@ public:
   Q_INVOKABLE void requestFullscreenCapture(int delaySeconds = 0);
   Q_INVOKABLE void requestWindowCapture(int delaySeconds = 0);
   Q_INVOKABLE void requestLastRegionCapture(int delaySeconds = 0);
+  Q_INVOKABLE void requestMonitorCapture(int monitorIndex, int delaySeconds = 0,
+                                         const QString &action = QString());
+  Q_INVOKABLE void requestScrollingCapture(int delaySeconds = 0);
+
   Q_INVOKABLE void requestRegionCaptureWithAction(int delaySeconds,
                                                   const QString &action);
   Q_INVOKABLE void requestFullscreenCaptureWithAction(int delaySeconds,
@@ -57,9 +63,11 @@ public:
   Q_INVOKABLE void requestLastRegionCaptureWithAction(int delaySeconds,
                                                       const QString &action);
 
-  // Region selection from QML Sniper Overlay
+  // Region & Polygon selection from QML Sniper Overlay
   Q_INVOKABLE void processRegionSelected(int x, int y, int width, int height,
                                          const QString &action = QString());
+  Q_INVOKABLE void processPolygonSelected(const QVariantList &points,
+                                          const QString &action = QString());
   Q_INVOKABLE void cancelCapture();
   Q_INVOKABLE bool copyImageToClipboard(const QString &filePath);
   Q_INVOKABLE bool saveImageAs(const QString &sourcePath,
@@ -111,6 +119,7 @@ private:
   LibraryManager *m_library{nullptr};
   ScreenGeometryManager *m_geometryManager{nullptr};
   SafeImageWriter *m_imageWriter{nullptr};
+  WlrScreencopyProvider *m_wlrProvider{nullptr};
   XdgPortalProvider *m_portalProvider{nullptr};
   X11FallbackProvider *m_x11Provider{nullptr};
 
@@ -121,6 +130,7 @@ private:
   CaptureMode m_pendingMode{CaptureMode::Region};
   QString m_pendingAction;
   bool m_pendingLastRegion{false};
+  int m_pendingMonitorIndex{-1};
 };
 
 } // namespace ro_screenshot

@@ -64,9 +64,6 @@ if(BUILD_TESTING)
 endif()
 
 qt_standard_project_setup(REQUIRES 6.5)
-# Generate qmldir metadata for QML subdirectories.  This keeps local imports
-# (components/ and editor/) deployable from both the resource bundle and an
-# installed application, instead of merely silencing the CMake warning.
 qt_policy(SET QTP0004 NEW)
 
 set(RO_SCREENSHOT_SOURCES
@@ -90,6 +87,8 @@ set(RO_SCREENSHOT_SOURCES
     src/core/platform/ScreenGeometryManager.cpp
     src/core/platform/SafeImageWriter.hpp
     src/core/platform/SafeImageWriter.cpp
+    src/core/platform/WlrScreencopyProvider.hpp
+    src/core/platform/WlrScreencopyProvider.cpp
     src/core/platform/XdgPortalProvider.hpp
     src/core/platform/XdgPortalProvider.cpp
     src/core/platform/X11FallbackProvider.hpp
@@ -108,6 +107,41 @@ set(RO_SCREENSHOT_SOURCES
     src/core/advanced/AutostartManager.cpp
     src/core/advanced/SystemTrayManager.hpp
     src/core/advanced/SystemTrayManager.cpp
+    src/core/advanced/SensitiveDataDetector.hpp
+    src/core/advanced/MockupFrameGenerator.hpp
+    src/core/advanced/MockupFrameGenerator.cpp
+    src/core/advanced/PaletteExtractor.hpp
+    src/core/advanced/PaletteExtractor.cpp
+    src/core/advanced/SmartDimensionGuide.hpp
+    src/core/advanced/SmartDimensionGuide.cpp
+    src/core/advanced/TableExtractor.hpp
+    src/core/advanced/TableExtractor.cpp
+    src/core/advanced/VaultManager.hpp
+    src/core/advanced/VaultManager.cpp
+    src/core/advanced/EphemeralShotManager.hpp
+    src/core/advanced/EphemeralShotManager.cpp
+    src/core/advanced/MetadataSanitizer.hpp
+    src/core/advanced/MetadataSanitizer.cpp
+    src/core/advanced/PerceptualHashEngine.hpp
+    src/core/advanced/PerceptualHashEngine.cpp
+    src/core/advanced/DuplicateCleaner.hpp
+    src/core/advanced/DuplicateCleaner.cpp
+    src/core/advanced/AccessibilityAnalyzer.hpp
+    src/core/advanced/AccessibilityAnalyzer.cpp
+    src/core/advanced/PdfReportGenerator.hpp
+    src/core/advanced/PdfReportGenerator.cpp
+    src/core/advanced/ImageDiffEngine.hpp
+    src/core/advanced/ImageDiffEngine.cpp
+    src/core/advanced/LiveTranslator.hpp
+    src/core/advanced/LiveTranslator.cpp
+    src/core/advanced/AiAssistantEngine.hpp
+    src/core/advanced/AiAssistantEngine.cpp
+    src/core/advanced/ScrollingCaptureEngine.hpp
+    src/core/advanced/ScrollingCaptureEngine.cpp
+    src/core/advanced/SmartWindowDetector.hpp
+    src/core/advanced/SmartWindowDetector.cpp
+    src/core/advanced/LivePresentationOverlay.hpp
+    src/core/advanced/LivePresentationOverlay.cpp
 )
 
 qt_add_executable(ro-screenshot
@@ -120,11 +154,18 @@ set_source_files_properties(src/ui/qml/LibraryView.qml PROPERTIES QT_RESOURCE_AL
 set_source_files_properties(src/ui/qml/SettingsView.qml PROPERTIES QT_RESOURCE_ALIAS "SettingsView.qml")
 set_source_files_properties(src/ui/qml/SniperOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "SniperOverlay.qml")
 set_source_files_properties(src/ui/qml/FloatingThumbnail.qml PROPERTIES QT_RESOURCE_ALIAS "FloatingThumbnail.qml")
+set_source_files_properties(src/ui/qml/FloatingRecordingHUD.qml PROPERTIES QT_RESOURCE_ALIAS "FloatingRecordingHUD.qml")
+set_source_files_properties(src/ui/qml/LivePresentationOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "LivePresentationOverlay.qml")
 set_source_files_properties(src/ui/qml/components/AccessibleIconButton.qml PROPERTIES QT_RESOURCE_ALIAS "components/AccessibleIconButton.qml")
 set_source_files_properties(src/ui/qml/components/AppSnackbar.qml PROPERTIES QT_RESOURCE_ALIAS "components/AppSnackbar.qml")
 set_source_files_properties(src/ui/qml/components/BusyOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "components/BusyOverlay.qml")
 set_source_files_properties(src/ui/qml/components/ConfirmDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/ConfirmDialog.qml")
 set_source_files_properties(src/ui/qml/components/InlineStatus.qml PROPERTIES QT_RESOURCE_ALIAS "components/InlineStatus.qml")
+set_source_files_properties(src/ui/qml/components/ImageDiffDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/ImageDiffDialog.qml")
+set_source_files_properties(src/ui/qml/components/PdfExportDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/PdfExportDialog.qml")
+set_source_files_properties(src/ui/qml/components/MockupFrameDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/MockupFrameDialog.qml")
+set_source_files_properties(src/ui/qml/components/DevKitDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/DevKitDialog.qml")
+set_source_files_properties(src/ui/qml/components/VaultDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/VaultDialog.qml")
 set_source_files_properties(src/ui/qml/editor/AnnotationEditor.qml PROPERTIES QT_RESOURCE_ALIAS "editor/AnnotationEditor.qml")
 set_source_files_properties(src/ui/qml/editor/EditorCanvas.qml PROPERTIES QT_RESOURCE_ALIAS "editor/EditorCanvas.qml")
 set_source_files_properties(src/ui/qml/editor/EditorToolbar.qml PROPERTIES QT_RESOURCE_ALIAS "editor/EditorToolbar.qml")
@@ -164,11 +205,18 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/SettingsView.qml
         src/ui/qml/SniperOverlay.qml
         src/ui/qml/FloatingThumbnail.qml
+        src/ui/qml/FloatingRecordingHUD.qml
+        src/ui/qml/LivePresentationOverlay.qml
         src/ui/qml/components/AccessibleIconButton.qml
         src/ui/qml/components/AppSnackbar.qml
         src/ui/qml/components/BusyOverlay.qml
         src/ui/qml/components/ConfirmDialog.qml
         src/ui/qml/components/InlineStatus.qml
+        src/ui/qml/components/ImageDiffDialog.qml
+        src/ui/qml/components/PdfExportDialog.qml
+        src/ui/qml/components/MockupFrameDialog.qml
+        src/ui/qml/components/DevKitDialog.qml
+        src/ui/qml/components/VaultDialog.qml
         src/ui/qml/editor/AnnotationEditor.qml
         src/ui/qml/editor/EditorCanvas.qml
         src/ui/qml/editor/EditorToolbar.qml

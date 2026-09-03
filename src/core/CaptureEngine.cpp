@@ -5,6 +5,10 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPolygonF>
+#include <QScreen>
 #include <QStandardPaths>
 #include <algorithm>
 
@@ -15,6 +19,7 @@ CaptureEngine::CaptureEngine(SettingsManager *settings, LibraryManager *library,
     : QObject(parent), m_settings(settings), m_library(library),
       m_geometryManager(new ScreenGeometryManager(this)),
       m_imageWriter(new SafeImageWriter(this)),
+      m_wlrProvider(new WlrScreencopyProvider(this)),
       m_portalProvider(new XdgPortalProvider(this)),
       m_x11Provider(new X11FallbackProvider(m_geometryManager, this)) {
 
@@ -25,6 +30,14 @@ CaptureEngine::CaptureEngine(SettingsManager *settings, LibraryManager *library,
     connect(m_settings, &SettingsManager::lastRegionChanged, this,
             &CaptureEngine::lastRegionChanged);
   }
+
+  // Connect Wlr Provider signals
+  connect(m_wlrProvider, &WlrScreencopyProvider::captureReady, this,
+          &CaptureEngine::handleProviderCaptureReady);
+  connect(m_wlrProvider, &WlrScreencopyProvider::captureFailed, this,
+          &CaptureEngine::handleProviderCaptureFailed);
+  connect(m_wlrProvider, &WlrScreencopyProvider::captureCancelled, this,
+          &CaptureEngine::handleProviderCaptureCancelled);
 
   // Connect Portal Provider signals
   connect(m_portalProvider, &IScreenshotProvider::captureReady, this,
@@ -93,8 +106,14 @@ void CaptureEngine::handleScreenTopologyChanged() {
 IScreenshotProvider *CaptureEngine::activeProvider() const {
   const bool isWayland = QGuiApplication::platformName().contains(
       QStringLiteral("wayland"), Qt::CaseInsensitive);
-  if (isWayland && m_portalProvider && m_portalProvider->isAvailable()) {
-    return m_portalProvider;
+
+  if (isWayland) {
+    if (m_wlrProvider && m_wlrProvider->isAvailable()) {
+      return m_wlrProvider;
+    }
+    if (m_portalProvider && m_portalProvider->isAvailable()) {
+      return m_portalProvider;
+    }
   }
   return m_x11Provider;
 }
@@ -141,6 +160,25 @@ void CaptureEngine::requestLastRegionCaptureWithAction(int delaySeconds,
   startCaptureWorkflow(CaptureMode::Region, delaySeconds, action, true);
 }
 
+void CaptureEngine::requestMonitorCapture(int monitorIndex, int delaySeconds,
+                                          const QString &action) {
+  auto screens = QGuiApplication::screens();
+  if (screens.isEmpty()) {
+    failCapture(tr("Bağlı monitör bulunamadı."),
+                CaptureErrorCode::InvalidImage);
+    return;
+  }
+
+  m_pendingMonitorIndex =
+      std::clamp(monitorIndex, 0, static_cast<int>(screens.size()) - 1);
+  startCaptureWorkflow(CaptureMode::Fullscreen, delaySeconds, action, false);
+}
+
+void CaptureEngine::requestScrollingCapture(int delaySeconds) {
+  // Region capture first to define scrolling container bounds
+  requestRegionCapture(delaySeconds);
+}
+
 void CaptureEngine::startCaptureWorkflow(CaptureMode mode, int delaySeconds,
                                          const QString &action,
                                          bool isLastRegion) {
@@ -184,6 +222,26 @@ void CaptureEngine::handleProviderCaptureReady(const QImage &image,
   }
 
   emit captureProgress(70, tr("Görsel işleniyor..."));
+
+  // Check if specific monitor capture was requested
+  if (m_pendingMonitorIndex >= 0) {
+    auto screens = QGuiApplication::screens();
+    if (m_pendingMonitorIndex < screens.size()) {
+      QRect screenGeom = screens[m_pendingMonitorIndex]->geometry();
+      QRect validGeom =
+          m_geometryManager->sanitizeRegion(screenGeom, image.size());
+      QImage monitorImg = image.copy(validGeom);
+      m_pendingMonitorIndex = -1;
+      saveAndProcessResult(monitorImg, CaptureMode::Fullscreen, validGeom,
+                           m_pendingAction);
+      m_isCapturing = false;
+      m_pendingAction.clear();
+      emit isCapturingChanged();
+      emit captureUiMayRestore();
+      return;
+    }
+    m_pendingMonitorIndex = -1;
+  }
 
   if (m_pendingMode == CaptureMode::Region) {
     if (m_pendingLastRegion) {
@@ -239,6 +297,7 @@ void CaptureEngine::handleProviderCaptureCancelled() { cancelCapture(); }
 void CaptureEngine::failCapture(const QString &message, CaptureErrorCode code) {
   m_isCapturing = false;
   m_pendingLastRegion = false;
+  m_pendingMonitorIndex = -1;
   m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureError(message);
@@ -286,6 +345,54 @@ void CaptureEngine::processRegionSelected(int x, int y, int width, int height,
   emit captureUiMayRestore();
 }
 
+void CaptureEngine::processPolygonSelected(const QVariantList &points,
+                                           const QString &action) {
+  if (m_cachedDesktopFrame.isNull() || points.size() < 3) {
+    cancelCapture();
+    return;
+  }
+
+  QPolygonF polygon;
+  for (const QVariant &ptVal : points) {
+    QVariantMap ptMap = ptVal.toMap();
+    polygon.append(QPointF(ptMap["x"].toDouble(), ptMap["y"].toDouble()));
+  }
+
+  QRectF bRect = polygon.boundingRect();
+  QRect boundInt =
+      bRect.toAlignedRect().intersected(m_cachedDesktopFrame.rect());
+
+  if (boundInt.width() <= 4 || boundInt.height() <= 4) {
+    cancelCapture();
+    return;
+  }
+
+  QImage cropped(boundInt.size(), QImage::Format_ARGB32_Premultiplied);
+  cropped.fill(Qt::transparent);
+
+  QPainter painter(&cropped);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  QPainterPath path;
+  path.addPolygon(polygon.translated(-boundInt.topLeft()));
+  painter.setClipPath(path);
+  painter.drawImage(QPoint(0, 0), m_cachedDesktopFrame, boundInt);
+  painter.end();
+
+  m_imageWriter->setCachedImage(cropped);
+  saveAndProcessResult(cropped, CaptureMode::Region, boundInt,
+                       action.isEmpty() ? m_pendingAction : action);
+
+  if (m_settings && m_settings->closeOverlayOnCapture()) {
+    emit closeSniperOverlay();
+  }
+
+  m_isCapturing = false;
+  m_pendingAction.clear();
+  emit isCapturingChanged();
+  emit captureUiMayRestore();
+}
+
 void CaptureEngine::cancelCapture() {
   IScreenshotProvider *provider = activeProvider();
   if (provider) {
@@ -295,6 +402,7 @@ void CaptureEngine::cancelCapture() {
   emit closeSniperOverlay();
   m_isCapturing = false;
   m_pendingAction.clear();
+  m_pendingMonitorIndex = -1;
   emit isCapturingChanged();
   emit captureCancelled();
   emit captureUiMayRestore();
