@@ -7,6 +7,21 @@ namespace ro_screenshot {
 DBusAdaptor::DBusAdaptor(CaptureEngine *engine, QObject *parent)
     : QDBusAbstractAdaptor(parent), m_engine(engine) {
   setAutoRelaySignals(true);
+
+  if (m_engine) {
+    connect(m_engine, &CaptureEngine::captureSuccess, this,
+            [this](const QString &filePath, const QString &fileName,
+                   bool savedToDisk, bool copiedToClipboard) {
+              emit CaptureCompleted(filePath, fileName, savedToDisk,
+                                    copiedToClipboard);
+            });
+    connect(m_engine, &CaptureEngine::captureErrorCode, this,
+            [this](const QString &message, CaptureErrorCode code) {
+              emit CaptureFailed(message, static_cast<int>(code));
+            });
+    connect(m_engine, &CaptureEngine::captureCancelled, this,
+            &DBusAdaptor::CaptureCancelled);
+  }
 }
 
 void DBusAdaptor::CaptureRegion(int delaySeconds) {
@@ -61,6 +76,47 @@ void DBusAdaptor::CaptureLastRegionWithAction(int delaySeconds,
   }
 }
 
+void DBusAdaptor::CaptureWithOptions(const QVariantMap &options) {
+  if (!m_engine) {
+    return;
+  }
+  const QString modeStr =
+      options.value(QStringLiteral("mode"), QStringLiteral("region"))
+          .toString()
+          .toLower();
+  const int delay = options.value(QStringLiteral("delay"), 0).toInt();
+  const QString action =
+      options.value(QStringLiteral("action"), QString()).toString();
+
+  if (modeStr == "fullscreen") {
+    m_engine->requestFullscreenCaptureWithAction(delay, action);
+  } else if (modeStr == "window") {
+    m_engine->requestWindowCaptureWithAction(delay, action);
+  } else if (modeStr == "last_region" || modeStr == "last-region") {
+    m_engine->requestLastRegionCaptureWithAction(delay, action);
+  } else {
+    m_engine->requestRegionCaptureWithAction(delay, action);
+  }
+}
+
+void DBusAdaptor::CancelCapture() {
+  if (m_engine) {
+    m_engine->cancelCapture();
+  }
+}
+
+bool DBusAdaptor::IsCapturing() const {
+  return m_engine && m_engine->isCapturing();
+}
+
+QString DBusAdaptor::GetLastCapturedFilePath() const {
+  return m_engine ? m_engine->lastCapturedFilePath() : QString();
+}
+
+QString DBusAdaptor::GetColorAt(int x, int y, const QString &format) const {
+  return m_engine ? m_engine->colorAtFormat(x, y, format) : QString();
+}
+
 void DBusAdaptor::OpenLibrary() { emit openLibraryRequested(); }
 
 void DBusAdaptor::OpenSettings() { emit openSettingsRequested(); }
@@ -84,8 +140,8 @@ bool DBusService::registerService() {
     return false;
   }
 
-  const QString serviceName = "org.ro_asd.ScreenShot";
-  const QString objectPath = "/org/ro_asd/ScreenShot";
+  const QString serviceName = QStringLiteral("org.ro_asd.ScreenShot");
+  const QString objectPath = QStringLiteral("/org/ro_asd/ScreenShot");
 
   if (!bus.registerService(serviceName)) {
     return false;
@@ -96,7 +152,19 @@ bool DBusService::registerService() {
     return false;
   }
 
+  m_isRegistered = true;
   return true;
 }
+
+void DBusService::unregisterService() {
+  if (m_isRegistered) {
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    bus.unregisterObject(QStringLiteral("/org/ro_asd/ScreenShot"));
+    bus.unregisterService(QStringLiteral("org.ro_asd.ScreenShot"));
+    m_isRegistered = false;
+  }
+}
+
+bool DBusService::isRegistered() const { return m_isRegistered; }
 
 } // namespace ro_screenshot
