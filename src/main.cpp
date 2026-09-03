@@ -6,8 +6,13 @@
 #include "core/SettingsManager.hpp"
 #include "core/Types.hpp"
 #include "core/UiPreferencesManager.hpp"
+#include "core/advanced/AiAssistantEngine.hpp"
 #include "core/advanced/AutostartManager.hpp"
+#include "core/advanced/EphemeralShotManager.hpp"
+#include "core/advanced/LivePresentationOverlay.hpp"
+#include "core/advanced/ScreenRecorderEngine.hpp"
 #include "core/advanced/SystemTrayManager.hpp"
+#include "core/advanced/VaultManager.hpp"
 #include "core/shortcuts/ShortcutManager.hpp"
 
 #include <QBuffer>
@@ -251,6 +256,11 @@ int main(int argc, char *argv[]) {
   ShortcutManager shortcutManager;
   AutostartManager autostartManager;
   SystemTrayManager systemTrayManager;
+  ScreenRecorderEngine screenRecorderEngine;
+  VaultManager vaultManager;
+  AiAssistantEngine aiAssistantEngine;
+  EphemeralShotManager ephemeralManager;
+  LivePresentationOverlay presentationOverlay;
 
   if (parser.isSet(trayOption)) {
     systemTrayManager.initTray();
@@ -278,6 +288,15 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("captureEngine", &captureEngine);
   engine.rootContext()->setContextProperty("languageManager", &languageManager);
   engine.rootContext()->setContextProperty("shortcutManager", &shortcutManager);
+  engine.rootContext()->setContextProperty("screenRecorderEngine",
+                                           &screenRecorderEngine);
+  engine.rootContext()->setContextProperty("vaultManager", &vaultManager);
+  engine.rootContext()->setContextProperty("aiAssistantEngine",
+                                           &aiAssistantEngine);
+  engine.rootContext()->setContextProperty("ephemeralManager",
+                                           &ephemeralManager);
+  engine.rootContext()->setContextProperty("presentationOverlay",
+                                           &presentationOverlay);
 
   // Load Main Hub using modern QML module API
   QObject::connect(&engine, &QQmlEngine::warnings,
@@ -424,6 +443,31 @@ int main(int argc, char *argv[]) {
             QMetaObject::invokeMethod(toastObject, "showToast",
                                       Q_ARG(QVariant, path),
                                       Q_ARG(QVariant, name));
+          }
+        }
+      });
+
+  // Floating Recording HUD Component
+  QQmlComponent hudComponent(&engine, "ro_screenshot", "FloatingRecordingHUD");
+  QObject *hudWindowObject = nullptr;
+
+  QObject::connect(
+      &screenRecorderEngine, &ScreenRecorderEngine::stateChanged, &app,
+      [&hudComponent, &hudWindowObject, &screenRecorderEngine]() {
+        if (screenRecorderEngine.isRecording()) {
+          if (!hudWindowObject) {
+            hudWindowObject = hudComponent.create();
+          }
+          if (hudWindowObject) {
+            QQuickWindow *win = qobject_cast<QQuickWindow *>(hudWindowObject);
+            if (win)
+              win->show();
+          }
+        } else {
+          if (hudWindowObject) {
+            QQuickWindow *win = qobject_cast<QQuickWindow *>(hudWindowObject);
+            if (win)
+              win->hide();
           }
         }
       });

@@ -1,11 +1,24 @@
 #include "core/LibraryManager.hpp"
+#include "core/advanced/DuplicateCleaner.hpp"
+#include "core/advanced/ImageDiffEngine.hpp"
+#include "core/advanced/MetadataSanitizer.hpp"
+#include "core/advanced/MockupFrameGenerator.hpp"
+#include "core/advanced/OcrEngine.hpp"
+#include "core/advanced/PaletteExtractor.hpp"
+#include "core/advanced/PdfReportGenerator.hpp"
+#include "core/advanced/TableExtractor.hpp"
+
 #include <QBuffer>
 #include <QClipboard>
 #include <QDesktopServices>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLocale>
 #include <QMetaObject>
 #include <QPainter>
@@ -20,6 +33,8 @@ LibraryManager::LibraryManager(SettingsManager *settings, QObject *parent)
     : QAbstractListModel(parent), m_settings(settings),
       m_cache(std::make_shared<ThumbnailCache>()) {
 
+  loadMetadata();
+
   if (m_settings) {
     connect(m_settings, &SettingsManager::saveDirectoryChanged, this,
             &LibraryManager::onSaveDirectorySettingChanged);
@@ -33,8 +48,66 @@ LibraryManager::LibraryManager(SettingsManager *settings, QObject *parent)
 }
 
 LibraryManager::~LibraryManager() {
+  saveMetadata();
   if (m_currentCancelFlag) {
     m_currentCancelFlag->store(true, std::memory_order_relaxed);
+  }
+}
+
+void LibraryManager::loadMetadata() {
+  QString metaPath =
+      QDir::homePath() + "/.config/ro-screenshot/library_meta.json";
+  QFile f(metaPath);
+  if (!f.open(QIODevice::ReadOnly))
+    return;
+
+  QJsonObject root = QJsonDocument::fromJson(f.readAll()).object();
+  f.close();
+
+  m_itemTags.clear();
+  QJsonObject tagsObj = root["tags"].toObject();
+  for (auto it = tagsObj.begin(); it != tagsObj.end(); ++it) {
+    QJsonArray arr = it.value().toArray();
+    QStringList tagList;
+    for (const auto &v : arr) {
+      tagList.append(v.toString());
+    }
+    m_itemTags.insert(it.key(), tagList);
+  }
+
+  m_favoritePaths.clear();
+  QJsonArray favArr = root["favorites"].toArray();
+  for (const auto &v : favArr) {
+    m_favoritePaths.insert(v.toString());
+  }
+}
+
+void LibraryManager::saveMetadata() {
+  QString dir = QDir::homePath() + "/.config/ro-screenshot";
+  QDir().mkpath(dir);
+  QString metaPath = dir + "/library_meta.json";
+
+  QJsonObject root;
+  QJsonObject tagsObj;
+  for (auto it = m_itemTags.begin(); it != m_itemTags.end(); ++it) {
+    QJsonArray arr;
+    for (const QString &t : it.value()) {
+      arr.append(t);
+    }
+    tagsObj[it.key()] = arr;
+  }
+  root["tags"] = tagsObj;
+
+  QJsonArray favArr;
+  for (const QString &p : m_favoritePaths) {
+    favArr.append(p);
+  }
+  root["favorites"] = favArr;
+
+  QFile f(metaPath);
+  if (f.open(QIODevice::WriteOnly)) {
+    f.write(QJsonDocument(root).toJson());
+    f.close();
   }
 }
 
@@ -79,18 +152,30 @@ QVariant LibraryManager::data(const QModelIndex &index, int role) const {
     QString suffix = QFileInfo(item.filePath).suffix().toUpper();
     return suffix.isEmpty() ? "PNG" : suffix;
   }
+  case TagsRole:
+    return m_itemTags.value(item.filePath);
+  case IsFavoriteRole:
+    return m_favoritePaths.contains(item.filePath);
   default:
     return {};
   }
 }
 
 QHash<int, QByteArray> LibraryManager::roleNames() const {
-  return {{FileNameRole, "fileName"},     {FilePathRole, "filePath"},
-          {FileSizeRole, "fileSize"},     {FormattedSizeRole, "formattedSize"},
-          {FileDateRole, "fileDate"},     {FormattedDateRole, "formattedDate"},
-          {ResolutionRole, "resolution"}, {WidthRole, "width"},
-          {HeightRole, "height"},         {ThumbnailUrlRole, "thumbnailUrl"},
-          {IsSelectedRole, "isSelected"}, {FormatRole, "format"}};
+  return {{FileNameRole, "fileName"},
+          {FilePathRole, "filePath"},
+          {FileSizeRole, "fileSize"},
+          {FormattedSizeRole, "formattedSize"},
+          {FileDateRole, "fileDate"},
+          {FormattedDateRole, "formattedDate"},
+          {ResolutionRole, "resolution"},
+          {WidthRole, "width"},
+          {HeightRole, "height"},
+          {ThumbnailUrlRole, "thumbnailUrl"},
+          {IsSelectedRole, "isSelected"},
+          {FormatRole, "format"},
+          {TagsRole, "tags"},
+          {IsFavoriteRole, "isFavorite"}};
 }
 
 int LibraryManager::count() const {
@@ -125,6 +210,40 @@ void LibraryManager::setFormatFilter(int filter) {
     emit formatFilterChanged();
     filterAndSortItems();
   }
+}
+
+QString LibraryManager::tagFilter() const { return m_tagFilter; }
+
+void LibraryManager::setTagFilter(const QString &tag) {
+  if (m_tagFilter != tag) {
+    m_tagFilter = tag;
+    emit tagFilterChanged();
+    filterAndSortItems();
+  }
+}
+
+bool LibraryManager::favoritesOnly() const { return m_favoritesOnly; }
+
+void LibraryManager::setFavoritesOnly(bool favOnly) {
+  if (m_favoritesOnly != favOnly) {
+    m_favoritesOnly = favOnly;
+    emit favoritesOnlyChanged();
+    filterAndSortItems();
+  }
+}
+
+QStringList LibraryManager::allTags() const {
+  QSet<QString> uniqueTags;
+  for (const auto &tags : m_itemTags) {
+    for (const auto &t : tags) {
+      if (!t.trimmed().isEmpty()) {
+        uniqueTags.insert(t.trimmed());
+      }
+    }
+  }
+  QStringList list = uniqueTags.values();
+  list.sort();
+  return list;
 }
 
 int LibraryManager::sortOrder() const { return m_sortOrder; }
@@ -238,7 +357,6 @@ void LibraryManager::onScanProgress(int count) {
 }
 
 void LibraryManager::onScanFinished(const ro_screenshot::ScanResult &result) {
-  // Reject stale generations
   if (result.generation != m_currentGeneration) {
     return;
   }
@@ -277,7 +395,6 @@ void LibraryManager::filterAndSortItems() {
     }
   }
 
-  // Apply sorting
   switch (m_sortOrder) {
   case NewestFirst:
     std::sort(m_filteredItems.begin(), m_filteredItems.end(),
@@ -336,6 +453,21 @@ bool LibraryManager::passesFilter(const ScreenshotItem &item) const {
     }
   }
 
+  // Tag filter
+  if (!m_tagFilter.isEmpty()) {
+    QStringList tags = m_itemTags.value(item.filePath);
+    if (!tags.contains(m_tagFilter, Qt::CaseInsensitive)) {
+      return false;
+    }
+  }
+
+  // Favorites filter
+  if (m_favoritesOnly) {
+    if (!m_favoritePaths.contains(item.filePath)) {
+      return false;
+    }
+  }
+
   // Format filter
   if (m_formatFilter > 0) {
     QString ext = QFileInfo(item.filePath).suffix().toLower();
@@ -351,7 +483,7 @@ bool LibraryManager::passesFilter(const ScreenshotItem &item) const {
   }
 
   // Date filter
-  if (m_dateFilter == 0) { // All
+  if (m_dateFilter == 0) {
     return true;
   }
 
@@ -363,8 +495,8 @@ bool LibraryManager::passesFilter(const ScreenshotItem &item) const {
     return itemDate == today;
   case 2: // Yesterday
     return itemDate == today.addDays(-1);
-  case 3: { // This Week (Locale-aware calendar week Monday-Sunday)
-    int dayOfWeek = today.dayOfWeek(); // 1 = Monday, 7 = Sunday
+  case 3: { // This Week
+    int dayOfWeek = today.dayOfWeek();
     QDate startOfWeek = today.addDays(-(dayOfWeek - 1));
     QDate endOfWeek = startOfWeek.addDays(6);
     return itemDate >= startOfWeek && itemDate <= endOfWeek;
@@ -378,11 +510,63 @@ bool LibraryManager::passesFilter(const ScreenshotItem &item) const {
   }
 }
 
+void LibraryManager::addTag(int row, const QString &tag) {
+  if (row < 0 || row >= m_filteredItems.size() || tag.trimmed().isEmpty())
+    return;
+  QString path = m_filteredItems[row].filePath;
+  QString cleanTag = tag.trimmed();
+  QStringList tags = m_itemTags.value(path);
+  if (!tags.contains(cleanTag)) {
+    tags.append(cleanTag);
+    m_itemTags[path] = tags;
+    saveMetadata();
+    emit tagsChanged();
+    emit dataChanged(index(row, 0), index(row, 0), {TagsRole});
+  }
+}
+
+void LibraryManager::removeTag(int row, const QString &tag) {
+  if (row < 0 || row >= m_filteredItems.size())
+    return;
+  QString path = m_filteredItems[row].filePath;
+  QStringList tags = m_itemTags.value(path);
+  if (tags.removeAll(tag) > 0) {
+    m_itemTags[path] = tags;
+    saveMetadata();
+    emit tagsChanged();
+    emit dataChanged(index(row, 0), index(row, 0), {TagsRole});
+  }
+}
+
+QStringList LibraryManager::getTags(int row) const {
+  if (row < 0 || row >= m_filteredItems.size())
+    return {};
+  return m_itemTags.value(m_filteredItems[row].filePath);
+}
+
+void LibraryManager::toggleFavorite(int row) {
+  if (row < 0 || row >= m_filteredItems.size())
+    return;
+  QString path = m_filteredItems[row].filePath;
+  if (m_favoritePaths.contains(path)) {
+    m_favoritePaths.remove(path);
+  } else {
+    m_favoritePaths.insert(path);
+  }
+  saveMetadata();
+  emit dataChanged(index(row, 0), index(row, 0), {IsFavoriteRole});
+}
+
+bool LibraryManager::isFavorite(int row) const {
+  if (row < 0 || row >= m_filteredItems.size())
+    return false;
+  return m_favoritePaths.contains(m_filteredItems[row].filePath);
+}
+
 bool LibraryManager::deleteItem(int row) {
   if (row < 0 || row >= static_cast<int>(m_filteredItems.size())) {
     return false;
   }
-
   QString path = m_filteredItems.at(row).filePath;
   return deleteItemByPath(path);
 }
@@ -401,7 +585,6 @@ bool LibraryManager::deleteItemByPath(const QString &path) {
     emit itemTrashed(path);
     emit itemDeleted(path);
 
-    // Remove from selection if selected
     if (m_selectedPaths.remove(path)) {
       emit selectionChanged();
     }
@@ -513,6 +696,8 @@ QVariantMap LibraryManager::getItem(int row) const {
   map["height"] = item.height;
   map["thumbnailUrl"] = item.thumbnailUrl;
   map["isSelected"] = m_selectedPaths.contains(item.filePath);
+  map["tags"] = m_itemTags.value(item.filePath);
+  map["isFavorite"] = m_favoritePaths.contains(item.filePath);
   return map;
 }
 
@@ -614,7 +799,6 @@ bool LibraryManager::copySelectedToClipboard() {
     return false;
   }
 
-  // Copy first selected image to clipboard
   QString firstPath = *m_selectedPaths.begin();
   QImage img(firstPath);
   if (!img.isNull()) {
@@ -624,6 +808,216 @@ bool LibraryManager::copySelectedToClipboard() {
     return true;
   }
   return false;
+}
+
+QVariantMap LibraryManager::compareSelectedImages() {
+  QVariantMap res;
+  if (m_selectedPaths.size() < 2) {
+    res["success"] = false;
+    res["error"] = "Karşılaştırma için en az 2 görsel seçmelisiniz.";
+    return res;
+  }
+
+  auto it = m_selectedPaths.begin();
+  QString pathA = *it++;
+  QString pathB = *it;
+
+  QImage imgA(pathA);
+  QImage imgB(pathB);
+
+  DiffResult diff = ImageDiffEngine::compare(imgA, imgB);
+  res["success"] = true;
+  res["pathA"] = pathA;
+  res["pathB"] = pathB;
+  res["differentPixels"] = diff.differentPixels;
+  res["similarityPercent"] = diff.similarityPercent;
+  res["differencePercent"] = diff.differencePercent;
+  res["dimensionsMatch"] = diff.dimensionsMatch;
+
+  return res;
+}
+
+QVariantMap LibraryManager::batchConvertSelected(const QString &targetFormat,
+                                                 int quality,
+                                                 double scaleFactor,
+                                                 const QString &targetDir,
+                                                 const QString &renamePattern) {
+  QVariantMap res;
+  if (m_selectedPaths.isEmpty()) {
+    res["success"] = false;
+    res["error"] = "Hiçbir görsel seçilmedi.";
+    return res;
+  }
+
+  int successCount = 0;
+  QString outDir =
+      targetDir.isEmpty() ? m_settings->saveDirectory() : targetDir;
+  QDir().mkpath(outDir);
+
+  int idx = 1;
+  for (const QString &srcPath : m_selectedPaths) {
+    QImage img(srcPath);
+    if (img.isNull())
+      continue;
+
+    if (scaleFactor > 0.05 && std::abs(scaleFactor - 1.0) > 0.01) {
+      int newW = std::max(1, static_cast<int>(img.width() * scaleFactor));
+      int newH = std::max(1, static_cast<int>(img.height() * scaleFactor));
+      img =
+          img.scaled(newW, newH, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+
+    QFileInfo fi(srcPath);
+    QString baseName = renamePattern.isEmpty() ? fi.completeBaseName()
+                                               : renamePattern.arg(idx++);
+    QString ext = targetFormat.toLower();
+    if (ext.isEmpty())
+      ext = fi.suffix().toLower();
+
+    QString destPath = QString("%1/%2.%3").arg(outDir, baseName, ext);
+    if (img.save(destPath, ext.toLatin1().constData(), quality)) {
+      successCount++;
+    }
+  }
+
+  res["success"] = (successCount > 0);
+  res["convertedCount"] = successCount;
+  emit operationCompleted(
+      QString("%1 görsel başarıyla dönüştürüldü.").arg(successCount));
+  refresh();
+  return res;
+}
+
+QVariantMap LibraryManager::findDuplicatesInLibrary(int tolerance) {
+  QStringList allPaths;
+  for (const auto &it : m_allItems) {
+    allPaths.append(it.filePath);
+  }
+
+  QVector<DuplicateGroup> groups =
+      DuplicateCleaner::findDuplicates(allPaths, tolerance);
+  QVariantMap res;
+  res["groupCount"] = groups.size();
+
+  qint64 totalReclaim = 0;
+  QVariantList groupList;
+  for (const auto &g : groups) {
+    QVariantMap gm;
+    gm["primary"] = g.primaryFilePath;
+    gm["duplicates"] = g.duplicateFilePaths;
+    gm["reclaimableBytes"] = g.totalReclaimableBytes;
+    gm["reclaimableFormatted"] = formatFileSize(g.totalReclaimableBytes);
+    totalReclaim += g.totalReclaimableBytes;
+    groupList.append(gm);
+  }
+
+  res["totalReclaimable"] = totalReclaim;
+  res["totalReclaimableFormatted"] = formatFileSize(totalReclaim);
+  res["groups"] = groupList;
+
+  emit duplicateScanFinished(groups.size(), totalReclaim);
+  return res;
+}
+
+bool LibraryManager::generatePdfReportFromSelected(const QString &outputPath,
+                                                   const QString &title,
+                                                   const QString &notes) {
+  if (m_selectedPaths.isEmpty())
+    return false;
+
+  QVector<PdfReportEntry> entries;
+  for (const QString &p : m_selectedPaths) {
+    PdfReportEntry e;
+    e.imagePath = p;
+    e.title = QFileInfo(p).fileName();
+    e.tags = m_itemTags.value(p).join(", ");
+    e.timestamp = QFileInfo(p).lastModified();
+    entries.append(e);
+  }
+
+  PdfReportOptions opt;
+  if (!title.isEmpty())
+    opt.title = title;
+  if (!notes.isEmpty())
+    opt.notes = notes;
+
+  bool ok = PdfReportGenerator::generateReport(outputPath, entries, opt);
+  if (ok) {
+    emit operationCompleted("PDF Raporu başarıyla oluşturuldu.");
+  }
+  return ok;
+}
+
+QVariantList LibraryManager::extractPaletteFromItem(int row, int maxColors) {
+  if (row < 0 || row >= m_filteredItems.size())
+    return {};
+  QImage img(m_filteredItems[row].filePath);
+  if (img.isNull())
+    return {};
+
+  QVector<PaletteColor> colors = PaletteExtractor::extract(img, maxColors);
+  QVariantList list;
+  for (const auto &c : colors) {
+    QVariantMap cm;
+    cm["hex"] = c.hex;
+    cm["rgb"] = c.rgb;
+    cm["hsl"] = c.hsl;
+    cm["tailwindClass"] = c.tailwindClass;
+    cm["tailwindName"] = c.tailwindName;
+    cm["dominancePercent"] = c.dominancePercent;
+    list.append(cm);
+  }
+  return list;
+}
+
+QString LibraryManager::extractTableFromItem(int row, const QString &format) {
+  if (row < 0 || row >= m_filteredItems.size())
+    return {};
+  QImage img(m_filteredItems[row].filePath);
+  if (img.isNull())
+    return {};
+
+  OcrEngine ocr;
+  OcrResult ocrRes = ocr.recognize(img);
+  ExtractedTable tbl = TableExtractor::extractFromOcr(ocrRes.blocks);
+  if (!tbl.isValid) {
+    tbl = TableExtractor::extractFromText(ocrRes.fullText);
+  }
+
+  if (format == "csv") {
+    return TableExtractor::toCsv(tbl);
+  } else if (format == "json") {
+    return TableExtractor::toJson(tbl);
+  }
+  return TableExtractor::toMarkdown(tbl);
+}
+
+QString LibraryManager::exportWithMockupFrame(int row, int presetIndex,
+                                              int padding,
+                                              const QString &outputPath) {
+  if (row < 0 || row >= m_filteredItems.size())
+    return {};
+  QString src = m_filteredItems[row].filePath;
+  QImage img(src);
+  if (img.isNull())
+    return {};
+
+  MockupOptions opt;
+  opt.preset = static_cast<MockupPreset>(std::clamp(presetIndex, 0, 6));
+  opt.padding = padding;
+
+  QImage framed = MockupFrameGenerator::generate(img, opt);
+  QFileInfo fi(src);
+  QString dest = outputPath.isEmpty()
+                     ? fi.dir().filePath(fi.baseName() + "_mockup.png")
+                     : outputPath;
+
+  if (framed.save(dest, "PNG")) {
+    emit operationCompleted("Mockup çerçeveli görsel kaydedildi.");
+    refresh();
+    return dest;
+  }
+  return {};
 }
 
 QVariantMap LibraryManager::renameItem(int row, const QString &newName) {
@@ -640,9 +1034,17 @@ QVariantMap LibraryManager::renameItem(int row, const QString &newName) {
   result = m_trashManager.renameFile(oldPath, newName, root);
 
   if (result["success"].toBool()) {
+    QString newPath = result["newPath"].toString();
     if (m_selectedPaths.remove(oldPath)) {
-      m_selectedPaths.insert(result["newPath"].toString());
+      m_selectedPaths.insert(newPath);
     }
+    if (m_itemTags.contains(oldPath)) {
+      m_itemTags[newPath] = m_itemTags.take(oldPath);
+    }
+    if (m_favoritePaths.remove(oldPath)) {
+      m_favoritePaths.insert(newPath);
+    }
+    saveMetadata();
     emit operationCompleted("Dosya yeniden adlandırıldı.");
     refresh();
   } else {
