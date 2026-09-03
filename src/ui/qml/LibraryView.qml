@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
+import "components"
+import "editor"
 
 Item {
     id: root
@@ -9,6 +11,87 @@ Item {
     property var colors: ({})
     property int selectedIndex: -1
     property var selectedItem: selectedIndex >= 0 ? libraryManager.getItem(selectedIndex) : null
+    property bool isRenameOpen: false
+    property string newFileNameInput: ""
+
+    // Keyboard Shortcuts
+    focus: true
+    Keys.onDeletePressed: {
+        if (libraryManager.selectedCount > 0) {
+            trashSelectedItems()
+        } else if (root.selectedIndex >= 0) {
+            trashSingleItem(root.selectedIndex)
+        }
+    }
+    Keys.onReturnPressed: {
+        if (root.selectedIndex >= 0) {
+            libraryManager.openFile(root.selectedIndex)
+        }
+    }
+
+    function trashSingleItem(idx) {
+        var item = libraryManager.getItem(idx)
+        if (item && item.filePath) {
+            var fileName = item.fileName
+            if (libraryManager.deleteItem(idx)) {
+                root.selectedIndex = -1
+                snackbar.showMessage(
+                    qsTr("%1 çöp kutusuna taşındı.").arg(fileName),
+                    "info",
+                    qsTr("Geri Al"),
+                    function() {
+                        libraryManager.undoLastTrash()
+                    }
+                )
+            }
+        }
+    }
+
+    function trashSelectedItems() {
+        var count = libraryManager.selectedCount
+        if (libraryManager.trashSelected()) {
+            root.selectedIndex = -1
+            snackbar.showMessage(
+                qsTr("%1 öğe çöp kutusuna taşındı.").arg(count),
+                "info",
+                qsTr("Geri Al"),
+                function() {
+                    libraryManager.undoLastTrash()
+                }
+            )
+        }
+    }
+
+    function requestPermanentDelete(idx) {
+        var item = libraryManager.getItem(idx)
+        var name = item ? item.fileName : ""
+        confirmDialog.open(
+            qsTr("Kalıcı Olarak Sil"),
+            qsTr("\"%1\" dosyasını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.").arg(name),
+            true,
+            function() {
+                if (libraryManager.permanentDeleteItem(idx)) {
+                    root.selectedIndex = -1
+                    snackbar.showMessage(qsTr("Dosya kalıcı olarak silindi."), "success")
+                }
+            }
+        )
+    }
+
+    function requestPermanentDeleteSelected() {
+        var count = libraryManager.selectedCount
+        confirmDialog.open(
+            qsTr("Kalıcı Olarak Sil"),
+            qsTr("Seçili %1 öğeyi kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.").arg(count),
+            true,
+            function() {
+                if (libraryManager.permanentDeleteSelected()) {
+                    root.selectedIndex = -1
+                    snackbar.showMessage(qsTr("Seçili öğeler kalıcı olarak silindi."), "success")
+                }
+            }
+        )
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -18,7 +101,7 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: parent.height
-            spacing: 16
+            spacing: 12
 
             // Filter & Search Toolbar
             Rectangle {
@@ -30,13 +113,13 @@ Item {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 20
-                    anchors.rightMargin: 20
-                    spacing: 14
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    spacing: 12
 
                     // Search input
                     Rectangle {
-                        Layout.preferredWidth: 260
+                        Layout.preferredWidth: 230
                         Layout.preferredHeight: 38
                         color: colors.cardStrong
                         border.color: searchField.activeFocus ? colors.accentB : colors.border
@@ -50,16 +133,11 @@ Item {
                             spacing: 8
 
                             Image {
-                                source: "assets/icon-search.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-search.svg"
                                 sourceSize.width: 13
                                 sourceSize.height: 13
                                 Layout.preferredWidth: 13
                                 Layout.preferredHeight: 13
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: colors.textSoft
-                                }
                             }
 
                             TextField {
@@ -71,6 +149,7 @@ Item {
                                 font.pixelSize: 13
                                 background: Item {}
                                 onTextChanged: libraryManager.searchQuery = text
+                                Accessible.name: qsTr("Görsel arama kutusu")
                             }
 
                             Button {
@@ -96,7 +175,8 @@ Item {
                                 { label: qsTr("Bugün"), filter: 1 },
                                 { label: qsTr("Dün"), filter: 2 },
                                 { label: qsTr("Bu Hafta"), filter: 3 },
-                                { label: qsTr("Bu Ay"), filter: 4 }
+                                { label: qsTr("Son 7 Gün"), filter: 4 },
+                                { label: qsTr("Bu Ay"), filter: 5 }
                             ]
                             delegate: Button {
                                 text: modelData.label
@@ -106,13 +186,13 @@ Item {
                                 contentItem: Text {
                                     text: parent.text
                                     color: parent.checked ? "#FFFFFF" : colors.textSoft
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     font.bold: parent.checked
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
                                 background: Rectangle {
-                                    implicitWidth: 70
+                                    implicitWidth: 64
                                     implicitHeight: 32
                                     color: parent.checked ? colors.accentB : (parent.hovered ? colors.border : colors.cardStrong)
                                     radius: 6
@@ -121,9 +201,40 @@ Item {
                         }
                     }
 
+                    // Sort Order ComboBox
+                    ComboBox {
+                        id: sortCombo
+                        model: [
+                            qsTr("Yeniden Eskiye"),
+                            qsTr("Eskiden Yeniye"),
+                            qsTr("İsim (A-Z)"),
+                            qsTr("İsim (Z-A)"),
+                            qsTr("Boyut (Büyük)"),
+                            qsTr("Boyut (Küçük)"),
+                            qsTr("Çözünürlük")
+                        ]
+                        currentIndex: libraryManager.sortOrder
+                        onActivated: libraryManager.sortOrder = index
+                        implicitWidth: 130
+                        implicitHeight: 32
+
+                        contentItem: Text {
+                            text: sortCombo.displayText
+                            color: colors.text
+                            font.pixelSize: 11
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 8
+                        }
+                        background: Rectangle {
+                            color: colors.cardStrong
+                            border.color: colors.border
+                            radius: 6
+                        }
+                    }
+
                     Item { Layout.fillWidth: true }
 
-                    // Storage Badge (icon + text)
+                    // Storage Badge
                     Rectangle {
                         height: 28
                         implicitWidth: storageText.implicitWidth + 22
@@ -137,16 +248,11 @@ Item {
                             spacing: 6
 
                             Image {
-                                source: "assets/icon-folder.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-folder.svg"
                                 sourceSize.width: 13
                                 sourceSize.height: 13
                                 Layout.preferredWidth: 13
                                 Layout.preferredHeight: 13
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: colors.textSoft
-                                }
                             }
 
                             Text {
@@ -159,33 +265,79 @@ Item {
                         }
                     }
 
-                    // Refresh Button (icon-only)
-                    Button {
-                        flat: true
+                    // Refresh Button with Scanning Animation
+                    AccessibleIconButton {
+                        iconSource: "assets/icon-refresh.svg"
+                        iconSize: 16
+                        colors: root.colors
+                        tooltipText: qsTr("Yenile")
                         onClicked: libraryManager.refresh()
-                        contentItem: Image {
-                            source: "assets/icon-refresh.svg"
-                            sourceSize.width: 16
-                            sourceSize.height: 16
-                            layer.enabled: true
-                            layer.effect: MultiEffect {
-                                colorization: 1.0
-                                colorizationColor: colors.textMuted
-                            }
-                        }
-                        background: Rectangle {
-                            implicitWidth: 32
-                            implicitHeight: 32
-                            color: parent.hovered ? colors.border : "transparent"
-                            radius: 6
+                    }
+                }
+            }
+
+            // Active Filters & Multi-selection Bar
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 32
+                color: colors.shellAlt
+                border.color: colors.border
+                border.width: 1
+                visible: libraryManager.selectedCount > 0 || libraryManager.searchQuery.length > 0 || libraryManager.dateFilter > 0
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    spacing: 12
+
+                    Text {
+                        text: qsTr("%1 görsel listeleniyor").arg(libraryManager.count)
+                        color: colors.textSoft
+                        font.pixelSize: 11
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: colors.border
+                    }
+
+                    // Multi-selection actions
+                    RowLayout {
+                        visible: libraryManager.selectedCount > 0
+                        spacing: 8
+
+                        Text {
+                            text: qsTr("%1 öğe seçildi").arg(libraryManager.selectedCount)
+                            color: colors.accentB
+                            font.pixelSize: 11
+                            font.bold: true
                         }
 
-                        ToolTip {
-                            text: qsTr("Yenile")
-                            delay: 300
-                            timeout: 5000
+                        Button {
+                            text: qsTr("Tümünü Seç")
+                            flat: true
+                            onClicked: libraryManager.selectAll()
+                            contentItem: Text { text: parent.text; color: colors.textSoft; font.pixelSize: 11 }
+                        }
+
+                        Button {
+                            text: qsTr("Seçimi Temizle")
+                            flat: true
+                            onClicked: libraryManager.clearSelection()
+                            contentItem: Text { text: parent.text; color: colors.textSoft; font.pixelSize: 11 }
+                        }
+
+                        Button {
+                            text: qsTr("Seçilenleri Çöpe At")
+                            onClicked: root.trashSelectedItems()
+                            contentItem: Text { text: parent.text; color: "#FFFFFF"; font.pixelSize: 11; font.bold: true }
+                            background: Rectangle { implicitHeight: 24; implicitWidth: 120; radius: 4; color: colors.danger }
                         }
                     }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
 
@@ -194,22 +346,58 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                // Empty State (icon + text, no emoji)
+                // Scanning Progress / Skeleton Indicator
+                RowLayout {
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.topMargin: 8
+                    visible: libraryManager.isScanning
+                    spacing: 8
+                    z: 10
+
+                    BusyIndicator {
+                        implicitWidth: 18
+                        implicitHeight: 18
+                        running: libraryManager.isScanning
+                    }
+                    Text {
+                        text: qsTr("Görseller taranıyor...")
+                        color: colors.accentB
+                        font.pixelSize: 12
+                    }
+                }
+
+                // Empty State 1: Search no results
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 12
-                    visible: libraryManager.count === 0
+                    visible: libraryManager.count === 0 && libraryManager.searchQuery.length > 0 && !libraryManager.isScanning
+
+                    Text {
+                        text: qsTr("Arama sonucu bulunamadı: \"%1\"").arg(libraryManager.searchQuery)
+                        color: colors.text
+                        font.pixelSize: 16
+                        font.bold: true
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    Button {
+                        text: qsTr("Aramayı Temizle")
+                        Layout.alignment: Qt.AlignHCenter
+                        onClicked: searchField.text = ""
+                    }
+                }
+
+                // Empty State 2: No screenshots found in folder
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 12
+                    visible: libraryManager.count === 0 && libraryManager.searchQuery.length === 0 && !libraryManager.isScanning
 
                     Image {
-                        source: "assets/icon-gallery-empty.svg"
+                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery-empty.svg"
                         sourceSize.width: 48
                         sourceSize.height: 48
                         Layout.alignment: Qt.AlignHCenter
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            colorization: 1.0
-                            colorizationColor: colors.muted
-                        }
                     }
 
                     Text {
@@ -232,7 +420,7 @@ Item {
                 GridView {
                     id: grid
                     anchors.fill: parent
-                    anchors.margins: 20
+                    anchors.margins: 16
                     cellWidth: 230
                     cellHeight: 200
                     clip: true
@@ -240,22 +428,27 @@ Item {
                     model: libraryManager
 
                     delegate: Rectangle {
+                        id: itemRect
                         width: 216
                         height: 186
-                        color: root.selectedIndex === index ? colors.selected : (itemMouse.containsMouse ? colors.cardStrong : colors.card)
-                        border.color: root.selectedIndex === index ? colors.accentB : (itemMouse.containsMouse ? colors.muted : colors.border)
-                        border.width: root.selectedIndex === index ? 2 : 1
+                        color: model.isSelected ? colors.selected : (root.selectedIndex === index ? colors.cardStrong : (itemMouse.containsMouse ? colors.cardStrong : colors.card))
+                        border.color: model.isSelected ? colors.accentA : (root.selectedIndex === index ? colors.accentB : (itemMouse.containsMouse ? colors.muted : colors.border))
+                        border.width: (model.isSelected || root.selectedIndex === index) ? 2 : 1
                         radius: 8
 
                         MouseArea {
                             id: itemMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: {
-                                root.selectedIndex = index
+                            onClicked: function(mouse) {
+                                if (mouse.modifiers & Qt.ControlModifier) {
+                                    libraryManager.toggleSelection(index)
+                                } else {
+                                    root.selectedIndex = index
+                                }
                             }
                             onDoubleClicked: {
-                                libraryManager.openFile(index)
+                                annotationEditor.open(model.filePath)
                             }
                         }
 
@@ -264,7 +457,7 @@ Item {
                             anchors.margins: 8
                             spacing: 6
 
-                            // Thumbnail Image
+                            // Thumbnail Image Container
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -278,6 +471,36 @@ Item {
                                     fillMode: Image.PreserveAspectFit
                                     asynchronous: true
                                     cache: true
+                                }
+
+                                // Selection checkbox
+                                CheckBox {
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.margins: 4
+                                    checked: model.isSelected
+                                    onToggled: libraryManager.toggleSelection(index)
+                                    visible: itemMouse.containsMouse || model.isSelected
+                                }
+
+                                // Format badge
+                                Rectangle {
+                                    anchors.bottom: parent.bottom
+                                    anchors.right: parent.right
+                                    anchors.margins: 4
+                                    width: formatText.implicitWidth + 8
+                                    height: 16
+                                    radius: 3
+                                    color: "#000000"
+                                    opacity: 0.75
+                                    Text {
+                                        id: formatText
+                                        anchors.centerIn: parent
+                                        text: model.format
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                    }
                                 }
                             }
 
@@ -318,12 +541,12 @@ Item {
 
         // Right Inspection Panel (Selected Item Details)
         Rectangle {
-            Layout.preferredWidth: root.selectedItem ? 300 : 0
+            Layout.preferredWidth: (root.selectedItem && libraryManager.selectedCount <= 1) ? 310 : 0
             Layout.fillHeight: true
             color: colors.shell
             border.color: colors.border
             border.width: 1
-            visible: root.selectedItem !== null
+            visible: (root.selectedItem && libraryManager.selectedCount <= 1) !== null
             clip: true
 
             Behavior on Layout.preferredWidth {
@@ -333,7 +556,7 @@ Item {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 16
-                spacing: 16
+                spacing: 14
                 visible: root.selectedItem !== null
 
                 RowLayout {
@@ -360,7 +583,7 @@ Item {
                 // Large Preview Card
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 170
+                    Layout.preferredHeight: 160
                     color: colors.shellAlt
                     radius: 8
                     border.color: colors.border
@@ -372,6 +595,16 @@ Item {
                         source: root.selectedItem ? root.selectedItem.thumbnailUrl : ""
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onDoubleClicked: {
+                            if (root.selectedItem) {
+                                annotationEditor.open(root.selectedItem.filePath)
+                            }
+                        }
                     }
                 }
 
@@ -446,10 +679,33 @@ Item {
 
                 Item { Layout.fillHeight: true }
 
-                // Actions (icon+label buttons)
+                // Actions
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
+
+                    // Edit / Annotate Button
+                    Button {
+                        Layout.fillWidth: true
+                        text: qsTr("Düzenle & Not Ekle")
+                        onClicked: {
+                            if (root.selectedItem) {
+                                annotationEditor.open(root.selectedItem.filePath)
+                            }
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#FFFFFF"
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            implicitHeight: 34
+                            color: parent.hovered ? colors.accentC : colors.accentA
+                            radius: 6
+                        }
+                    }
 
                     // Copy to Clipboard
                     Button {
@@ -458,37 +714,19 @@ Item {
                         onClicked: {
                             if (root.selectedIndex >= 0) {
                                 libraryManager.copyToClipboard(root.selectedIndex)
+                                snackbar.showMessage(qsTr("Görsel panoya kopyalandı."), "success")
                             }
                         }
-                        contentItem: RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-                            Image {
-                                source: "assets/icon-copy.svg"
-                                sourceSize.width: 18
-                                sourceSize.height: 18
-                                Layout.preferredWidth: 18
-                                Layout.preferredHeight: 18
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: "#FFFFFF"
-                                }
-                            }
-                            Text {
-                                text: parent.parent ? parent.parent.text : ""
-                                color: "#FFFFFF"
-                                font.bold: true
-                                horizontalAlignment: Text.AlignLeft
-                                verticalAlignment: Text.AlignVCenter
-                                Layout.fillWidth: true
-                            }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.textMuted
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                         }
                         background: Rectangle {
-                            implicitHeight: 36
-                            color: parent.hovered ? colors.accentC : colors.accentA
+                            implicitHeight: 34
+                            color: parent.hovered ? colors.border : colors.cardStrong
+                            border.color: colors.border
                             radius: 6
                         }
                     }
@@ -502,83 +740,199 @@ Item {
                                 libraryManager.openInFolder(root.selectedIndex)
                             }
                         }
-                        contentItem: RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-                            Image {
-                                source: "assets/icon-folder.svg"
-                                sourceSize.width: 18
-                                sourceSize.height: 18
-                                Layout.preferredWidth: 18
-                                Layout.preferredHeight: 18
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: colors.textMuted
-                                }
-                            }
-                            Text {
-                                text: parent.parent ? parent.parent.text : ""
-                                color: colors.textMuted
-                                horizontalAlignment: Text.AlignLeft
-                                verticalAlignment: Text.AlignVCenter
-                                Layout.fillWidth: true
-                            }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.textMuted
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                         }
                         background: Rectangle {
-                            implicitHeight: 36
+                            implicitHeight: 34
                             color: parent.hovered ? colors.border : colors.cardStrong
                             border.color: colors.border
                             radius: 6
                         }
                     }
 
-                    // Delete
+                    // Rename
                     Button {
                         Layout.fillWidth: true
-                        text: qsTr("Görseli Sil")
+                        text: qsTr("Yeniden Adlandır")
                         onClicked: {
-                            if (root.selectedIndex >= 0) {
-                                libraryManager.deleteItem(root.selectedIndex)
-                                root.selectedIndex = -1
+                            if (root.selectedItem) {
+                                root.newFileNameInput = root.selectedItem.fileName
+                                root.isRenameOpen = true
                             }
                         }
-                        contentItem: RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-                            Image {
-                                source: "assets/icon-trash.svg"
-                                sourceSize.width: 18
-                                sourceSize.height: 18
-                                Layout.preferredWidth: 18
-                                Layout.preferredHeight: 18
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: colors.danger
-                                }
-                            }
-                            Text {
-                                text: parent.parent ? parent.parent.text : ""
-                                color: colors.danger
-                                horizontalAlignment: Text.AlignLeft
-                                verticalAlignment: Text.AlignVCenter
-                                Layout.fillWidth: true
-                            }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.textMuted
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                         }
                         background: Rectangle {
-                            implicitHeight: 36
+                            implicitHeight: 34
+                            color: parent.hovered ? colors.border : colors.cardStrong
+                            border.color: colors.border
+                            radius: 6
+                        }
+                    }
+
+                    // Delete (Trash)
+                    Button {
+                        Layout.fillWidth: true
+                        text: qsTr("Çöp Kutusuna Taşı")
+                        onClicked: {
+                            if (root.selectedIndex >= 0) {
+                                root.trashSingleItem(root.selectedIndex)
+                            }
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.danger
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            implicitHeight: 34
                             color: parent.hovered ? "#450A0A" : colors.cardStrong
                             border.color: "#7F1D1D"
                             radius: 6
                         }
                     }
+
+                    // Permanent Delete
+                    Button {
+                        Layout.fillWidth: true
+                        text: qsTr("Kalıcı Olarak Sil...")
+                        flat: true
+                        onClicked: {
+                            if (root.selectedIndex >= 0) {
+                                root.requestPermanentDelete(root.selectedIndex)
+                            }
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.placeholder
+                            font.pixelSize: 11
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // Rename Dialog Overlay
+    Rectangle {
+        anchors.fill: parent
+        color: "#000000"
+        opacity: root.isRenameOpen ? 0.65 : 0.0
+        visible: opacity > 0.0
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.isRenameOpen = false
+        }
+    }
+
+    Rectangle {
+        width: 360
+        implicitHeight: renameCol.implicitHeight + 40
+        anchors.centerIn: parent
+        radius: 10
+        color: colors.card
+        border.color: colors.border
+        border.width: 1
+        visible: root.isRenameOpen
+        z: 500
+
+        ColumnLayout {
+            id: renameCol
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 14
+
+            Text {
+                text: qsTr("Dosyayı Yeniden Adlandır")
+                color: colors.text
+                font.pixelSize: 15
+                font.bold: true
+            }
+
+            TextField {
+                id: renameField
+                Layout.fillWidth: true
+                text: root.newFileNameInput
+                color: colors.text
+                background: Rectangle {
+                    implicitHeight: 36
+                    color: colors.cardStrong
+                    border.color: colors.border
+                    radius: 6
+                }
+                onAccepted: {
+                    var res = libraryManager.renameItem(root.selectedIndex, text)
+                    if (res.success) {
+                        root.isRenameOpen = false
+                        snackbar.showMessage(qsTr("Dosya yeniden adlandırıldı."), "success")
+                    } else {
+                        snackbar.showMessage(res.error || qsTr("Yeniden adlandırılamadı."), "error")
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: qsTr("İptal")
+                    onClicked: root.isRenameOpen = false
+                    contentItem: Text { text: parent.text; color: colors.textSoft }
+                    background: Rectangle { implicitHeight: 32; implicitWidth: 70; radius: 4; color: "transparent"; border.color: colors.border }
+                }
+
+                Button {
+                    text: qsTr("Kaydet")
+                    onClicked: {
+                        var res = libraryManager.renameItem(root.selectedIndex, renameField.text)
+                        if (res.success) {
+                            root.isRenameOpen = false
+                            snackbar.showMessage(qsTr("Dosya yeniden adlandırıldı."), "success")
+                        } else {
+                            snackbar.showMessage(res.error || qsTr("Yeniden adlandırılamadı."), "error")
+                        }
+                    }
+                    contentItem: Text { text: parent.text; color: "#FFFFFF"; font.bold: true }
+                    background: Rectangle { implicitHeight: 32; implicitWidth: 80; radius: 4; color: colors.accentA }
+                }
+            }
+        }
+    }
+
+    // Annotation Editor Main View
+    AnnotationEditor {
+        id: annotationEditor
+        colors: root.colors
+        onSaved: function(path) {
+            libraryManager.refresh()
+            snackbar.showMessage(qsTr("Düzenlenen görsel kaydedildi."), "success")
+        }
+    }
+
+    // Shared ConfirmDialog & AppSnackbar
+    ConfirmDialog {
+        id: confirmDialog
+        colors: root.colors
+    }
+
+    AppSnackbar {
+        id: snackbar
+        colors: root.colors
     }
 }
