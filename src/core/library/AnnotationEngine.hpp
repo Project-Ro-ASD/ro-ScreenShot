@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/advanced/MockupFrameGenerator.hpp"
+#include "core/advanced/OcrEngine.hpp"
+#include "core/advanced/SensitiveDataDetector.hpp"
 #include "core/library/AnnotationCommands.hpp"
 #include "core/library/AnnotationTypes.hpp"
 #include <QColor>
@@ -192,6 +195,63 @@ public:
     item.strokeColor = m_strokeColor;
     emitStepNumberChanged();
     m_undoStack.push(new AddAnnotationCommand(this, item));
+  }
+
+  void addStatusBadge(qreal x, qreal y, StatusBadgeType badgeType) {
+    AnnotationItem item;
+    item.type = ToolType::StatusBadge;
+    item.points = {QPointF(x, y)};
+    item.badgeType = badgeType;
+    switch (badgeType) {
+    case StatusBadgeType::Checkmark:
+      item.strokeColor = QColor("#22C55E");
+      break; // Green
+    case StatusBadgeType::Cross:
+      item.strokeColor = QColor("#EF4444");
+      break; // Red
+    case StatusBadgeType::Warning:
+      item.strokeColor = QColor("#F59E0B");
+      break; // Amber
+    }
+    m_undoStack.push(new AddAnnotationCommand(this, item));
+  }
+
+  void addCalloutLoupe(qreal x, qreal y, qreal radius = 36.0,
+                       qreal zoom = 2.0) {
+    AnnotationItem item;
+    item.type = ToolType::CalloutLoupe;
+    item.points = {QPointF(x, y)};
+    item.loupeRadius = radius;
+    item.loupeZoom = zoom;
+    item.strokeColor = m_strokeColor;
+    item.strokeWidth = m_strokeWidth;
+    m_undoStack.push(new AddAnnotationCommand(this, item));
+  }
+
+  int autoRedactSensitiveData(const QString &text,
+                              const QVector<OcrTextBlock> &blocks) {
+    auto matches = SensitiveDataDetector::detect(text);
+    int added = 0;
+
+    for (const auto &m : matches) {
+      // Find matching OCR block bounds
+      bool blockMatched = false;
+      for (const auto &b : blocks) {
+        if (b.text.contains(m.matchedText) || m.matchedText.contains(b.text)) {
+          addBlur(b.boundingBox.x() - 4, b.boundingBox.y() - 4,
+                  b.boundingBox.width() + 8, b.boundingBox.height() + 8);
+          blockMatched = true;
+          added++;
+          break;
+        }
+      }
+      if (!blockMatched && !blocks.isEmpty()) {
+        // Fallback approximation
+        addBlur(blocks[0].boundingBox.x(), blocks[0].boundingBox.y(), 120, 30);
+        added++;
+      }
+    }
+    return added;
   }
 
   void applyCrop(qreal x, qreal y, qreal w, qreal h) {
@@ -393,6 +453,63 @@ public:
         }
         break;
       }
+      case ToolType::StatusBadge: {
+        if (!item.points.isEmpty()) {
+          QPointF center = item.points[0] - offset;
+          qreal radius = 16.0;
+          painter.setPen(Qt::NoPen);
+          painter.setBrush(item.strokeColor);
+          painter.drawEllipse(center, radius, radius);
+
+          painter.setPen(Qt::white);
+          QFont font = painter.font();
+          font.setPixelSize(14);
+          font.setBold(true);
+          painter.setFont(font);
+          QRectF badgeRect(center.x() - radius, center.y() - radius, radius * 2,
+                           radius * 2);
+
+          QString sym = "✓";
+          if (item.badgeType == StatusBadgeType::Cross)
+            sym = "✕";
+          else if (item.badgeType == StatusBadgeType::Warning)
+            sym = "!";
+          painter.drawText(badgeRect, Qt::AlignCenter, sym);
+        }
+        break;
+      }
+      case ToolType::CalloutLoupe: {
+        if (!item.points.isEmpty()) {
+          QPointF center = item.points[0] - offset;
+          qreal r = item.loupeRadius > 0 ? item.loupeRadius : 36.0;
+          qreal zoom = item.loupeZoom > 1.0 ? item.loupeZoom : 2.0;
+
+          // Source area around center in uncropped coordinates
+          qreal srcW = (r * 2.0) / zoom;
+          qreal srcH = (r * 2.0) / zoom;
+          QRectF srcRect(item.points[0].x() - srcW / 2.0,
+                         item.points[0].y() - srcH / 2.0, srcW, srcH);
+          QImage subImg =
+              m_baseImage.copy(srcRect.toRect())
+                  .scaled(static_cast<int>(r * 2), static_cast<int>(r * 2),
+                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
+          painter.save();
+          QPainterPath clip;
+          clip.addEllipse(center, r, r);
+          painter.setClipPath(clip);
+          painter.drawImage(
+              QRectF(center.x() - r, center.y() - r, r * 2, r * 2), subImg);
+          painter.restore();
+
+          // Loupe ring
+          painter.setPen(QPen(item.strokeColor,
+                              item.strokeWidth > 0 ? item.strokeWidth : 3.0));
+          painter.setBrush(Qt::NoBrush);
+          painter.drawEllipse(center, r, r);
+        }
+        break;
+      }
       default:
         break;
       }
@@ -400,6 +517,13 @@ public:
 
     painter.end();
     return cropped;
+  }
+
+  QImage renderWithMockupFrame(const MockupOptions &options) const {
+    QImage flat = renderFlattened();
+    if (flat.isNull())
+      return {};
+    return MockupFrameGenerator::generate(flat, options);
   }
 
   bool exportToFile(const QString &destPath, const QString &format = "PNG") {

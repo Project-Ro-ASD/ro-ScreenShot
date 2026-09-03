@@ -22,7 +22,15 @@ enum class ToolType {
   Ellipse,
   Text,
   Blur,
-  StepMarker
+  StepMarker,
+  StatusBadge,
+  CalloutLoupe
+};
+
+enum class StatusBadgeType {
+  Checkmark, // Green ✓
+  Cross,     // Red ✕
+  Warning    // Yellow ⚠️
 };
 
 struct AnnotationItem {
@@ -37,6 +45,9 @@ struct AnnotationItem {
   int fontSize{14};
   int stepNumber{1};
   int blurRadius{10};
+  StatusBadgeType badgeType{StatusBadgeType::Checkmark};
+  qreal loupeZoom{2.0};
+  qreal loupeRadius{36.0};
   bool isSelected{false};
 
   AnnotationItem() { id = QUuid::createUuid().toString(QUuid::WithoutBraces); }
