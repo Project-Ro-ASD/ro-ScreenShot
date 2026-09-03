@@ -33,6 +33,15 @@ public:
   Q_PROPERTY(RecordingState state READ state NOTIFY stateChanged)
   Q_PROPERTY(int recordingDurationSeconds READ recordingDurationSeconds NOTIFY
                  durationChanged)
+  Q_PROPERTY(
+      QString formattedDuration READ formattedDuration NOTIFY durationChanged)
+  Q_PROPERTY(double audioLevel READ audioLevel NOTIFY audioLevelChanged)
+  Q_PROPERTY(
+      bool micEnabled READ micEnabled WRITE setMicEnabled NOTIFY micChanged)
+  Q_PROPERTY(bool systemAudioEnabled READ systemAudioEnabled WRITE
+                 setSystemAudioEnabled NOTIFY systemAudioChanged)
+  Q_PROPERTY(bool webcamPiPEnabled READ webcamPiPEnabled WRITE
+                 setWebcamPiPEnabled NOTIFY webcamPiPChanged)
 
   explicit ScreenRecorderEngine(QObject *parent = nullptr);
   ~ScreenRecorderEngine() override;
@@ -41,12 +50,25 @@ public:
   bool isPaused() const;
   RecordingState state() const;
   int recordingDurationSeconds() const;
+  QString formattedDuration() const;
+  double audioLevel() const;
 
-  bool startRecording(const RecordingOptions &options);
-  bool pauseRecording();
-  bool resumeRecording();
-  bool stopRecording();
-  void cancelRecording();
+  bool micEnabled() const;
+  void setMicEnabled(bool enabled);
+
+  bool systemAudioEnabled() const;
+  void setSystemAudioEnabled(bool enabled);
+
+  bool webcamPiPEnabled() const;
+  void setWebcamPiPEnabled(bool enabled);
+
+  Q_INVOKABLE bool startRecording(const RecordingOptions &options);
+  Q_INVOKABLE bool startRegionGif(const QRect &region, int durationSec = 5,
+                                  const QString &outputPath = QString());
+  Q_INVOKABLE bool pauseRecording();
+  Q_INVOKABLE bool resumeRecording();
+  Q_INVOKABLE bool stopRecording();
+  Q_INVOKABLE void cancelRecording();
 
   // GIF Producer helper
   bool generateGifFromFrames(const QVector<QImage> &frames,
@@ -55,17 +77,27 @@ public:
 signals:
   void stateChanged();
   void durationChanged();
+  void audioLevelChanged();
+  void micChanged();
+  void systemAudioChanged();
+  void webcamPiPChanged();
   void recordingFinished(const QString &outputPath, bool isGif);
   void recordingFailed(const QString &errorMessage);
 
 private slots:
   void handleDurationTick();
+  void handleAudioPulse();
 
 private:
   RecordingState m_state{RecordingState::Idle};
   RecordingOptions m_options;
   QTimer *m_durationTimer{nullptr};
+  QTimer *m_audioTimer{nullptr};
   int m_elapsedSeconds{0};
+  double m_audioLevel{0.0};
+  bool m_micEnabled{false};
+  bool m_systemAudioEnabled{false};
+  bool m_webcamPiPEnabled{false};
   QProcess *m_recorderProcess{nullptr};
 };
 

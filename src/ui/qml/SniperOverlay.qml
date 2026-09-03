@@ -16,11 +16,18 @@ Window {
     property bool hasSelection: false
     property int sourceFrameWidth: 0
     property int sourceFrameHeight: 0
+    property bool lockSquare: false
+    property bool lock16to9: false
+    property bool showRulers: true
 
-    property real selX: Math.min(startX, currentX)
-    property real selY: Math.min(startY, currentY)
-    property real selW: Math.abs(currentX - startX)
-    property real selH: Math.abs(currentY - startY)
+    property real rawSelW: Math.abs(currentX - startX)
+    property real rawSelH: Math.abs(currentY - startY)
+
+    property real selW: lockSquare ? Math.max(rawSelW, rawSelH) : (lock16to9 ? rawSelW : rawSelW)
+    property real selH: lockSquare ? Math.max(rawSelW, rawSelH) : (lock16to9 ? (rawSelW * 9.0 / 16.0) : rawSelH)
+    property real selX: currentX >= startX ? startX : startX - selW
+    property real selY: currentY >= startY ? startY : startY - selH
+
     readonly property real sourceScaleX: sourceFrameWidth > 0 && width > 0 ? sourceFrameWidth / width : 1
     readonly property real sourceScaleY: sourceFrameHeight > 0 && height > 0 ? sourceFrameHeight / height : 1
     readonly property string sampledColor: captureEngine.colorAt(Math.round(mouseArea.mouseX * sourceScaleX), Math.round(mouseArea.mouseY * sourceScaleY))
@@ -40,7 +47,14 @@ Window {
             confirmCapture("")
         }
         Keys.onPressed: (event) => {
-            if (event.key === Qt.Key_C && !sniperWindow.hasSelection) {
+            if (event.key === Qt.Key_Shift) {
+                lockSquare = true
+            } else if (event.key === Qt.Key_Control) {
+                lock16to9 = true
+            } else if (event.key === Qt.Key_R) {
+                showRulers = !showRulers
+                event.accepted = true
+            } else if (event.key === Qt.Key_C && !sniperWindow.hasSelection) {
                 captureEngine.copyColorAt(Math.round(mouseArea.mouseX * sniperWindow.sourceScaleX), Math.round(mouseArea.mouseY * sniperWindow.sourceScaleY))
                 event.accepted = true
                 return
@@ -60,6 +74,13 @@ Window {
             } else if (event.key === Qt.Key_Down) {
                 sniperWindow.adjustSelection(0, 1, resize)
                 event.accepted = true
+            }
+        }
+        Keys.onReleased: (event) => {
+            if (event.key === Qt.Key_Shift) {
+                lockSquare = false
+            } else if (event.key === Qt.Key_Control) {
+                lock16to9 = false
             }
         }
     }
@@ -96,33 +117,65 @@ Window {
         cache: false
     }
 
+    // Pixel Rulers Canvas (Top and Left)
+    Canvas {
+        id: rulerCanvas
+        anchors.fill: parent
+        visible: sniperWindow.showRulers && !sniperWindow.hasSelection
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = "#4038BDF8";
+            ctx.fillStyle = "#A038BDF8";
+            ctx.font = "9px sans-serif";
+
+            // Top Ruler (ticks every 50px)
+            for (var x = 0; x < width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, (x % 100 === 0) ? 14 : 8);
+                ctx.stroke();
+                if (x % 100 === 0 && x > 0) {
+                    ctx.fillText(x.toString(), x + 2, 12);
+                }
+            }
+
+            // Left Ruler (ticks every 50px)
+            for (var y = 0; y < height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo((y % 100 === 0) ? 14 : 8, y);
+                ctx.stroke();
+                if (y % 100 === 0 && y > 0) {
+                    ctx.fillText(y.toString(), 2, y + 10);
+                }
+            }
+        }
+    }
+
     // Dimmed Dark Overlay outside Selection
     Item {
         anchors.fill: parent
         visible: sniperWindow.hasSelection
 
-        // Top Dim
         Rectangle {
             x: 0; y: 0
             width: parent.width
             height: sniperWindow.selY
             color: "#80000000"
         }
-        // Bottom Dim
         Rectangle {
             x: 0; y: sniperWindow.selY + sniperWindow.selH
             width: parent.width
             height: parent.height - (sniperWindow.selY + sniperWindow.selH)
             color: "#80000000"
         }
-        // Left Dim
         Rectangle {
             x: 0; y: sniperWindow.selY
             width: sniperWindow.selX
             height: sniperWindow.selH
             color: "#80000000"
         }
-        // Right Dim
         Rectangle {
             x: sniperWindow.selX + sniperWindow.selW; y: sniperWindow.selY
             width: parent.width - (sniperWindow.selX + sniperWindow.selW)
@@ -143,13 +196,11 @@ Window {
         anchors.fill: parent
         visible: !sniperWindow.hasSelection
 
-        // Horizontal Guide
         Rectangle {
             x: 0; y: mouseArea.mouseY
             width: parent.width; height: 1
             color: "#603B82F6"
         }
-        // Vertical Guide
         Rectangle {
             x: mouseArea.mouseX; y: 0
             width: 1; height: parent.height
@@ -166,7 +217,7 @@ Window {
         width: sniperWindow.selW
         height: sniperWindow.selH
         color: "transparent"
-        border.color: "#3B82F6"
+        border.color: lockSquare ? "#10B981" : (lock16to9 ? "#F59E0B" : "#3B82F6")
         border.width: 2
 
         // Dimension Badge
@@ -176,14 +227,16 @@ Window {
             height: 24
             width: dimText.implicitWidth + 14
             color: "#1E293B"
-            border.color: "#3B82F6"
+            border.color: parent.border.color
             border.width: 1
             radius: 4
 
             Text {
                 id: dimText
                 anchors.centerIn: parent
-                text: "%1 × %2 px".arg(Math.round(sniperWindow.selW * sniperWindow.sourceScaleX)).arg(Math.round(sniperWindow.selH * sniperWindow.sourceScaleY))
+                text: "%1 × %2 px %3".arg(Math.round(sniperWindow.selW * sniperWindow.sourceScaleX))
+                                      .arg(Math.round(sniperWindow.selH * sniperWindow.sourceScaleY))
+                                      .arg(sniperWindow.lockSquare ? "(1:1)" : (sniperWindow.lock16to9 ? "(16:9)" : ""))
                 color: "#F8FAFC"
                 font.pixelSize: 11
                 font.bold: true
@@ -218,7 +271,7 @@ Window {
                         font.bold: true
                     }
                     background: Rectangle {
-                        implicitWidth: 80
+                        implicitWidth: 72
                         implicitHeight: 28
                         color: parent.hovered ? "#2563EB" : "#1D4ED8"
                         radius: 4
@@ -234,10 +287,37 @@ Window {
                         font.pixelSize: 11
                     }
                     background: Rectangle {
-                        implicitWidth: 70
+                        implicitWidth: 64
                         implicitHeight: 28
                         color: parent.hovered ? "#334155" : "#0F172A"
                         border.color: "#334155"
+                        radius: 4
+                    }
+                }
+
+                Button {
+                    text: qsTr("🎥 5s GIF")
+                    onClicked: {
+                        if (screenRecorderEngine) {
+                            var reg = Qt.rect(Math.round(sniperWindow.selX * sniperWindow.sourceScaleX),
+                                              Math.round(sniperWindow.selY * sniperWindow.sourceScaleY),
+                                              Math.round(sniperWindow.selW * sniperWindow.sourceScaleX),
+                                              Math.round(sniperWindow.selH * sniperWindow.sourceScaleY));
+                            screenRecorderEngine.startRegionGif(reg, 5);
+                            captureEngine.cancelCapture();
+                        }
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#38BDF8"
+                        font.pixelSize: 11
+                        font.bold: true
+                    }
+                    background: Rectangle {
+                        implicitWidth: 68
+                        implicitHeight: 28
+                        color: parent.hovered ? "#0C4A6E" : "#082F49"
+                        border.color: "#0284C7"
                         radius: 4
                     }
                 }
@@ -253,7 +333,7 @@ Window {
                         horizontalAlignment: Text.AlignHCenter
                     }
                     background: Rectangle {
-                        implicitWidth: 30
+                        implicitWidth: 28
                         implicitHeight: 28
                         color: parent.hovered ? "#450A0A" : "#0F172A"
                         border.color: "#7F1D1D"
@@ -276,7 +356,6 @@ Window {
         border.width: 3
         clip: true
 
-        // Follow mouse with boundary collision prevention
         x: (mouseArea.mouseX + 20 + width > sniperWindow.width) ? mouseArea.mouseX - width - 20 : mouseArea.mouseX + 20
         y: (mouseArea.mouseY + 20 + height > sniperWindow.height) ? mouseArea.mouseY - height - 20 : mouseArea.mouseY + 20
 
@@ -293,7 +372,6 @@ Window {
                 y: -(mouseArea.mouseY * settingsManager.magnifierZoom - parent.height / 2)
             }
 
-            // Loupe Central Crosshair
             Rectangle {
                 anchors.centerIn: parent
                 width: parent.width; height: 1
@@ -305,7 +383,6 @@ Window {
                 color: "#80EF4444"
             }
 
-            // Loupe Coordinate & Info Badge
             Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter

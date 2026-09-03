@@ -1,16 +1,23 @@
 #include "ScreenRecorderEngine.hpp"
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QRandomGenerator>
 #include <QStandardPaths>
 
 namespace ro_screenshot {
 
 ScreenRecorderEngine::ScreenRecorderEngine(QObject *parent)
-    : QObject(parent), m_durationTimer(new QTimer(this)) {
+    : QObject(parent), m_durationTimer(new QTimer(this)),
+      m_audioTimer(new QTimer(this)) {
   m_durationTimer->setInterval(1000);
   connect(m_durationTimer, &QTimer::timeout, this,
           &ScreenRecorderEngine::handleDurationTick);
+
+  m_audioTimer->setInterval(100);
+  connect(m_audioTimer, &QTimer::timeout, this,
+          &ScreenRecorderEngine::handleAudioPulse);
 }
 
 ScreenRecorderEngine::~ScreenRecorderEngine() {
@@ -36,10 +43,61 @@ int ScreenRecorderEngine::recordingDurationSeconds() const {
   return m_elapsedSeconds;
 }
 
+QString ScreenRecorderEngine::formattedDuration() const {
+  int m = m_elapsedSeconds / 60;
+  int s = m_elapsedSeconds % 60;
+  return QString("%1:%2").arg(m, 2, 10, QChar('0')).arg(s, 2, 10, QChar('0'));
+}
+
+double ScreenRecorderEngine::audioLevel() const { return m_audioLevel; }
+
+bool ScreenRecorderEngine::micEnabled() const { return m_micEnabled; }
+
+void ScreenRecorderEngine::setMicEnabled(bool enabled) {
+  if (m_micEnabled != enabled) {
+    m_micEnabled = enabled;
+    emit micChanged();
+  }
+}
+
+bool ScreenRecorderEngine::systemAudioEnabled() const {
+  return m_systemAudioEnabled;
+}
+
+void ScreenRecorderEngine::setSystemAudioEnabled(bool enabled) {
+  if (m_systemAudioEnabled != enabled) {
+    m_systemAudioEnabled = enabled;
+    emit systemAudioChanged();
+  }
+}
+
+bool ScreenRecorderEngine::webcamPiPEnabled() const {
+  return m_webcamPiPEnabled;
+}
+
+void ScreenRecorderEngine::setWebcamPiPEnabled(bool enabled) {
+  if (m_webcamPiPEnabled != enabled) {
+    m_webcamPiPEnabled = enabled;
+    emit webcamPiPChanged();
+  }
+}
+
 void ScreenRecorderEngine::handleDurationTick() {
   if (m_state == RecordingState::Recording) {
     m_elapsedSeconds++;
     emit durationChanged();
+  }
+}
+
+void ScreenRecorderEngine::handleAudioPulse() {
+  if (m_state == RecordingState::Recording &&
+      (m_micEnabled || m_systemAudioEnabled)) {
+    // Simulated dynamic VU meter amplitude
+    m_audioLevel = 0.2 + (QRandomGenerator::global()->generateDouble() * 0.65);
+    emit audioLevelChanged();
+  } else if (m_audioLevel > 0.0) {
+    m_audioLevel = 0.0;
+    emit audioLevelChanged();
   }
 }
 
@@ -52,11 +110,12 @@ bool ScreenRecorderEngine::startRecording(const RecordingOptions &options) {
   m_elapsedSeconds = 0;
   m_state = RecordingState::Recording;
   m_durationTimer->start();
+  m_audioTimer->start();
 
   emit stateChanged();
   emit durationChanged();
 
-  // Recording pipeline hook (e.g. PipeWire / wf-recorder / ffmpeg / gstreamer)
+  // Recording pipeline hook (wf-recorder / ffmpeg / gstreamer)
   const QString wfRecorder =
       QStandardPaths::findExecutable(QStringLiteral("wf-recorder"));
   const QString ffmpeg =
@@ -95,12 +154,45 @@ bool ScreenRecorderEngine::startRecording(const RecordingOptions &options) {
   return true;
 }
 
+bool ScreenRecorderEngine::startRegionGif(const QRect &region, int durationSec,
+                                          const QString &outputPath) {
+  RecordingOptions opt;
+  opt.produceGif = true;
+  opt.targetRegion = region;
+  opt.framerate = 15;
+  opt.gifFramerate = 15;
+
+  if (outputPath.isEmpty()) {
+    QString picDir =
+        QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    opt.outputPath =
+        QString("%1/ro-ScreenShot_%2.gif")
+            .arg(picDir)
+            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss"));
+  } else {
+    opt.outputPath = outputPath;
+  }
+
+  bool ok = startRecording(opt);
+  if (ok && durationSec > 0) {
+    QTimer::singleShot(durationSec * 1000, this, [this]() {
+      if (isRecording()) {
+        stopRecording();
+      }
+    });
+  }
+  return ok;
+}
+
 bool ScreenRecorderEngine::pauseRecording() {
   if (m_state != RecordingState::Recording) {
     return false;
   }
   m_state = RecordingState::Paused;
   m_durationTimer->stop();
+  m_audioTimer->stop();
+  m_audioLevel = 0.0;
+  emit audioLevelChanged();
   emit stateChanged();
   return true;
 }
@@ -111,6 +203,7 @@ bool ScreenRecorderEngine::resumeRecording() {
   }
   m_state = RecordingState::Recording;
   m_durationTimer->start();
+  m_audioTimer->start();
   emit stateChanged();
   return true;
 }
@@ -121,6 +214,10 @@ bool ScreenRecorderEngine::stopRecording() {
   }
 
   m_durationTimer->stop();
+  m_audioTimer->stop();
+  m_audioLevel = 0.0;
+  emit audioLevelChanged();
+
   m_state = RecordingState::Encoding;
   emit stateChanged();
 
@@ -141,6 +238,10 @@ bool ScreenRecorderEngine::stopRecording() {
 
 void ScreenRecorderEngine::cancelRecording() {
   m_durationTimer->stop();
+  m_audioTimer->stop();
+  m_audioLevel = 0.0;
+  emit audioLevelChanged();
+
   if (m_recorderProcess) {
     m_recorderProcess->kill();
     delete m_recorderProcess;
@@ -160,7 +261,6 @@ bool ScreenRecorderEngine::generateGifFromFrames(const QVector<QImage> &frames,
     return false;
   }
 
-  // Create temporary directory of frame PNGs
   const QString tempDir =
       QStandardPaths::writableLocation(QStandardPaths::CacheLocation) +
       "/gif_frames";
