@@ -58,11 +58,11 @@ Linux paths are case-sensitive. Clone into and consistently use the exact
 git clone https://github.com/Project-Ro-ASD/Ro-ScreenShot.git ro-ScreenShot
 cd ro-ScreenShot
 
-cmake -S . -B build-local -G Ninja \
+cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_TESTING=ON
-cmake --build build-local --parallel
-./build-local/ro-screenshot
+cmake --build build --parallel
+./build/ro-screenshot
 ```
 
 See the [build guide](docs/BUILD.md) for testing and CMake cache troubleshooting.

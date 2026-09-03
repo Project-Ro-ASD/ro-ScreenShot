@@ -8,11 +8,11 @@ This guide describes how to install **Ro-ScreenShot** system-wide and configure 
 
 ### Install via CMake:
 ```bash
-cmake -S . -B build-local -G Ninja \
+cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_TESTING=OFF
-cmake --build build-local --parallel
-sudo cmake --install build-local
+cmake --build build --parallel
+sudo cmake --install build
 ```
 
 This installs:

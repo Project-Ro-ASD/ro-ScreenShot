@@ -44,15 +44,15 @@ git clone https://github.com/Project-Ro-ASD/Ro-ScreenShot.git ro-ScreenShot
 cd ro-ScreenShot
 
 # Configure with CMake
-cmake -S . -B build-local -G Ninja \
+cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_TESTING=ON
 
 # Compile binary
-cmake --build build-local --parallel
+cmake --build build --parallel
 
 # Run application
-./build-local/ro-screenshot
+./build/ro-screenshot
 ```
 
 ---
@@ -64,12 +64,12 @@ Ro-ScreenShot includes a CTest test suite covering the core modules:
 ```bash
 # Run all tests via CTest
 QT_QPA_PLATFORM=offscreen \
-ctest --test-dir build-local --output-on-failure
+ctest --test-dir build --output-on-failure
 ```
 
 Expected output:
 ```
-100% tests passed, 0 tests failed out of 4
+100% tests passed, 0 tests failed out of 10
 ```
 
 ---
@@ -86,15 +86,14 @@ The current CMakeCache.txt directory is different than the directory where CMake
 The source does not match the source used to generate cache.
 ```
 
-Keep the repository name consistent and configure a fresh, separate build
-directory without deleting the old one:
+Keep the repository name consistent and configure/build in the `build` directory:
 
 ```bash
 cd ~/Desktop/Ro-ASD/ro-ScreenShot
-cmake -S . -B build-local -G Ninja \
+cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_TESTING=ON
-cmake --build build-local --parallel
+cmake --build build --parallel
 ```
 
 Do not write `\ \` at the end of a shell line. A multiline command uses one
@@ -102,10 +101,10 @@ backslash as the final character of each continued line. The equivalent
 single-line command is:
 
 ```bash
-cmake -S . -B build-local -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
 ```
 
-To intentionally reuse `build` with CMake 3.24 or newer, regenerate its cache:
+To regenerate the cache inside `build` with CMake 3.24 or newer:
 
 ```bash
 cmake --fresh -S . -B build -G Ninja \
