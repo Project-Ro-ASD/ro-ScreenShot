@@ -30,6 +30,24 @@ else()
     )
 endif()
 
+# Sanitizer Options
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
+option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+
+if(ENABLE_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+if(ENABLE_UBSAN)
+    add_compile_options(-fsanitize=undefined)
+    add_link_options(-fsanitize=undefined)
+endif()
+if(ENABLE_TSAN)
+    add_compile_options(-fsanitize=thread)
+    add_link_options(-fsanitize=thread)
+endif()
+
 include(CTest)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS
@@ -67,6 +85,29 @@ set(RO_SCREENSHOT_SOURCES
     src/core/UiPreferencesManager.cpp
     src/core/DesktopFeedback.hpp
     src/core/DesktopFeedback.cpp
+    src/core/platform/IScreenshotProvider.hpp
+    src/core/platform/ScreenGeometryManager.hpp
+    src/core/platform/ScreenGeometryManager.cpp
+    src/core/platform/SafeImageWriter.hpp
+    src/core/platform/SafeImageWriter.cpp
+    src/core/platform/XdgPortalProvider.hpp
+    src/core/platform/XdgPortalProvider.cpp
+    src/core/platform/X11FallbackProvider.hpp
+    src/core/platform/X11FallbackProvider.cpp
+    src/core/shortcuts/ShortcutManager.hpp
+    src/core/shortcuts/ShortcutManager.cpp
+    src/core/advanced/OcrEngine.hpp
+    src/core/advanced/OcrEngine.cpp
+    src/core/advanced/QrCodeDetector.hpp
+    src/core/advanced/QrCodeDetector.cpp
+    src/core/advanced/ScreenRecorderEngine.hpp
+    src/core/advanced/ScreenRecorderEngine.cpp
+    src/core/advanced/CloudShareManager.hpp
+    src/core/advanced/CloudShareManager.cpp
+    src/core/advanced/AutostartManager.hpp
+    src/core/advanced/AutostartManager.cpp
+    src/core/advanced/SystemTrayManager.hpp
+    src/core/advanced/SystemTrayManager.cpp
 )
 
 qt_add_executable(ro-screenshot
@@ -138,6 +179,7 @@ qt_add_qml_module(ro-screenshot
 # Embed compiled translations as Qt resources
 qt_add_resources(ro-screenshot "i18n"
     PREFIX "/i18n"
+    BASE "i18n"
     FILES
         i18n/ro-screenshot_en.qm
         i18n/ro-screenshot_tr.qm

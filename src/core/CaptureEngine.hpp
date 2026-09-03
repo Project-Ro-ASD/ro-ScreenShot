@@ -3,7 +3,12 @@
 #include "LibraryManager.hpp"
 #include "SettingsManager.hpp"
 #include "Types.hpp"
-#include <QDBusObjectPath>
+#include "platform/IScreenshotProvider.hpp"
+#include "platform/SafeImageWriter.hpp"
+#include "platform/ScreenGeometryManager.hpp"
+#include "platform/X11FallbackProvider.hpp"
+#include "platform/XdgPortalProvider.hpp"
+
 #include <QDateTime>
 #include <QImage>
 #include <QObject>
@@ -26,13 +31,19 @@ class CaptureEngine : public QObject {
 public:
   explicit CaptureEngine(SettingsManager *settings, LibraryManager *library,
                          QObject *parent = nullptr);
-  ~CaptureEngine() override = default;
+  ~CaptureEngine() override;
 
   bool isCapturing() const;
   QString lastCapturedFilePath() const;
   QString frozenFramePath() const;
   bool hasLastRegion() const;
+  QImage lastCapturedImage() const;
 
+  // Accessors
+  ScreenGeometryManager *geometryManager() const;
+  SafeImageWriter *imageWriter() const;
+
+  // Q_INVOKABLE Capture triggers
   Q_INVOKABLE void requestRegionCapture(int delaySeconds = 0);
   Q_INVOKABLE void requestFullscreenCapture(int delaySeconds = 0);
   Q_INVOKABLE void requestWindowCapture(int delaySeconds = 0);
@@ -46,14 +57,19 @@ public:
   Q_INVOKABLE void requestLastRegionCaptureWithAction(int delaySeconds,
                                                       const QString &action);
 
+  // Region selection from QML Sniper Overlay
   Q_INVOKABLE void processRegionSelected(int x, int y, int width, int height,
                                          const QString &action = QString());
   Q_INVOKABLE void cancelCapture();
   Q_INVOKABLE bool copyImageToClipboard(const QString &filePath);
   Q_INVOKABLE bool saveImageAs(const QString &sourcePath,
                                const QString &destinationPath);
+
+  // Color picker methods (Hex, RGB, HSL)
   Q_INVOKABLE QString colorAt(int x, int y) const;
+  Q_INVOKABLE QString colorAtFormat(int x, int y, const QString &format) const;
   Q_INVOKABLE bool copyColorAt(int x, int y);
+  Q_INVOKABLE bool copyColorAtFormat(int x, int y, const QString &format);
 
 signals:
   void isCapturingChanged();
@@ -66,38 +82,45 @@ signals:
   void captureSuccess(const QString &filePath, const QString &fileName,
                       bool savedToDisk, bool copiedToClipboard);
   void captureError(const QString &message);
-  void colorCopied(const QString &hexColor);
+  void captureErrorCode(const QString &message, CaptureErrorCode code);
+  void captureCancelled();
+  void captureProgress(int percent, const QString &statusText);
+  void colorCopied(const QString &colorString);
   void captureUiShouldHide();
   void captureUiMayRestore();
 
 private slots:
-  void executeRegionCapture();
-  void executeFullscreenCapture();
-  void executeWindowCapture();
-  void handlePortalResponse(uint response, const QVariantMap &results);
+  void handleProviderCaptureReady(const QImage &image, const QRect &sourceRect);
+  void handleProviderCaptureFailed(const QString &errorMessage,
+                                   CaptureErrorCode errorCode);
+  void handleProviderCaptureCancelled();
+  void handleScreenTopologyChanged();
 
 private:
-  QImage captureCombinedDesktop() const;
-  bool shouldUsePortal() const;
-  void requestPortalCapture(CaptureMode mode);
-  QString expectedPortalRequestPath(const QString &token) const;
-  bool connectPortalResponse(const QString &path);
-  void disconnectPortalResponse();
-  void failCapture(const QString &message);
+  IScreenshotProvider *activeProvider() const;
+  void startCaptureWorkflow(CaptureMode mode, int delaySeconds,
+                            const QString &action, bool isLastRegion);
+  void executeCapture(CaptureMode mode);
+  void failCapture(const QString &message,
+                   CaptureErrorCode code = CaptureErrorCode::Unknown);
   bool saveAndProcessResult(const QImage &image, CaptureMode mode,
                             const QRect &sourceRect,
                             const QString &action = QString());
 
   SettingsManager *m_settings{nullptr};
   LibraryManager *m_library{nullptr};
+  ScreenGeometryManager *m_geometryManager{nullptr};
+  SafeImageWriter *m_imageWriter{nullptr};
+  XdgPortalProvider *m_portalProvider{nullptr};
+  X11FallbackProvider *m_x11Provider{nullptr};
+
   bool m_isCapturing{false};
   QString m_lastCapturedFilePath;
   QString m_frozenFramePath;
   QImage m_cachedDesktopFrame;
-  CaptureMode m_pendingPortalMode{CaptureMode::Region};
+  CaptureMode m_pendingMode{CaptureMode::Region};
   QString m_pendingAction;
   bool m_pendingLastRegion{false};
-  QString m_pendingPortalRequestPath;
 };
 
 } // namespace ro_screenshot
