@@ -1,5 +1,8 @@
 #include "core/LibraryManager.hpp"
 #include "core/SettingsManager.hpp"
+#include "library/TestAnnotationEngine.hpp"
+#include "library/TestGalleryBackend.hpp"
+#include "library/TestSafeOperations.hpp"
 #include <QDir>
 #include <QImage>
 #include <QSettings>
@@ -38,6 +41,7 @@ private slots:
 
     LibraryManager library(&settings);
     library.refresh();
+    QVERIFY(library.waitForScan());
 
     QCOMPARE(library.count(), 2);
 
@@ -51,10 +55,17 @@ private slots:
     library.setSearchQuery("");
     QCOMPARE(library.count(), 2);
 
-    // Test deletion
+    // Test deletion (moves to trash)
     QVERIFY(library.deleteItem(0));
+    QVERIFY(library.waitForScan());
     QCOMPARE(library.count(), 1);
   }
+
+  void testGalleryBackendSuite() { TestGalleryBackend::runAllTests(); }
+
+  void testSafeOperationsSuite() { TestSafeOperations::runAllTests(); }
+
+  void testAnnotationEngineSuite() { TestAnnotationEngine::runAllTests(); }
 };
 
 QTEST_MAIN(TestLibrary)
