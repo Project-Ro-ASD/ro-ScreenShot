@@ -1,19 +1,48 @@
 include(CTest)
 
+set(RO_COMMON_TEST_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/core/Types.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/SettingsManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/SettingsManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/LibraryManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/LibraryManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/CaptureEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/CaptureEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/DBusService.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/DBusService.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/UiPreferencesManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/UiPreferencesManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/DesktopFeedback.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/DesktopFeedback.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/IScreenshotProvider.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/ScreenGeometryManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/ScreenGeometryManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/SafeImageWriter.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/SafeImageWriter.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/XdgPortalProvider.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/XdgPortalProvider.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/X11FallbackProvider.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/X11FallbackProvider.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/shortcuts/ShortcutManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/shortcuts/ShortcutManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/OcrEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/OcrEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/QrCodeDetector.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/QrCodeDetector.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/ScreenRecorderEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/ScreenRecorderEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/CloudShareManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/CloudShareManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/AutostartManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/AutostartManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SystemTrayManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SystemTrayManager.cpp
+)
+
 macro(add_ro_test TEST_NAME TEST_SOURCE)
     add_executable(${TEST_NAME}
         ${TEST_SOURCE}
-        ${CMAKE_SOURCE_DIR}/src/core/Types.hpp
-        ${CMAKE_SOURCE_DIR}/src/core/SettingsManager.hpp
-        ${CMAKE_SOURCE_DIR}/src/core/SettingsManager.cpp
-        ${CMAKE_SOURCE_DIR}/src/core/LibraryManager.hpp
-        ${CMAKE_SOURCE_DIR}/src/core/LibraryManager.cpp
-        ${CMAKE_SOURCE_DIR}/src/core/CaptureEngine.hpp
-        ${CMAKE_SOURCE_DIR}/src/core/CaptureEngine.cpp
-        ${CMAKE_SOURCE_DIR}/src/core/DBusService.hpp
-        ${CMAKE_SOURCE_DIR}/src/core/DBusService.cpp
-        ${CMAKE_SOURCE_DIR}/src/core/UiPreferencesManager.hpp
-        ${CMAKE_SOURCE_DIR}/src/core/UiPreferencesManager.cpp
+        ${RO_COMMON_TEST_SOURCES}
     )
     target_include_directories(${TEST_NAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -23,6 +52,7 @@ macro(add_ro_test TEST_NAME TEST_SOURCE)
         Qt6::Gui
         Qt6::Quick
         Qt6::DBus
+        Qt6::Multimedia
         Qt6::Test
     )
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
@@ -32,3 +62,10 @@ add_ro_test(test_settings test_settings.cpp)
 add_ro_test(test_library test_library.cpp)
 add_ro_test(test_capture test_capture.cpp)
 add_ro_test(test_ui_preferences test_ui_preferences.cpp)
+add_ro_test(test_multi_monitor_geometry test_multi_monitor_geometry.cpp)
+add_ro_test(test_safe_image_io test_safe_image_io.cpp)
+add_ro_test(test_portal_backend test_portal_backend.cpp)
+add_ro_test(test_shortcuts_and_advanced test_shortcuts_and_advanced.cpp)
+add_ro_test(test_cli_dbus test_cli_dbus.cpp)
+
+

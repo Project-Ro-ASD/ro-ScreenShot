@@ -15,6 +15,7 @@ private slots:
   void defaults();
   void persistAndRestore();
   void normalizesInvalidMode();
+  void sidebarPreference();
   void resetToDefaults();
 };
 
@@ -41,20 +42,26 @@ void TestUiPreferences::defaults() {
                .value(QStringLiteral("code"))
                .toString(),
            QStringLiteral("light"));
+  QCOMPARE(preferences.isSidebarCollapsed(), false);
 }
 
 void TestUiPreferences::persistAndRestore() {
   {
     UiPreferencesManager preferences;
     QSignalSpy themeSpy(&preferences, &UiPreferencesManager::themeModeChanged);
+    QSignalSpy sidebarSpy(&preferences,
+                          &UiPreferencesManager::sidebarCollapsedChanged);
 
     preferences.setThemeMode(QStringLiteral("dark"));
+    preferences.setSidebarCollapsed(true);
 
     QCOMPARE(themeSpy.count(), 1);
+    QCOMPARE(sidebarSpy.count(), 1);
   }
 
   UiPreferencesManager reloadedPreferences;
   QCOMPARE(reloadedPreferences.themeMode(), QStringLiteral("dark"));
+  QCOMPARE(reloadedPreferences.isSidebarCollapsed(), true);
 }
 
 void TestUiPreferences::normalizesInvalidMode() {
@@ -65,13 +72,29 @@ void TestUiPreferences::normalizesInvalidMode() {
           preferences.themeMode() == QStringLiteral("dark"));
 }
 
+void TestUiPreferences::sidebarPreference() {
+  UiPreferencesManager preferences;
+  QSignalSpy sidebarSpy(&preferences,
+                        &UiPreferencesManager::sidebarCollapsedChanged);
+
+  preferences.toggleSidebar();
+  QCOMPARE(preferences.isSidebarCollapsed(), true);
+  QCOMPARE(sidebarSpy.count(), 1);
+
+  preferences.toggleSidebar();
+  QCOMPARE(preferences.isSidebarCollapsed(), false);
+  QCOMPARE(sidebarSpy.count(), 2);
+}
+
 void TestUiPreferences::resetToDefaults() {
   UiPreferencesManager preferences;
 
   preferences.setThemeMode(QStringLiteral("dark"));
+  preferences.setSidebarCollapsed(true);
   preferences.resetToDefaults();
   QVERIFY(preferences.themeMode() == QStringLiteral("light") ||
           preferences.themeMode() == QStringLiteral("dark"));
+  QCOMPARE(preferences.isSidebarCollapsed(), false);
 }
 
 QTEST_GUILESS_MAIN(TestUiPreferences)
