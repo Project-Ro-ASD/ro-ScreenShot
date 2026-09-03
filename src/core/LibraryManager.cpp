@@ -1,26 +1,24 @@
-#include "LibraryManager.hpp"
+#include "core/LibraryManager.hpp"
+#include <QBuffer>
 #include <QClipboard>
-#include <QCryptographicHash>
 #include <QDesktopServices>
 #include <QDir>
-#include <QDirIterator>
+#include <QElapsedTimer>
 #include <QFileInfo>
 #include <QGuiApplication>
-#include <QImageReader>
-#include <QStandardPaths>
+#include <QLocale>
+#include <QMetaObject>
+#include <QPainter>
+#include <QSaveFile>
+#include <QThread>
 #include <QUrl>
+#include <algorithm>
 
 namespace ro_screenshot {
 
 LibraryManager::LibraryManager(SettingsManager *settings, QObject *parent)
-    : QAbstractListModel(parent), m_settings(settings) {
-  QString cacheBase =
-      QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-  if (cacheBase.isEmpty()) {
-    cacheBase = QDir::homePath() + "/.cache/ro-asd/ro-screenshot";
-  }
-  m_cacheDir = cacheBase + "/thumbnails";
-  QDir().mkpath(m_cacheDir);
+    : QAbstractListModel(parent), m_settings(settings),
+      m_cache(std::make_shared<ThumbnailCache>()) {
 
   if (m_settings) {
     connect(m_settings, &SettingsManager::saveDirectoryChanged, this,
@@ -32,6 +30,12 @@ LibraryManager::LibraryManager(SettingsManager *settings, QObject *parent)
           &LibraryManager::onDirectoryChanged);
 
   refresh();
+}
+
+LibraryManager::~LibraryManager() {
+  if (m_currentCancelFlag) {
+    m_currentCancelFlag->store(true, std::memory_order_relaxed);
+  }
 }
 
 int LibraryManager::rowCount(const QModelIndex &parent) const {
@@ -69,6 +73,12 @@ QVariant LibraryManager::data(const QModelIndex &index, int role) const {
     return item.height;
   case ThumbnailUrlRole:
     return item.thumbnailUrl;
+  case IsSelectedRole:
+    return m_selectedPaths.contains(item.filePath);
+  case FormatRole: {
+    QString suffix = QFileInfo(item.filePath).suffix().toUpper();
+    return suffix.isEmpty() ? "PNG" : suffix;
+  }
   default:
     return {};
   }
@@ -79,7 +89,8 @@ QHash<int, QByteArray> LibraryManager::roleNames() const {
           {FileSizeRole, "fileSize"},     {FormattedSizeRole, "formattedSize"},
           {FileDateRole, "fileDate"},     {FormattedDateRole, "formattedDate"},
           {ResolutionRole, "resolution"}, {WidthRole, "width"},
-          {HeightRole, "height"},         {ThumbnailUrlRole, "thumbnailUrl"}};
+          {HeightRole, "height"},         {ThumbnailUrlRole, "thumbnailUrl"},
+          {IsSelectedRole, "isSelected"}, {FormatRole, "format"}};
 }
 
 int LibraryManager::count() const {
@@ -92,7 +103,7 @@ void LibraryManager::setSearchQuery(const QString &query) {
   if (m_searchQuery != query) {
     m_searchQuery = query;
     emit searchQueryChanged();
-    filterItems();
+    filterAndSortItems();
   }
 }
 
@@ -102,38 +113,82 @@ void LibraryManager::setDateFilter(int filter) {
   if (m_dateFilter != filter) {
     m_dateFilter = filter;
     emit dateFilterChanged();
-    filterItems();
+    filterAndSortItems();
+  }
+}
+
+int LibraryManager::formatFilter() const { return m_formatFilter; }
+
+void LibraryManager::setFormatFilter(int filter) {
+  if (m_formatFilter != filter) {
+    m_formatFilter = filter;
+    emit formatFilterChanged();
+    filterAndSortItems();
+  }
+}
+
+int LibraryManager::sortOrder() const { return m_sortOrder; }
+
+void LibraryManager::setSortOrder(int order) {
+  if (m_sortOrder != order) {
+    m_sortOrder = order;
+    emit sortOrderChanged();
+    filterAndSortItems();
   }
 }
 
 bool LibraryManager::isScanning() const { return m_isScanning; }
+QString LibraryManager::scanState() const { return m_scanState; }
+int LibraryManager::scanProgress() const { return m_scanProgress; }
 
 QString LibraryManager::totalStorageSize() const {
   return formatFileSize(m_totalBytes);
 }
 
+int LibraryManager::selectedCount() const {
+  return static_cast<int>(m_selectedPaths.size());
+}
+
+bool LibraryManager::canUndoTrash() const { return m_trashManager.canUndo(); }
+
+QString LibraryManager::lastTrashedFileName() const {
+  return m_lastTrashedFileName;
+}
+
+QString LibraryManager::errorMessage() const { return m_errorMessage; }
+
 void LibraryManager::onSaveDirectorySettingChanged() {
-  if (!m_watcher.directories().isEmpty()) {
-    m_watcher.removePaths(m_watcher.directories());
+  if (!m_settings) {
+    return;
   }
-  if (m_settings) {
-    QString dir = m_settings->saveDirectory();
-    if (QDir(dir).exists()) {
-      m_watcher.addPath(dir);
-    }
+  QString dir = m_settings->saveDirectory();
+  if (QDir(dir).exists()) {
+    updateWatchers({dir});
   }
   refresh();
 }
 
 void LibraryManager::onDirectoryChanged(const QString & /*path*/) { refresh(); }
 
+void LibraryManager::updateWatchers(const QStringList &directories) {
+  if (!m_watcher.directories().isEmpty()) {
+    m_watcher.removePaths(m_watcher.directories());
+  }
+  QStringList validDirs;
+  for (const auto &d : directories) {
+    if (QDir(d).exists()) {
+      validDirs.append(d);
+    }
+  }
+  if (!validDirs.isEmpty()) {
+    m_watcher.addPaths(validDirs);
+  }
+}
+
 void LibraryManager::refresh() {
   if (!m_settings) {
     return;
   }
-
-  m_isScanning = true;
-  emit isScanningChanged();
 
   QString targetDir = m_settings->saveDirectory();
   QDir dir(targetDir);
@@ -141,57 +196,78 @@ void LibraryManager::refresh() {
     dir.mkpath(targetDir);
   }
 
-  QList<ScreenshotItem> items;
-  qint64 total = 0;
-
-  QStringList nameFilters;
-  nameFilters << "*.png" << "*.jpg" << "*.jpeg" << "*.webp" << "*.bmp";
-
-  QDirIterator it(targetDir, nameFilters, QDir::Files,
-                  QDirIterator::Subdirectories);
-  while (it.hasNext()) {
-    QString filePath = it.next();
-    QFileInfo info(filePath);
-
-    ScreenshotItem item;
-    item.fileName = info.fileName();
-    item.filePath = info.absoluteFilePath();
-    item.fileSize = info.size();
-    total += item.fileSize;
-    item.formattedSize = formatFileSize(item.fileSize);
-    item.createdAt = info.lastModified();
-    item.formattedDate = item.createdAt.toString("yyyy-MM-dd hh:mm");
-
-    QImageReader reader(item.filePath);
-    QSize size = reader.size();
-    if (size.isValid()) {
-      item.width = size.width();
-      item.height = size.height();
-      item.resolution = QString("%1 × %2").arg(size.width()).arg(size.height());
-    } else {
-      item.resolution = "Unknown";
-    }
-
-    item.thumbnailUrl = getOrCreateThumbnail(item.filePath);
-    items.append(item);
+  // Cancel any running scan
+  if (m_currentCancelFlag) {
+    m_currentCancelFlag->store(true, std::memory_order_relaxed);
   }
 
-  std::sort(items.begin(), items.end(),
-            [](const ScreenshotItem &a, const ScreenshotItem &b) {
-              return a.createdAt > b.createdAt;
-            });
+  m_currentGeneration++;
+  m_currentCancelFlag = std::make_shared<std::atomic<bool>>(false);
 
-  m_allItems = std::move(items);
-  m_totalBytes = total;
-  emit totalStorageSizeChanged();
-
-  m_isScanning = false;
+  m_isScanning = true;
+  m_scanState = "scanning";
+  m_scanProgress = 0;
   emit isScanningChanged();
+  emit scanStateChanged();
+  emit scanProgressChanged();
 
-  filterItems();
+  auto *worker = new ScanWorker(
+      m_currentGeneration, targetDir, m_cache, m_currentCancelFlag, this,
+      [this](int count) { onScanProgress(count); },
+      [this](const ScanResult &result) { onScanFinished(result); });
+
+  QThreadPool::globalInstance()->start(worker);
 }
 
-void LibraryManager::filterItems() {
+bool LibraryManager::waitForScan(int timeoutMs) {
+  if (!m_isScanning) {
+    return true;
+  }
+  QElapsedTimer timer;
+  timer.start();
+  while (m_isScanning && timer.elapsed() < timeoutMs) {
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    QThread::msleep(5);
+  }
+  return !m_isScanning;
+}
+
+void LibraryManager::onScanProgress(int count) {
+  m_scanProgress = count;
+  emit scanProgressChanged();
+}
+
+void LibraryManager::onScanFinished(const ro_screenshot::ScanResult &result) {
+  // Reject stale generations
+  if (result.generation != m_currentGeneration) {
+    return;
+  }
+
+  m_isScanning = false;
+  if (!result.success) {
+    m_scanState = "error";
+    m_errorMessage = result.errorMessage;
+    emit scanStateChanged();
+    emit errorMessageChanged();
+    emit isScanningChanged();
+    return;
+  }
+
+  m_scanState = "idle";
+  m_errorMessage.clear();
+  emit scanStateChanged();
+  emit errorMessageChanged();
+  emit isScanningChanged();
+
+  m_allItems = result.items;
+  m_totalBytes = result.totalBytes;
+  emit totalStorageSizeChanged();
+
+  updateWatchers(result.discoveredDirectories);
+  filterAndSortItems();
+}
+
+void LibraryManager::filterAndSortItems() {
   beginResetModel();
   m_filteredItems.clear();
 
@@ -200,8 +276,56 @@ void LibraryManager::filterItems() {
       m_filteredItems.append(item);
     }
   }
-  endResetModel();
 
+  // Apply sorting
+  switch (m_sortOrder) {
+  case NewestFirst:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return a.createdAt > b.createdAt;
+              });
+    break;
+  case OldestFirst:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return a.createdAt < b.createdAt;
+              });
+    break;
+  case NameAsc:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return a.fileName.localeAwareCompare(b.fileName) < 0;
+              });
+    break;
+  case NameDesc:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return a.fileName.localeAwareCompare(b.fileName) > 0;
+              });
+    break;
+  case SizeDesc:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return a.fileSize > b.fileSize;
+              });
+    break;
+  case SizeAsc:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return a.fileSize < b.fileSize;
+              });
+    break;
+  case ResolutionDesc:
+    std::sort(m_filteredItems.begin(), m_filteredItems.end(),
+              [](const ScreenshotItem &a, const ScreenshotItem &b) {
+                return (a.width * a.height) > (b.width * b.height);
+              });
+    break;
+  default:
+    break;
+  }
+
+  endResetModel();
   emit countChanged();
 }
 
@@ -212,6 +336,21 @@ bool LibraryManager::passesFilter(const ScreenshotItem &item) const {
     }
   }
 
+  // Format filter
+  if (m_formatFilter > 0) {
+    QString ext = QFileInfo(item.filePath).suffix().toLower();
+    if (m_formatFilter == 1 && ext != "png") {
+      return false;
+    }
+    if (m_formatFilter == 2 && ext != "jpg" && ext != "jpeg") {
+      return false;
+    }
+    if (m_formatFilter == 3 && ext != "webp") {
+      return false;
+    }
+  }
+
+  // Date filter
   if (m_dateFilter == 0) { // All
     return true;
   }
@@ -224,9 +363,15 @@ bool LibraryManager::passesFilter(const ScreenshotItem &item) const {
     return itemDate == today;
   case 2: // Yesterday
     return itemDate == today.addDays(-1);
-  case 3: // This Week
-    return itemDate >= today.addDays(-7);
-  case 4: // This Month
+  case 3: { // This Week (Locale-aware calendar week Monday-Sunday)
+    int dayOfWeek = today.dayOfWeek(); // 1 = Monday, 7 = Sunday
+    QDate startOfWeek = today.addDays(-(dayOfWeek - 1));
+    QDate endOfWeek = startOfWeek.addDays(6);
+    return itemDate >= startOfWeek && itemDate <= endOfWeek;
+  }
+  case 4: // Last 7 Days
+    return itemDate >= today.addDays(-6) && itemDate <= today;
+  case 5: // This Month
     return itemDate.month() == today.month() && itemDate.year() == today.year();
   default:
     return true;
@@ -243,19 +388,71 @@ bool LibraryManager::deleteItem(int row) {
 }
 
 bool LibraryManager::deleteItemByPath(const QString &path) {
-  QFile file(path);
-  if (file.remove()) {
-    // Delete cached thumbnail if exists
-    QByteArray hash =
-        QCryptographicHash::hash(path.toUtf8(), QCryptographicHash::Md5)
-            .toHex();
-    QString thumbPath = m_cacheDir + "/" + hash + ".png";
-    QFile::remove(thumbPath);
+  if (!m_settings) {
+    return false;
+  }
 
+  QString root = m_settings->saveDirectory();
+  QString err;
+  if (m_trashManager.trashFile(path, root, &err)) {
+    m_lastTrashedFileName = QFileInfo(path).fileName();
+    emit lastTrashedChanged();
+    emit canUndoTrashChanged();
+    emit itemTrashed(path);
     emit itemDeleted(path);
+
+    // Remove from selection if selected
+    if (m_selectedPaths.remove(path)) {
+      emit selectionChanged();
+    }
+
     refresh();
     return true;
   }
+
+  m_errorMessage = err;
+  emit errorMessageChanged();
+  return false;
+}
+
+bool LibraryManager::undoLastTrash() {
+  QString restoredPath;
+  QString err;
+  if (m_trashManager.undoLastTrash(&restoredPath, &err)) {
+    emit canUndoTrashChanged();
+    emit itemRestored(restoredPath);
+    emit operationCompleted("Dosya geri yüklendi: " +
+                            QFileInfo(restoredPath).fileName());
+    refresh();
+    return true;
+  }
+
+  m_errorMessage = err;
+  emit errorMessageChanged();
+  return false;
+}
+
+bool LibraryManager::permanentDeleteItem(int row) {
+  if (row < 0 || row >= static_cast<int>(m_filteredItems.size()) ||
+      !m_settings) {
+    return false;
+  }
+
+  QString path = m_filteredItems.at(row).filePath;
+  QString root = m_settings->saveDirectory();
+  QString err;
+
+  if (m_trashManager.permanentDelete(path, root, &err)) {
+    emit itemDeleted(path);
+    if (m_selectedPaths.remove(path)) {
+      emit selectionChanged();
+    }
+    refresh();
+    return true;
+  }
+
+  m_errorMessage = err;
+  emit errorMessageChanged();
   return false;
 }
 
@@ -269,6 +466,7 @@ bool LibraryManager::copyToClipboard(int row) {
   if (!img.isNull()) {
     QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setImage(img);
+    emit operationCompleted("Görsel panoya kopyalandı.");
     return true;
   }
   return false;
@@ -280,8 +478,7 @@ void LibraryManager::openInFolder(int row) {
   }
 
   QString path = m_filteredItems.at(row).filePath;
-  QFileInfo info(path);
-  QDesktopServices::openUrl(QUrl::fromLocalFile(info.absolutePath()));
+  m_trashManager.showInFolder(path);
 }
 
 void LibraryManager::openFile(int row) {
@@ -315,32 +512,241 @@ QVariantMap LibraryManager::getItem(int row) const {
   map["width"] = item.width;
   map["height"] = item.height;
   map["thumbnailUrl"] = item.thumbnailUrl;
+  map["isSelected"] = m_selectedPaths.contains(item.filePath);
   return map;
 }
 
-QString LibraryManager::getOrCreateThumbnail(const QString &imagePath) const {
-  QByteArray hash =
-      QCryptographicHash::hash(imagePath.toUtf8(), QCryptographicHash::Md5)
-          .toHex();
-  QString thumbPath = m_cacheDir + "/" + hash + ".png";
+void LibraryManager::toggleSelection(int row) {
+  if (row < 0 || row >= static_cast<int>(m_filteredItems.size())) {
+    return;
+  }
+  QString path = m_filteredItems.at(row).filePath;
+  if (m_selectedPaths.contains(path)) {
+    m_selectedPaths.remove(path);
+  } else {
+    m_selectedPaths.insert(path);
+  }
+  emit dataChanged(index(row, 0), index(row, 0), {IsSelectedRole});
+  emit selectionChanged();
+}
 
-  if (QFile::exists(thumbPath)) {
-    return QUrl::fromLocalFile(thumbPath).toString();
+void LibraryManager::selectAll() {
+  m_selectedPaths.clear();
+  for (const auto &item : m_filteredItems) {
+    m_selectedPaths.insert(item.filePath);
+  }
+  if (!m_filteredItems.isEmpty()) {
+    emit dataChanged(index(0, 0),
+                     index(static_cast<int>(m_filteredItems.size()) - 1, 0),
+                     {IsSelectedRole});
+  }
+  emit selectionChanged();
+}
+
+void LibraryManager::clearSelection() {
+  m_selectedPaths.clear();
+  if (!m_filteredItems.isEmpty()) {
+    emit dataChanged(index(0, 0),
+                     index(static_cast<int>(m_filteredItems.size()) - 1, 0),
+                     {IsSelectedRole});
+  }
+  emit selectionChanged();
+}
+
+bool LibraryManager::isSelected(int row) const {
+  if (row < 0 || row >= static_cast<int>(m_filteredItems.size())) {
+    return false;
+  }
+  return m_selectedPaths.contains(m_filteredItems.at(row).filePath);
+}
+
+QList<int> LibraryManager::selectedRows() const {
+  QList<int> rows;
+  for (int i = 0; i < m_filteredItems.size(); ++i) {
+    if (m_selectedPaths.contains(m_filteredItems.at(i).filePath)) {
+      rows.append(i);
+    }
+  }
+  return rows;
+}
+
+bool LibraryManager::trashSelected() {
+  if (m_selectedPaths.isEmpty() || !m_settings) {
+    return false;
   }
 
-  QImageReader reader(imagePath);
-  QSize origSize = reader.size();
-  if (origSize.isValid()) {
-    QSize targetSize = origSize.scaled(320, 240, Qt::KeepAspectRatio);
-    reader.setScaledSize(targetSize);
-    QImage thumb = reader.read();
-    if (!thumb.isNull()) {
-      thumb.save(thumbPath, "PNG");
-      return QUrl::fromLocalFile(thumbPath).toString();
+  QString root = m_settings->saveDirectory();
+  int countSuccess = 0;
+  for (const auto &path : m_selectedPaths) {
+    if (m_trashManager.trashFile(path, root)) {
+      countSuccess++;
     }
   }
 
-  return QUrl::fromLocalFile(imagePath).toString();
+  m_selectedPaths.clear();
+  emit selectionChanged();
+  emit canUndoTrashChanged();
+  refresh();
+  return countSuccess > 0;
+}
+
+bool LibraryManager::permanentDeleteSelected() {
+  if (m_selectedPaths.isEmpty() || !m_settings) {
+    return false;
+  }
+
+  QString root = m_settings->saveDirectory();
+  int countSuccess = 0;
+  for (const auto &path : m_selectedPaths) {
+    if (m_trashManager.permanentDelete(path, root)) {
+      countSuccess++;
+    }
+  }
+
+  m_selectedPaths.clear();
+  emit selectionChanged();
+  refresh();
+  return countSuccess > 0;
+}
+
+bool LibraryManager::copySelectedToClipboard() {
+  if (m_selectedPaths.isEmpty()) {
+    return false;
+  }
+
+  // Copy first selected image to clipboard
+  QString firstPath = *m_selectedPaths.begin();
+  QImage img(firstPath);
+  if (!img.isNull()) {
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setImage(img);
+    emit operationCompleted("Seçili görsel panoya kopyalandı.");
+    return true;
+  }
+  return false;
+}
+
+QVariantMap LibraryManager::renameItem(int row, const QString &newName) {
+  QVariantMap result;
+  if (row < 0 || row >= static_cast<int>(m_filteredItems.size()) ||
+      !m_settings) {
+    result["success"] = false;
+    result["error"] = "Geçersiz öğe seçimi.";
+    return result;
+  }
+
+  QString oldPath = m_filteredItems.at(row).filePath;
+  QString root = m_settings->saveDirectory();
+  result = m_trashManager.renameFile(oldPath, newName, root);
+
+  if (result["success"].toBool()) {
+    if (m_selectedPaths.remove(oldPath)) {
+      m_selectedPaths.insert(result["newPath"].toString());
+    }
+    emit operationCompleted("Dosya yeniden adlandırıldı.");
+    refresh();
+  } else {
+    m_errorMessage = result["error"].toString();
+    emit errorMessageChanged();
+  }
+
+  return result;
+}
+
+QVariantMap LibraryManager::exportAnnotatedImage(
+    const QString &sourcePath, const QString &overlayDataUrl, qreal viewportX,
+    qreal viewportY, qreal viewportWidth, qreal viewportHeight) {
+  QVariantMap result;
+  result[QStringLiteral("success")] = false;
+
+  if (!m_settings ||
+      !m_trashManager.isPathSafe(sourcePath, m_settings->saveDirectory())) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Güvenlik hatası: Dosya kitaplık sınırları dışında.");
+    return result;
+  }
+  if (viewportWidth <= 0.0 || viewportHeight <= 0.0) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Düzenleyici görüntü alanı geçersiz.");
+    return result;
+  }
+
+  const qsizetype comma = overlayDataUrl.indexOf(u',');
+  if (comma < 0) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Anotasyon verisi okunamadı.");
+    return result;
+  }
+  const QImage source(sourcePath);
+  const QImage overlay = QImage::fromData(
+      QByteArray::fromBase64(overlayDataUrl.mid(comma + 1).toLatin1()), "PNG");
+  if (source.isNull() || overlay.isNull()) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Görüntü veya anotasyon verisi okunamadı.");
+    return result;
+  }
+
+  const QRect viewport =
+      QRectF(viewportX, viewportY, viewportWidth, viewportHeight)
+          .toAlignedRect()
+          .intersected(overlay.rect());
+  if (viewport.isEmpty()) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Anotasyon alanı görüntü sınırları dışında.");
+    return result;
+  }
+
+  QImage composited =
+      source.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+  const QImage annotations = overlay.copy(viewport).scaled(
+      composited.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+  QPainter painter(&composited);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  painter.drawImage(QPoint(), annotations);
+  painter.end();
+
+  const QFileInfo sourceInfo(sourcePath);
+  const QString destination = sourceInfo.dir().filePath(
+      QStringLiteral("%1_edited_%2.png")
+          .arg(sourceInfo.completeBaseName(),
+               QDateTime::currentDateTime().toString(
+                   QStringLiteral("yyyyMMdd_HHmmss_zzz"))));
+  QBuffer buffer;
+  buffer.open(QIODevice::WriteOnly);
+  if (!composited.save(&buffer, "PNG")) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Düzenlenmiş görüntü kodlanamadı.");
+    return result;
+  }
+  QSaveFile output(destination);
+  if (!output.open(QIODevice::WriteOnly) ||
+      output.write(buffer.data()) != buffer.data().size() || !output.commit()) {
+    result[QStringLiteral("error")] =
+        QStringLiteral("Düzenlenmiş görüntü güvenli biçimde kaydedilemedi.");
+    return result;
+  }
+
+  result[QStringLiteral("success")] = true;
+  result[QStringLiteral("path")] = destination;
+  emit operationCompleted(QStringLiteral("Düzenlenmiş görsel kaydedildi."));
+  refresh();
+  return result;
+}
+
+bool LibraryManager::clearThumbnailCache() {
+  if (m_cache) {
+    bool ok = m_cache->clearCache();
+    emit thumbnailCacheCleared(ok);
+    return ok;
+  }
+  return false;
+}
+
+bool LibraryManager::isPathInLibrary(const QString &path) const {
+  if (!m_settings) {
+    return false;
+  }
+  return m_trashManager.isPathSafe(path, m_settings->saveDirectory());
 }
 
 QString LibraryManager::formatFileSize(qint64 bytes) const {

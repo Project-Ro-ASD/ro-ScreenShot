@@ -1,14 +1,20 @@
 #pragma once
 
-#include "SettingsManager.hpp"
-#include "Types.hpp"
+#include "core/SettingsManager.hpp"
+#include "core/Types.hpp"
+#include "core/library/ScanWorker.hpp"
+#include "core/library/ThumbnailCache.hpp"
+#include "core/library/TrashManager.hpp"
 #include <QAbstractListModel>
 #include <QDateTime>
 #include <QFileSystemWatcher>
-#include <QFutureWatcher>
 #include <QList>
 #include <QObject>
+#include <QSet>
 #include <QString>
+#include <QThreadPool>
+#include <atomic>
+#include <memory>
 
 namespace ro_screenshot {
 
@@ -20,9 +26,20 @@ class LibraryManager : public QAbstractListModel {
                  searchQueryChanged)
   Q_PROPERTY(int dateFilter READ dateFilter WRITE setDateFilter NOTIFY
                  dateFilterChanged)
+  Q_PROPERTY(int formatFilter READ formatFilter WRITE setFormatFilter NOTIFY
+                 formatFilterChanged)
+  Q_PROPERTY(
+      int sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
   Q_PROPERTY(bool isScanning READ isScanning NOTIFY isScanningChanged)
+  Q_PROPERTY(QString scanState READ scanState NOTIFY scanStateChanged)
+  Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
   Q_PROPERTY(QString totalStorageSize READ totalStorageSize NOTIFY
                  totalStorageSizeChanged)
+  Q_PROPERTY(int selectedCount READ selectedCount NOTIFY selectionChanged)
+  Q_PROPERTY(bool canUndoTrash READ canUndoTrash NOTIFY canUndoTrashChanged)
+  Q_PROPERTY(QString lastTrashedFileName READ lastTrashedFileName NOTIFY
+                 lastTrashedChanged)
+  Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged)
 
 public:
   enum Roles {
@@ -35,12 +52,25 @@ public:
     ResolutionRole,
     WidthRole,
     HeightRole,
-    ThumbnailUrlRole
+    ThumbnailUrlRole,
+    IsSelectedRole,
+    FormatRole
   };
   Q_ENUM(Roles)
 
+  enum SortOrder {
+    NewestFirst = 0,
+    OldestFirst,
+    NameAsc,
+    NameDesc,
+    SizeDesc,
+    SizeAsc,
+    ResolutionDesc
+  };
+  Q_ENUM(SortOrder)
+
   explicit LibraryManager(SettingsManager *settings, QObject *parent = nullptr);
-  ~LibraryManager() override = default;
+  ~LibraryManager() override;
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index,
@@ -54,45 +84,110 @@ public:
   int dateFilter() const;
   void setDateFilter(int filter);
 
+  int formatFilter() const;
+  void setFormatFilter(int filter);
+
+  int sortOrder() const;
+  void setSortOrder(int order);
+
   bool isScanning() const;
+  QString scanState() const;
+  int scanProgress() const;
   QString totalStorageSize() const;
 
+  int selectedCount() const;
+  bool canUndoTrash() const;
+  QString lastTrashedFileName() const;
+  QString errorMessage() const;
+
   Q_INVOKABLE void refresh();
+  Q_INVOKABLE bool waitForScan(int timeoutMs = 5000);
   Q_INVOKABLE bool deleteItem(int row);
   Q_INVOKABLE bool deleteItemByPath(const QString &path);
+  Q_INVOKABLE bool undoLastTrash();
+  Q_INVOKABLE bool permanentDeleteItem(int row);
   Q_INVOKABLE bool copyToClipboard(int row);
   Q_INVOKABLE void openInFolder(int row);
   Q_INVOKABLE void openFile(int row);
   Q_INVOKABLE QString getFilePath(int row) const;
   Q_INVOKABLE QVariantMap getItem(int row) const;
 
+  // Multi-selection & Batch Operations
+  Q_INVOKABLE void toggleSelection(int row);
+  Q_INVOKABLE void selectAll();
+  Q_INVOKABLE void clearSelection();
+  Q_INVOKABLE bool isSelected(int row) const;
+  Q_INVOKABLE QList<int> selectedRows() const;
+  Q_INVOKABLE bool trashSelected();
+  Q_INVOKABLE bool permanentDeleteSelected();
+  Q_INVOKABLE bool copySelectedToClipboard();
+
+  // Rename & Cache
+  Q_INVOKABLE QVariantMap renameItem(int row, const QString &newName);
+  Q_INVOKABLE QVariantMap exportAnnotatedImage(const QString &sourcePath,
+                                               const QString &overlayDataUrl,
+                                               qreal viewportX, qreal viewportY,
+                                               qreal viewportWidth,
+                                               qreal viewportHeight);
+  Q_INVOKABLE bool clearThumbnailCache();
+  Q_INVOKABLE bool isPathInLibrary(const QString &path) const;
+
 signals:
   void countChanged();
   void searchQueryChanged();
   void dateFilterChanged();
+  void formatFilterChanged();
+  void sortOrderChanged();
   void isScanningChanged();
+  void scanStateChanged();
+  void scanProgressChanged();
   void totalStorageSizeChanged();
+  void selectionChanged();
+  void canUndoTrashChanged();
+  void lastTrashedChanged();
+  void errorMessageChanged();
   void itemDeleted(const QString &path);
+  void itemTrashed(const QString &path);
+  void itemRestored(const QString &path);
+  void thumbnailCacheCleared(bool success);
+  void operationCompleted(const QString &message);
 
 private slots:
   void onDirectoryChanged(const QString &path);
   void onSaveDirectorySettingChanged();
+  void onScanProgress(int count);
+  void onScanFinished(const ro_screenshot::ScanResult &result);
 
 private:
-  void filterItems();
+  void filterAndSortItems();
   QString formatFileSize(qint64 bytes) const;
-  QString getOrCreateThumbnail(const QString &imagePath) const;
   bool passesFilter(const ScreenshotItem &item) const;
+  void updateWatchers(const QStringList &directories);
 
   SettingsManager *m_settings{nullptr};
   QFileSystemWatcher m_watcher;
+  std::shared_ptr<ThumbnailCache> m_cache;
+  TrashManager m_trashManager;
+
   QList<ScreenshotItem> m_allItems;
   QList<ScreenshotItem> m_filteredItems;
+  QSet<QString> m_selectedPaths;
+
   QString m_searchQuery;
-  int m_dateFilter{0}; // 0=All, 1=Today, 2=Yesterday, 3=ThisWeek, 4=ThisMonth
+  int m_dateFilter{
+      0}; // 0=All, 1=Today, 2=Yesterday, 3=ThisWeek, 4=Last7Days, 5=ThisMonth
+  int m_formatFilter{0}; // 0=All, 1=PNG, 2=JPG, 3=WEBP
+  int m_sortOrder{0};    // NewestFirst
+
   bool m_isScanning{false};
+  QString m_scanState{"idle"}; // "idle", "scanning", "error"
+  int m_scanProgress{0};
   qint64 m_totalBytes{0};
-  QString m_cacheDir;
+  QString m_errorMessage;
+  QString m_lastTrashedFileName;
+
+  uint64_t m_currentGeneration{0};
+  std::shared_ptr<std::atomic<bool>> m_currentCancelFlag;
 };
 
 } // namespace ro_screenshot
