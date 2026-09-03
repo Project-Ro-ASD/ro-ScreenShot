@@ -1,12 +1,15 @@
-# Ro-ScreenShot
+# ro-ScreenShot
 
-**Modern, Wayland-Native Screen Capture & Gallery Suite for Ro-ASD and Linux.**
+A modern, lightning-fast screen capture, annotation, and library management tool engineered for Linux desktop environments with native Wayland and X11 support. Built using C++20 and Qt 6.
+
+[![Build and Test](https://github.com/Project-Ro-ASD/Ro-ScreenShot/actions/workflows/build-test.yml/badge.svg)](https://github.com/Project-Ro-ASD/Ro-ScreenShot/actions)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 ---
 
 ## Overview
 
-**Ro-ScreenShot** is a next-generation screen capture, annotation, and library management tool engineered specifically for modern Linux desktop environments (Fedora 44+, KDE Plasma 6, GNOME, and Wayland compositors). It combines a zero-latency sniper capture engine with a comprehensive desktop library and flexible automation workflows.
+**ro-ScreenShot** is a next-generation screen capture, annotation, and library management tool engineered specifically for modern Linux desktop environments (Fedora 44+, KDE Plasma 6, GNOME, and Wayland compositors). It combines a zero-latency sniper capture engine with a comprehensive desktop library and flexible automation workflows.
 
 ### Core Capabilities
 
