@@ -1,9 +1,6 @@
 # ro-ScreenShot
 
-A modern, lightning-fast screen capture, annotation, and library management tool engineered for Linux desktop environments with native Wayland and X11 support. Built using C++20 and Qt 6.
-
-[![Build and Test](https://github.com/Project-Ro-ASD/Ro-ScreenShot/actions/workflows/build-test.yml/badge.svg)](https://github.com/Project-Ro-ASD/Ro-ScreenShot/actions)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+A modern, lightning-fast screen capture, annotation, and library management tool engineered for Ro-ASD desktop environments with native Wayland and X11 support. Built using C++20 and Qt 6.
 
 ---
 
@@ -46,26 +43,6 @@ shortcut.
 - **`Shift + Arrow Keys`**: Resize the selection by one pixel.
 - **`C`**: Copy hovered pixel HEX color code to clipboard.
 - **`Escape`**: Cancel capture.
-
----
-
-## Build and Run
-
-Linux paths are case-sensitive. Clone into and consistently use the exact
-`ro-ScreenShot` directory name:
-
-```bash
-git clone https://github.com/Project-Ro-ASD/Ro-ScreenShot.git ro-ScreenShot
-cd ro-ScreenShot
-
-cmake -S . -B build -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_TESTING=ON
-cmake --build build --parallel
-./build/ro-screenshot
-```
-
-See the [build guide](docs/BUILD.md) for testing and CMake cache troubleshooting.
 
 ---
 
