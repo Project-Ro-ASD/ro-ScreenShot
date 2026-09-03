@@ -1,5 +1,6 @@
 #include "core/CaptureEngine.hpp"
 #include "core/DBusService.hpp"
+#include "core/DesktopFeedback.hpp"
 #include "core/LanguageManager.hpp"
 #include "core/LibraryManager.hpp"
 #include "core/SettingsManager.hpp"
@@ -10,6 +11,7 @@
 #include <QCommandLineParser>
 #include <QDBusInterface>
 #include <QDBusReply>
+#include <QDebug>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
@@ -50,6 +52,12 @@ int main(int argc, char *argv[]) {
   QCommandLineOption delayOption({"d", "delay"},
                                  "Yakalama öncesi gecikme süresi (saniye).",
                                  "saniye", "0");
+  QCommandLineOption copyOnlyOption("copy-only",
+                                    "Yalnızca panoya kopyala; diske kaydetme.");
+  QCommandLineOption saveOnlyOption("save-only",
+                                    "Yalnızca diske kaydet; panoya kopyalama.");
+  QCommandLineOption lastRegionOption(
+      "last-region", "Önceki bölge sınırlarıyla yeniden yakala.");
   QCommandLineOption renderOption(
       "render-to", "Main pencereyi PNG olarak çiz ve çık (doc).", "file");
 
@@ -59,24 +67,60 @@ int main(int argc, char *argv[]) {
   parser.addOption(libraryOption);
   parser.addOption(settingsOption);
   parser.addOption(delayOption);
+  parser.addOption(copyOnlyOption);
+  parser.addOption(saveOnlyOption);
+  parser.addOption(lastRegionOption);
   parser.addOption(renderOption);
 
   parser.process(app);
 
-  int delaySec = parser.value(delayOption).toInt();
+  bool delayIsValid = false;
+  const int delaySec = parser.value(delayOption).toInt(&delayIsValid);
+  if (!delayIsValid || delaySec < 0 || delaySec > 3600) {
+    qCritical("--delay must be an integer between 0 and 3600 seconds.");
+    return 5;
+  }
+  if (parser.isSet(copyOnlyOption) && parser.isSet(saveOnlyOption)) {
+    qCritical("--copy-only and --save-only cannot be used together.");
+    return 5;
+  }
+  const QString captureAction =
+      parser.isSet(copyOnlyOption)
+          ? QStringLiteral("copy")
+          : (parser.isSet(saveOnlyOption) ? QStringLiteral("save") : QString());
+  const bool hasCaptureRequest =
+      parser.isSet(regionOption) || parser.isSet(fullscreenOption) ||
+      parser.isSet(windowOption) || parser.isSet(lastRegionOption) ||
+      parser.isSet(delayOption);
 
   // Check if an instance is already running via D-Bus
   QDBusInterface iface("org.ro_asd.ScreenShot", "/org/ro_asd/ScreenShot",
                        "org.ro_asd.ScreenShot", QDBusConnection::sessionBus());
   if (iface.isValid()) {
-    if (parser.isSet(regionOption)) {
-      iface.call(QDBus::NoBlock, "CaptureRegion", delaySec);
+    const auto dispatchCapture = [&iface, delaySec,
+                                  captureAction](const QString &defaultMethod,
+                                                 const QString &actionMethod) {
+      if (captureAction.isEmpty()) {
+        iface.call(QDBus::NoBlock, defaultMethod, delaySec);
+      } else {
+        iface.call(QDBus::NoBlock, actionMethod, delaySec, captureAction);
+      }
+    };
+    if (parser.isSet(lastRegionOption)) {
+      dispatchCapture(QStringLiteral("CaptureLastRegion"),
+                      QStringLiteral("CaptureLastRegionWithAction"));
+      return 0;
+    } else if (parser.isSet(regionOption) || parser.isSet(delayOption)) {
+      dispatchCapture(QStringLiteral("CaptureRegion"),
+                      QStringLiteral("CaptureRegionWithAction"));
       return 0;
     } else if (parser.isSet(fullscreenOption)) {
-      iface.call(QDBus::NoBlock, "CaptureFullscreen", delaySec);
+      dispatchCapture(QStringLiteral("CaptureFullscreen"),
+                      QStringLiteral("CaptureFullscreenWithAction"));
       return 0;
     } else if (parser.isSet(windowOption)) {
-      iface.call(QDBus::NoBlock, "CaptureWindow", delaySec);
+      dispatchCapture(QStringLiteral("CaptureWindow"),
+                      QStringLiteral("CaptureWindowWithAction"));
       return 0;
     } else if (parser.isSet(settingsOption)) {
       iface.call(QDBus::NoBlock, "OpenSettings");
@@ -91,9 +135,13 @@ int main(int argc, char *argv[]) {
   SettingsManager settingsManager;
   LibraryManager libraryManager(&settingsManager);
   CaptureEngine captureEngine(&settingsManager, &libraryManager);
+  DesktopFeedback desktopFeedback;
 
   DBusService dbusService(&captureEngine);
-  dbusService.registerService();
+  if (!dbusService.registerService()) {
+    qWarning() << "[dbus] Single-instance service registration failed; "
+                  "continuing without D-Bus command routing.";
+  }
 
   QTranslator translator;
 
@@ -127,9 +175,7 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().first();
   QQuickWindow *mainWindow = qobject_cast<QQuickWindow *>(rootObject);
-  const bool captureOnlyLaunch = parser.isSet(regionOption) ||
-                                 parser.isSet(fullscreenOption) ||
-                                 parser.isSet(windowOption);
+  const bool captureOnlyLaunch = hasCaptureRequest;
 
   QObject::connect(&captureEngine, &CaptureEngine::captureUiShouldHide, &app,
                    [mainWindow]() {
@@ -155,22 +201,24 @@ int main(int argc, char *argv[]) {
   QQmlComponent sniperComponent(&engine, "ro_screenshot", "SniperOverlay");
   QObject *sniperWindowObject = nullptr;
 
-  QObject::connect(&captureEngine, &CaptureEngine::openSniperOverlay, &app,
-                   [&sniperComponent, &sniperWindowObject](
-                       const QString & /*framePath*/, int /*w*/, int /*h*/) {
-                     if (!sniperWindowObject) {
-                       sniperWindowObject = sniperComponent.create();
-                     }
-                     if (sniperWindowObject) {
-                       QQuickWindow *win =
-                           qobject_cast<QQuickWindow *>(sniperWindowObject);
-                       if (win) {
-                         win->showFullScreen();
-                         win->raise();
-                         win->requestActivate();
-                       }
-                     }
-                   });
+  QObject::connect(
+      &captureEngine, &CaptureEngine::openSniperOverlay, &app,
+      [&sniperComponent, &sniperWindowObject](const QString & /*framePath*/,
+                                              int frameWidth, int frameHeight) {
+        if (!sniperWindowObject) {
+          sniperWindowObject = sniperComponent.create();
+        }
+        if (sniperWindowObject) {
+          QQuickWindow *win = qobject_cast<QQuickWindow *>(sniperWindowObject);
+          if (win) {
+            win->setProperty("sourceFrameWidth", frameWidth);
+            win->setProperty("sourceFrameHeight", frameHeight);
+            win->showFullScreen();
+            win->raise();
+            win->requestActivate();
+          }
+        }
+      });
 
   QObject::connect(&captureEngine, &CaptureEngine::closeSniperOverlay, &app,
                    [&sniperWindowObject]() {
@@ -187,21 +235,36 @@ int main(int argc, char *argv[]) {
   QQmlComponent toastComponent(&engine, "ro_screenshot", "FloatingThumbnail");
   QObject *toastObject = nullptr;
 
-  QObject::connect(&captureEngine, &CaptureEngine::captureSuccess, &app,
-                   [&toastComponent, &toastObject,
-                    &settingsManager](const QString &path, const QString &name,
-                                      bool /*saved*/, bool /*copied*/) {
-                     if (settingsManager.showFloatingThumbnail()) {
-                       if (!toastObject) {
-                         toastObject = toastComponent.create();
-                       }
-                       if (toastObject) {
-                         QMetaObject::invokeMethod(toastObject, "showToast",
-                                                   Q_ARG(QVariant, path),
-                                                   Q_ARG(QVariant, name));
-                       }
-                     }
-                   });
+  QObject::connect(
+      &captureEngine, &CaptureEngine::captureSuccess, &app,
+      [&toastComponent, &toastObject, &settingsManager, &desktopFeedback](
+          const QString &path, const QString &name, bool saved, bool copied) {
+        if (settingsManager.showNotification()) {
+          desktopFeedback.showCaptureSuccess(path, name, saved, copied);
+        }
+        if (settingsManager.playShutterSound()) {
+          desktopFeedback.playShutter();
+        }
+        if (settingsManager.showFloatingThumbnail()) {
+          if (!toastObject) {
+            toastObject = toastComponent.create();
+          }
+          if (toastObject) {
+            QMetaObject::invokeMethod(toastObject, "showToast",
+                                      Q_ARG(QVariant, path),
+                                      Q_ARG(QVariant, name));
+          }
+        }
+      });
+
+  QObject::connect(
+      &captureEngine, &CaptureEngine::captureError, &app,
+      [&settingsManager, &desktopFeedback](const QString &message) {
+        if (settingsManager.showNotification()) {
+          desktopFeedback.showError(message);
+        }
+        qWarning().noquote() << "[capture]" << message;
+      });
 
   // Connect D-Bus signals to Main Window tabs
   QObject::connect(&dbusService, &DBusService::openLibraryRequested, &app,
@@ -232,26 +295,33 @@ int main(int argc, char *argv[]) {
                    &QGuiApplication::quit);
 
   // Handle immediate CLI trigger if requested on launch
-  if (parser.isSet(regionOption)) {
+  if (parser.isSet(lastRegionOption)) {
     if (mainWindow) {
       mainWindow->hide();
     }
-    QTimer::singleShot(100, [&captureEngine, delaySec]() {
-      captureEngine.requestRegionCapture(delaySec);
+    QTimer::singleShot(100, [&captureEngine, delaySec, captureAction]() {
+      captureEngine.requestLastRegionCaptureWithAction(delaySec, captureAction);
+    });
+  } else if (parser.isSet(regionOption) || parser.isSet(delayOption)) {
+    if (mainWindow) {
+      mainWindow->hide();
+    }
+    QTimer::singleShot(100, [&captureEngine, delaySec, captureAction]() {
+      captureEngine.requestRegionCaptureWithAction(delaySec, captureAction);
     });
   } else if (parser.isSet(fullscreenOption)) {
     if (mainWindow) {
       mainWindow->hide();
     }
-    QTimer::singleShot(100, [&captureEngine, delaySec]() {
-      captureEngine.requestFullscreenCapture(delaySec);
+    QTimer::singleShot(100, [&captureEngine, delaySec, captureAction]() {
+      captureEngine.requestFullscreenCaptureWithAction(delaySec, captureAction);
     });
   } else if (parser.isSet(windowOption)) {
     if (mainWindow) {
       mainWindow->hide();
     }
-    QTimer::singleShot(100, [&captureEngine, delaySec]() {
-      captureEngine.requestWindowCapture(delaySec);
+    QTimer::singleShot(100, [&captureEngine, delaySec, captureAction]() {
+      captureEngine.requestWindowCaptureWithAction(delaySec, captureAction);
     });
   } else if (parser.isSet(libraryOption)) {
     if (rootObject) {

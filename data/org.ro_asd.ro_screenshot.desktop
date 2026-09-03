@@ -9,7 +9,7 @@ Type=Application
 Categories=Graphics;2DGraphics;RasterGraphics;
 Keywords=screenshot;capture;sniper;region;ekran;yakalama;galeri;
 StartupNotify=true
-Actions=CaptureRegion;CaptureFullscreen;CaptureWindow;CaptureDelayed;OpenLibrary;OpenSettings;
+Actions=CaptureRegion;CaptureFullscreen;CaptureWindow;CaptureDelayed;CaptureRegionCopy;CaptureRegionSave;CaptureLastRegion;OpenLibrary;OpenSettings;
 
 [Desktop Action CaptureRegion]
 Name=Bölge Seçimi Yakala
@@ -34,6 +34,24 @@ Name=5 Saniye Gecikmeli Bölge Yakala
 Exec=ro-screenshot --region --delay 5
 Icon=chronometer
 X-KDE-Shortcuts=Ctrl+Print
+
+[Desktop Action CaptureRegionCopy]
+Name=Bölgeyi Panoya Kopyala
+Exec=ro-screenshot --region --copy-only
+Icon=edit-copy
+X-KDE-Shortcuts=Ctrl+Shift+Print
+
+[Desktop Action CaptureRegionSave]
+Name=Bölgeyi Diske Kaydet
+Exec=ro-screenshot --region --save-only
+Icon=document-save
+X-KDE-Shortcuts=Ctrl+Alt+Print
+
+[Desktop Action CaptureLastRegion]
+Name=Son Bölgeyi Tekrar Yakala
+Exec=ro-screenshot --last-region
+Icon=view-refresh
+X-KDE-Shortcuts=Ctrl+Shift+R
 
 [Desktop Action OpenLibrary]
 Name=Galeri / Kütüphane

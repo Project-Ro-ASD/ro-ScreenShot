@@ -37,8 +37,29 @@ private slots:
     QVERIFY(!engine.frozenFramePath().isEmpty());
     QVERIFY(!engine.hasLastRegion());
 
-    settings.setLastRegion(QRect(10, 10, 320, 180));
+    settings.setLastRegionGeometry(QRect(10, 10, 320, 180), QSize(1920, 1080));
     QVERIFY(engine.hasLastRegion());
+  }
+
+  void testSaveImageAsWritesValidImage() {
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    SettingsManager settings;
+    LibraryManager library(&settings);
+    CaptureEngine engine(&settings, &library);
+
+    const QString sourcePath = tempDir.path() + "/source.png";
+    QImage source(48, 32, QImage::Format_ARGB32_Premultiplied);
+    source.fill(Qt::cyan);
+    QVERIFY(source.save(sourcePath));
+
+    const QString destinationPath = tempDir.path() + "/nested/export.webp";
+    QVERIFY(engine.saveImageAs(sourcePath, destinationPath));
+
+    const QImage exported(destinationPath);
+    QVERIFY(!exported.isNull());
+    QCOMPARE(exported.size(), source.size());
   }
 };
 

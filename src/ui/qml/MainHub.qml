@@ -35,6 +35,32 @@ ApplicationWindow {
         context: Qt.ApplicationShortcut
         onActivated: captureEngine.requestRegionCapture(5)
     }
+    Shortcut {
+        sequence: "Ctrl+Shift+Print"
+        context: Qt.ApplicationShortcut
+        onActivated: captureEngine.requestRegionCaptureWithAction(0, "copy")
+    }
+    Shortcut {
+        sequence: "Ctrl+Alt+Print"
+        context: Qt.ApplicationShortcut
+        onActivated: captureEngine.requestRegionCaptureWithAction(0, "save")
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+R"
+        context: Qt.ApplicationShortcut
+        enabled: captureEngine.hasLastRegion
+        onActivated: captureEngine.requestLastRegionCapture(0)
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+L"
+        context: Qt.ApplicationShortcut
+        onActivated: root.currentTab = 1
+    }
+    Shortcut {
+        sequence: "Ctrl+,"
+        context: Qt.ApplicationShortcut
+        onActivated: root.currentTab = 2
+    }
 
     readonly property bool hasUiPreferences: UiPreferencesManager !== null
     readonly property string themeMode: hasUiPreferences ? UiPreferencesManager.themeMode : "light"
@@ -71,6 +97,86 @@ ApplicationWindow {
     Material.primary: colors.accentB
     Material.background: colors.window
     Material.foreground: colors.text
+
+    property string captureStatusMessage: ""
+    property bool captureStatusIsError: false
+
+    function showCaptureStatus(message, isError) {
+        captureStatusMessage = message
+        captureStatusIsError = isError
+        captureStatusPopup.open()
+        captureStatusTimer.restart()
+    }
+
+    Connections {
+        target: captureEngine
+        function onCaptureSuccess(filePath, fileName, savedToDisk, copiedToClipboard) {
+            var details = []
+            if (savedToDisk)
+                details.push(qsTr("Kaydedildi"))
+            if (copiedToClipboard)
+                details.push(qsTr("Panoya kopyalandı"))
+            root.showCaptureStatus(details.length > 0 ? details.join(" • ") : qsTr("Ekran görüntüsü hazır"), false)
+        }
+        function onCaptureError(message) {
+            root.showCaptureStatus(message, true)
+        }
+        function onColorCopied(hexColor) {
+            root.showCaptureStatus(qsTr("Renk panoya kopyalandı: %1").arg(hexColor), false)
+        }
+    }
+
+    Timer {
+        id: captureStatusTimer
+        interval: 5000
+        repeat: false
+        onTriggered: captureStatusPopup.close()
+    }
+
+    Popup {
+        id: captureStatusPopup
+        parent: Overlay.overlay
+        x: parent.width - width - 24
+        y: parent.height - height - 24
+        width: Math.min(420, parent.width - 48)
+        height: statusContent.implicitHeight + 28
+        modal: false
+        focus: false
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            radius: 10
+            color: root.captureStatusIsError ? "#3B121C" : "#10372C"
+            border.color: root.captureStatusIsError ? colors.danger : colors.success
+            border.width: 1
+        }
+        contentItem: RowLayout {
+            id: statusContent
+            spacing: 10
+            Text {
+                text: root.captureStatusIsError ? "!" : "✓"
+                color: root.captureStatusIsError ? "#FCA5A5" : "#6EE7B7"
+                font.pixelSize: 18
+                font.bold: true
+            }
+            Text {
+                Layout.fillWidth: true
+                text: root.captureStatusMessage
+                color: "#F8FAFC"
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+            }
+            Button {
+                flat: true
+                Accessible.name: qsTr("Bildirimi kapat")
+                onClicked: captureStatusPopup.close()
+                contentItem: Text {
+                    text: "×"
+                    color: "#CBD5E1"
+                    font.pixelSize: 18
+                }
+            }
+        }
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -116,16 +222,11 @@ ApplicationWindow {
                             spacing: 12
 
                             Image {
-                                source: "assets/icon-capture.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
                                 sourceSize.width: 20
                                 sourceSize.height: 20
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: root.currentTab === 0 ? "#FFFFFF" : colors.textSoft
-                                }
                             }
 
                             Text {
@@ -160,16 +261,11 @@ ApplicationWindow {
                             spacing: 12
 
                             Image {
-                                source: "assets/icon-gallery.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery.svg"
                                 sourceSize.width: 20
                                 sourceSize.height: 20
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: root.currentTab === 1 ? "#FFFFFF" : colors.textSoft
-                                }
                             }
 
                             Text {
@@ -219,16 +315,11 @@ ApplicationWindow {
                             spacing: 12
 
                             Image {
-                                source: "assets/icon-settings.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-settings.svg"
                                 sourceSize.width: 20
                                 sourceSize.height: 20
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: root.currentTab === 2 ? "#FFFFFF" : colors.textSoft
-                                }
                             }
 
                             Text {
@@ -313,16 +404,11 @@ ApplicationWindow {
                             spacing: 6
 
                             Image {
-                                source: "assets/icon-folder.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-folder.svg"
                                 sourceSize.width: 14
                                 sourceSize.height: 14
                                 Layout.preferredWidth: 14
                                 Layout.preferredHeight: 14
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: colors.textSoft
-                                }
                             }
 
                             Text {
@@ -408,14 +494,11 @@ ApplicationWindow {
                                     color: colors.accentC
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "assets/icon-capture.svg"
+                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
+                                        width: 28
+                                        height: 28
                                         sourceSize.width: 28
                                         sourceSize.height: 28
-                                        layer.enabled: true
-                                        layer.effect: MultiEffect {
-                                            colorization: 1.0
-                                            colorizationColor: "#FFFFFF"
-                                        }
                                     }
                                 }
 
@@ -482,14 +565,11 @@ ApplicationWindow {
                                     color: "#047857"
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "assets/icon-fullscreen.svg"
+                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-fullscreen.svg"
+                                        width: 28
+                                        height: 28
                                         sourceSize.width: 28
                                         sourceSize.height: 28
-                                        layer.enabled: true
-                                        layer.effect: MultiEffect {
-                                            colorization: 1.0
-                                            colorizationColor: "#FFFFFF"
-                                        }
                                     }
                                 }
 
@@ -556,14 +636,11 @@ ApplicationWindow {
                                     color: "#6D28D9"
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "assets/icon-window.svg"
+                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-window.svg"
+                                        width: 28
+                                        height: 28
                                         sourceSize.width: 28
                                         sourceSize.height: 28
-                                        layer.enabled: true
-                                        layer.effect: MultiEffect {
-                                            colorization: 1.0
-                                            colorizationColor: "#FFFFFF"
-                                        }
                                     }
                                 }
 
@@ -630,14 +707,11 @@ ApplicationWindow {
                                     color: "#B45309"
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "assets/icon-timer.svg"
+                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-timer.svg"
+                                        width: 28
+                                        height: 28
                                         sourceSize.width: 28
                                         sourceSize.height: 28
-                                        layer.enabled: true
-                                        layer.effect: MultiEffect {
-                                            colorization: 1.0
-                                            colorizationColor: "#FFFFFF"
-                                        }
                                     }
                                 }
 
@@ -701,16 +775,11 @@ ApplicationWindow {
                             spacing: 12
 
                             Image {
-                                source: "assets/icon-refresh.svg"
+                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-refresh.svg"
                                 sourceSize.width: 20
                                 sourceSize.height: 20
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: captureEngine.hasLastRegion ? colors.accentA : colors.muted
-                                }
                             }
 
                             ColumnLayout {

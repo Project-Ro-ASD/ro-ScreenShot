@@ -20,6 +20,7 @@ constexpr const char *KEY_CLOSE_OVERLAY = "Sniper/CloseOverlayOnCapture";
 constexpr const char *KEY_MAGNIFIER = "Sniper/MagnifierEnabled";
 constexpr const char *KEY_MAGNIFIER_ZOOM = "Sniper/MagnifierZoom";
 constexpr const char *KEY_LAST_REGION = "Sniper/LastRegion";
+constexpr const char *KEY_LAST_REGION_FRAME_SIZE = "Sniper/LastRegionFrameSize";
 
 QString defaultPicturesDir() {
   QString pictures =
@@ -57,6 +58,7 @@ void SettingsManager::load() {
   m_magnifierEnabled = m_settings.value(KEY_MAGNIFIER, true).toBool();
   m_magnifierZoom = m_settings.value(KEY_MAGNIFIER_ZOOM, 8).toInt();
   m_lastRegion = m_settings.value(KEY_LAST_REGION).toRect();
+  m_lastRegionFrameSize = m_settings.value(KEY_LAST_REGION_FRAME_SIZE).toSize();
 }
 
 void SettingsManager::sync() {
@@ -74,6 +76,7 @@ void SettingsManager::sync() {
   m_settings.setValue(KEY_MAGNIFIER, m_magnifierEnabled);
   m_settings.setValue(KEY_MAGNIFIER_ZOOM, m_magnifierZoom);
   m_settings.setValue(KEY_LAST_REGION, m_lastRegion);
+  m_settings.setValue(KEY_LAST_REGION_FRAME_SIZE, m_lastRegionFrameSize);
   m_settings.sync();
 }
 
@@ -245,16 +248,45 @@ void SettingsManager::setMagnifierZoom(int zoom) {
 
 QRect SettingsManager::lastRegion() const { return m_lastRegion; }
 
+QSize SettingsManager::lastRegionFrameSize() const {
+  return m_lastRegionFrameSize;
+}
+
 void SettingsManager::setLastRegion(const QRect &region) {
   QRect normalized = region.normalized();
   if (normalized.width() <= 2 || normalized.height() <= 2) {
     normalized = {};
   }
-  if (normalized == m_lastRegion) {
+  if (normalized == m_lastRegion &&
+      (normalized.isValid() || !m_lastRegionFrameSize.isValid())) {
     return;
   }
   m_lastRegion = normalized;
+  if (!m_lastRegion.isValid()) {
+    m_lastRegionFrameSize = {};
+  }
   m_settings.setValue(KEY_LAST_REGION, m_lastRegion);
+  m_settings.setValue(KEY_LAST_REGION_FRAME_SIZE, m_lastRegionFrameSize);
+  emit lastRegionChanged();
+}
+
+void SettingsManager::setLastRegionGeometry(const QRect &region,
+                                            const QSize &frameSize) {
+  QRect normalized = region.normalized();
+  const bool valid = normalized.width() > 2 && normalized.height() > 2 &&
+                     frameSize.isValid() && frameSize.width() > 2 &&
+                     frameSize.height() > 2;
+  if (!valid) {
+    setLastRegion({});
+    return;
+  }
+  if (m_lastRegion == normalized && m_lastRegionFrameSize == frameSize) {
+    return;
+  }
+  m_lastRegion = normalized;
+  m_lastRegionFrameSize = frameSize;
+  m_settings.setValue(KEY_LAST_REGION, m_lastRegion);
+  m_settings.setValue(KEY_LAST_REGION_FRAME_SIZE, m_lastRegionFrameSize);
   emit lastRegionChanged();
 }
 

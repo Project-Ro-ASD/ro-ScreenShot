@@ -67,6 +67,22 @@ private slots:
     QCOMPARE(reloaded.lastRegion(), region);
   }
 
+  void testLastRegionGeometryPersistence() {
+    SettingsManager settings;
+    const QRect region(12, 24, 640, 360);
+    const QSize frameSize(1920, 1080);
+    settings.setLastRegionGeometry(region, frameSize);
+
+    QCOMPARE(settings.lastRegion(), region);
+    QCOMPARE(settings.lastRegionFrameSize(), frameSize);
+
+    SettingsManager reloaded;
+    QCOMPARE(reloaded.lastRegionFrameSize(), frameSize);
+
+    reloaded.setLastRegion({});
+    QVERIFY(!reloaded.lastRegionFrameSize().isValid());
+  }
+
   void testFileNameFormatting() {
     SettingsManager settings;
     settings.setFileNameTemplate("Screenshot_%Y%m%d_%H%M%S");

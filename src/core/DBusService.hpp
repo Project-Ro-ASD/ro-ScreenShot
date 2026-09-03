@@ -19,6 +19,15 @@ public slots:
   Q_NOREPLY void CaptureRegion(int delaySeconds = 0);
   Q_NOREPLY void CaptureFullscreen(int delaySeconds = 0);
   Q_NOREPLY void CaptureWindow(int delaySeconds = 0);
+  Q_NOREPLY void CaptureLastRegion(int delaySeconds = 0);
+  Q_NOREPLY void CaptureRegionWithAction(int delaySeconds,
+                                         const QString &action);
+  Q_NOREPLY void CaptureFullscreenWithAction(int delaySeconds,
+                                             const QString &action);
+  Q_NOREPLY void CaptureWindowWithAction(int delaySeconds,
+                                         const QString &action);
+  Q_NOREPLY void CaptureLastRegionWithAction(int delaySeconds,
+                                             const QString &action);
   Q_NOREPLY void OpenLibrary();
   Q_NOREPLY void OpenSettings();
   Q_NOREPLY void Quit();

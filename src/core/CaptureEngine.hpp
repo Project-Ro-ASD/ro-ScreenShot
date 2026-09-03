@@ -37,6 +37,14 @@ public:
   Q_INVOKABLE void requestFullscreenCapture(int delaySeconds = 0);
   Q_INVOKABLE void requestWindowCapture(int delaySeconds = 0);
   Q_INVOKABLE void requestLastRegionCapture(int delaySeconds = 0);
+  Q_INVOKABLE void requestRegionCaptureWithAction(int delaySeconds,
+                                                  const QString &action);
+  Q_INVOKABLE void requestFullscreenCaptureWithAction(int delaySeconds,
+                                                      const QString &action);
+  Q_INVOKABLE void requestWindowCaptureWithAction(int delaySeconds,
+                                                  const QString &action);
+  Q_INVOKABLE void requestLastRegionCaptureWithAction(int delaySeconds,
+                                                      const QString &action);
 
   Q_INVOKABLE void processRegionSelected(int x, int y, int width, int height,
                                          const QString &action = QString());
@@ -44,6 +52,8 @@ public:
   Q_INVOKABLE bool copyImageToClipboard(const QString &filePath);
   Q_INVOKABLE bool saveImageAs(const QString &sourcePath,
                                const QString &destinationPath);
+  Q_INVOKABLE QString colorAt(int x, int y) const;
+  Q_INVOKABLE bool copyColorAt(int x, int y);
 
 signals:
   void isCapturingChanged();
@@ -56,6 +66,7 @@ signals:
   void captureSuccess(const QString &filePath, const QString &fileName,
                       bool savedToDisk, bool copiedToClipboard);
   void captureError(const QString &message);
+  void colorCopied(const QString &hexColor);
   void captureUiShouldHide();
   void captureUiMayRestore();
 
@@ -84,6 +95,7 @@ private:
   QString m_frozenFramePath;
   QImage m_cachedDesktopFrame;
   CaptureMode m_pendingPortalMode{CaptureMode::Region};
+  QString m_pendingAction;
   bool m_pendingLastRegion{false};
   QString m_pendingPortalRequestPath;
 };

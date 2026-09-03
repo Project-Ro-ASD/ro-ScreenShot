@@ -27,6 +27,40 @@ void DBusAdaptor::CaptureWindow(int delaySeconds) {
   }
 }
 
+void DBusAdaptor::CaptureLastRegion(int delaySeconds) {
+  if (m_engine) {
+    m_engine->requestLastRegionCapture(delaySeconds);
+  }
+}
+
+void DBusAdaptor::CaptureRegionWithAction(int delaySeconds,
+                                          const QString &action) {
+  if (m_engine) {
+    m_engine->requestRegionCaptureWithAction(delaySeconds, action);
+  }
+}
+
+void DBusAdaptor::CaptureFullscreenWithAction(int delaySeconds,
+                                              const QString &action) {
+  if (m_engine) {
+    m_engine->requestFullscreenCaptureWithAction(delaySeconds, action);
+  }
+}
+
+void DBusAdaptor::CaptureWindowWithAction(int delaySeconds,
+                                          const QString &action) {
+  if (m_engine) {
+    m_engine->requestWindowCaptureWithAction(delaySeconds, action);
+  }
+}
+
+void DBusAdaptor::CaptureLastRegionWithAction(int delaySeconds,
+                                              const QString &action) {
+  if (m_engine) {
+    m_engine->requestLastRegionCaptureWithAction(delaySeconds, action);
+  }
+}
+
 void DBusAdaptor::OpenLibrary() { emit openLibraryRequested(); }
 
 void DBusAdaptor::OpenSettings() { emit openSettingsRequested(); }

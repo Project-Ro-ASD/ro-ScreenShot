@@ -38,6 +38,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Quick
     Qml
     DBus
+    Multimedia
 )
 
 if(BUILD_TESTING)
@@ -45,6 +46,10 @@ if(BUILD_TESTING)
 endif()
 
 qt_standard_project_setup(REQUIRES 6.5)
+# Generate qmldir metadata for QML subdirectories.  This keeps local imports
+# (components/ and editor/) deployable from both the resource bundle and an
+# installed application, instead of merely silencing the CMake warning.
+qt_policy(SET QTP0004 NEW)
 
 set(RO_SCREENSHOT_SOURCES
     src/core/Types.hpp
@@ -60,6 +65,8 @@ set(RO_SCREENSHOT_SOURCES
     src/core/LanguageManager.cpp
     src/core/UiPreferencesManager.hpp
     src/core/UiPreferencesManager.cpp
+    src/core/DesktopFeedback.hpp
+    src/core/DesktopFeedback.cpp
 )
 
 qt_add_executable(ro-screenshot
@@ -72,6 +79,14 @@ set_source_files_properties(src/ui/qml/LibraryView.qml PROPERTIES QT_RESOURCE_AL
 set_source_files_properties(src/ui/qml/SettingsView.qml PROPERTIES QT_RESOURCE_ALIAS "SettingsView.qml")
 set_source_files_properties(src/ui/qml/SniperOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "SniperOverlay.qml")
 set_source_files_properties(src/ui/qml/FloatingThumbnail.qml PROPERTIES QT_RESOURCE_ALIAS "FloatingThumbnail.qml")
+set_source_files_properties(src/ui/qml/components/AccessibleIconButton.qml PROPERTIES QT_RESOURCE_ALIAS "components/AccessibleIconButton.qml")
+set_source_files_properties(src/ui/qml/components/AppSnackbar.qml PROPERTIES QT_RESOURCE_ALIAS "components/AppSnackbar.qml")
+set_source_files_properties(src/ui/qml/components/BusyOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "components/BusyOverlay.qml")
+set_source_files_properties(src/ui/qml/components/ConfirmDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/ConfirmDialog.qml")
+set_source_files_properties(src/ui/qml/components/InlineStatus.qml PROPERTIES QT_RESOURCE_ALIAS "components/InlineStatus.qml")
+set_source_files_properties(src/ui/qml/editor/AnnotationEditor.qml PROPERTIES QT_RESOURCE_ALIAS "editor/AnnotationEditor.qml")
+set_source_files_properties(src/ui/qml/editor/EditorCanvas.qml PROPERTIES QT_RESOURCE_ALIAS "editor/EditorCanvas.qml")
+set_source_files_properties(src/ui/qml/editor/EditorToolbar.qml PROPERTIES QT_RESOURCE_ALIAS "editor/EditorToolbar.qml")
 
 # Flatten SVG asset paths
 set(RO_SVG_ASSETS
@@ -108,6 +123,14 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/SettingsView.qml
         src/ui/qml/SniperOverlay.qml
         src/ui/qml/FloatingThumbnail.qml
+        src/ui/qml/components/AccessibleIconButton.qml
+        src/ui/qml/components/AppSnackbar.qml
+        src/ui/qml/components/BusyOverlay.qml
+        src/ui/qml/components/ConfirmDialog.qml
+        src/ui/qml/components/InlineStatus.qml
+        src/ui/qml/editor/AnnotationEditor.qml
+        src/ui/qml/editor/EditorCanvas.qml
+        src/ui/qml/editor/EditorToolbar.qml
     RESOURCES
         ${RO_SVG_ASSETS}
 )
@@ -132,6 +155,7 @@ target_link_libraries(ro-screenshot PRIVATE
     Qt6::Quick
     Qt6::Qml
     Qt6::DBus
+    Qt6::Multimedia
 )
 
 # Desktop & AppStream metadata installation

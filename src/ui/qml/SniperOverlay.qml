@@ -14,11 +14,16 @@ Window {
     property real currentY: 0
     property bool isSelecting: false
     property bool hasSelection: false
+    property int sourceFrameWidth: 0
+    property int sourceFrameHeight: 0
 
     property real selX: Math.min(startX, currentX)
     property real selY: Math.min(startY, currentY)
     property real selW: Math.abs(currentX - startX)
     property real selH: Math.abs(currentY - startY)
+    readonly property real sourceScaleX: sourceFrameWidth > 0 && width > 0 ? sourceFrameWidth / width : 1
+    readonly property real sourceScaleY: sourceFrameHeight > 0 && height > 0 ? sourceFrameHeight / height : 1
+    readonly property string sampledColor: captureEngine.colorAt(Math.round(mouseArea.mouseX * sourceScaleX), Math.round(mouseArea.mouseY * sourceScaleY))
 
     // Keyboard Shortcuts
     Item {
@@ -35,6 +40,11 @@ Window {
             confirmCapture("")
         }
         Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_C && !sniperWindow.hasSelection) {
+                captureEngine.copyColorAt(Math.round(mouseArea.mouseX * sniperWindow.sourceScaleX), Math.round(mouseArea.mouseY * sniperWindow.sourceScaleY))
+                event.accepted = true
+                return
+            }
             if (!sniperWindow.hasSelection)
                 return
             const resize = (event.modifiers & Qt.ShiftModifier) !== 0
@@ -71,7 +81,7 @@ Window {
 
     function confirmCapture(action) {
         if (hasSelection && selW > 2 && selH > 2) {
-            captureEngine.processRegionSelected(Math.round(selX), Math.round(selY), Math.round(selW), Math.round(selH), action || "")
+            captureEngine.processRegionSelected(Math.round(selX * sourceScaleX), Math.round(selY * sourceScaleY), Math.round(selW * sourceScaleX), Math.round(selH * sourceScaleY), action || "")
         } else {
             captureEngine.cancelCapture()
         }
@@ -173,7 +183,7 @@ Window {
             Text {
                 id: dimText
                 anchors.centerIn: parent
-                text: "%1 × %2 px".arg(Math.round(sniperWindow.selW)).arg(Math.round(sniperWindow.selH))
+                text: "%1 × %2 px".arg(Math.round(sniperWindow.selW * sniperWindow.sourceScaleX)).arg(Math.round(sniperWindow.selH * sniperWindow.sourceScaleY))
                 color: "#F8FAFC"
                 font.pixelSize: 11
                 font.bold: true
@@ -307,7 +317,7 @@ Window {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "%1, %2".arg(Math.round(mouseArea.mouseX)).arg(Math.round(mouseArea.mouseY))
+                    text: "%1 · %2, %3".arg(sniperWindow.sampledColor).arg(Math.round(mouseArea.mouseX * sniperWindow.sourceScaleX)).arg(Math.round(mouseArea.mouseY * sniperWindow.sourceScaleY))
                     color: "#F8FAFC"
                     font.pixelSize: 10
                     font.bold: true

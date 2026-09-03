@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QRect>
 #include <QSettings>
+#include <QSize>
 #include <QString>
 
 namespace ro_screenshot {
@@ -42,6 +43,8 @@ class SettingsManager : public QObject {
   Q_PROPERTY(QString previewFileName READ previewFileName NOTIFY
                  fileNameTemplateChanged)
   Q_PROPERTY(QRect lastRegion READ lastRegion WRITE setLastRegion NOTIFY
+                 lastRegionChanged)
+  Q_PROPERTY(QSize lastRegionFrameSize READ lastRegionFrameSize NOTIFY
                  lastRegionChanged)
 
 public:
@@ -89,6 +92,8 @@ public:
 
   QRect lastRegion() const;
   void setLastRegion(const QRect &region);
+  QSize lastRegionFrameSize() const;
+  void setLastRegionGeometry(const QRect &region, const QSize &frameSize);
 
   Q_INVOKABLE QString
   formatFileName(const QDateTime &dt = QDateTime::currentDateTime()) const;
@@ -133,6 +138,7 @@ private:
   bool m_magnifierEnabled{true};
   int m_magnifierZoom{8};
   QRect m_lastRegion;
+  QSize m_lastRegionFrameSize;
 };
 
 } // namespace ro_screenshot

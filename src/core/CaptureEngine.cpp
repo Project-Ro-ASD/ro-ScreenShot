@@ -1,15 +1,17 @@
 #include "CaptureEngine.hpp"
+#include <QBuffer>
 #include <QClipboard>
+#include <QColor>
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include <QDir>
-#include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QPainter>
 #include <QPixmap>
+#include <QSaveFile>
 #include <QScreen>
 #include <QStandardPaths>
 #include <QUrl>
@@ -17,6 +19,37 @@
 #include <algorithm>
 
 namespace ro_screenshot {
+
+namespace {
+
+bool writeImageAtomically(const QImage &image, const QString &filePath,
+                          const QString &format, int quality) {
+  if (image.isNull() || filePath.isEmpty()) {
+    return false;
+  }
+
+  const QFileInfo destinationInfo(filePath);
+  if (!QDir().mkpath(destinationInfo.absolutePath())) {
+    return false;
+  }
+
+  QByteArray encodedImage;
+  QBuffer buffer(&encodedImage);
+  const bool encoded =
+      buffer.open(QIODevice::WriteOnly) &&
+      image.save(&buffer, format.toUtf8().constData(), quality);
+  buffer.close();
+  if (!encoded) {
+    return false;
+  }
+
+  QSaveFile outputFile(filePath);
+  return outputFile.open(QIODevice::WriteOnly) &&
+         outputFile.write(encodedImage) == encodedImage.size() &&
+         outputFile.commit();
+}
+
+} // namespace
 
 CaptureEngine::CaptureEngine(SettingsManager *settings, LibraryManager *library,
                              QObject *parent)
@@ -43,15 +76,22 @@ QString CaptureEngine::lastCapturedFilePath() const {
 QString CaptureEngine::frozenFramePath() const { return m_frozenFramePath; }
 
 bool CaptureEngine::hasLastRegion() const {
-  return m_settings && m_settings->lastRegion().isValid();
+  return m_settings && m_settings->lastRegion().isValid() &&
+         m_settings->lastRegionFrameSize().isValid();
 }
 
 void CaptureEngine::requestRegionCapture(int delaySeconds) {
+  requestRegionCaptureWithAction(delaySeconds, {});
+}
+
+void CaptureEngine::requestRegionCaptureWithAction(int delaySeconds,
+                                                   const QString &action) {
   if (m_isCapturing) {
     return;
   }
   m_isCapturing = true;
   m_pendingLastRegion = false;
+  m_pendingAction = action;
   emit isCapturingChanged();
   emit captureUiShouldHide();
 
@@ -65,11 +105,17 @@ void CaptureEngine::requestRegionCapture(int delaySeconds) {
 }
 
 void CaptureEngine::requestFullscreenCapture(int delaySeconds) {
+  requestFullscreenCaptureWithAction(delaySeconds, {});
+}
+
+void CaptureEngine::requestFullscreenCaptureWithAction(int delaySeconds,
+                                                       const QString &action) {
   if (m_isCapturing) {
     return;
   }
   m_isCapturing = true;
   m_pendingLastRegion = false;
+  m_pendingAction = action;
   emit isCapturingChanged();
   emit captureUiShouldHide();
 
@@ -82,11 +128,17 @@ void CaptureEngine::requestFullscreenCapture(int delaySeconds) {
 }
 
 void CaptureEngine::requestWindowCapture(int delaySeconds) {
+  requestWindowCaptureWithAction(delaySeconds, {});
+}
+
+void CaptureEngine::requestWindowCaptureWithAction(int delaySeconds,
+                                                   const QString &action) {
   if (m_isCapturing) {
     return;
   }
   m_isCapturing = true;
   m_pendingLastRegion = false;
+  m_pendingAction = action;
   emit isCapturingChanged();
   emit captureUiShouldHide();
 
@@ -99,11 +151,17 @@ void CaptureEngine::requestWindowCapture(int delaySeconds) {
 }
 
 void CaptureEngine::requestLastRegionCapture(int delaySeconds) {
+  requestLastRegionCaptureWithAction(delaySeconds, {});
+}
+
+void CaptureEngine::requestLastRegionCaptureWithAction(int delaySeconds,
+                                                       const QString &action) {
   if (m_isCapturing || !hasLastRegion()) {
     return;
   }
   m_isCapturing = true;
   m_pendingLastRegion = true;
+  m_pendingAction = action;
   emit isCapturingChanged();
   emit captureUiShouldHide();
   QTimer::singleShot(std::max(0, delaySeconds) * 1000, this, [this]() {
@@ -113,13 +171,17 @@ void CaptureEngine::requestLastRegionCapture(int delaySeconds) {
     }
     const QImage desktop = captureCombinedDesktop();
     const QRect region = m_settings->lastRegion().intersected(desktop.rect());
-    if (desktop.isNull() || region.width() <= 2 || region.height() <= 2) {
+    if (desktop.isNull() ||
+        m_settings->lastRegionFrameSize() != desktop.size() ||
+        region.width() <= 2 || region.height() <= 2) {
       failCapture(tr("The previous capture region is no longer available."));
       return;
     }
-    saveAndProcessResult(desktop.copy(region), CaptureMode::Region, region);
+    saveAndProcessResult(desktop.copy(region), CaptureMode::Region, region,
+                         m_pendingAction);
     m_isCapturing = false;
     m_pendingLastRegion = false;
+    m_pendingAction.clear();
     emit isCapturingChanged();
     emit captureUiMayRestore();
   });
@@ -155,8 +217,10 @@ void CaptureEngine::executeFullscreenCapture() {
     return;
   }
 
-  saveAndProcessResult(full, CaptureMode::Fullscreen, full.rect());
+  saveAndProcessResult(full, CaptureMode::Fullscreen, full.rect(),
+                       m_pendingAction);
   m_isCapturing = false;
+  m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureUiMayRestore();
 }
@@ -181,8 +245,9 @@ void CaptureEngine::executeWindowCapture() {
     return;
   }
 
-  saveAndProcessResult(img, CaptureMode::Window, img.rect());
+  saveAndProcessResult(img, CaptureMode::Window, img.rect(), m_pendingAction);
   m_isCapturing = false;
+  m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureUiMayRestore();
 }
@@ -318,13 +383,16 @@ void CaptureEngine::handlePortalResponse(uint response,
   if (m_pendingPortalMode == CaptureMode::Region) {
     if (m_pendingLastRegion) {
       const QRect region = m_settings->lastRegion().intersected(image.rect());
-      if (region.width() <= 2 || region.height() <= 2) {
+      if (m_settings->lastRegionFrameSize() != image.size() ||
+          region.width() <= 2 || region.height() <= 2) {
         failCapture(tr("The previous capture region is no longer available."));
         return;
       }
-      saveAndProcessResult(image.copy(region), CaptureMode::Region, region);
+      saveAndProcessResult(image.copy(region), CaptureMode::Region, region,
+                           m_pendingAction);
       m_pendingLastRegion = false;
       m_isCapturing = false;
+      m_pendingAction.clear();
       emit isCapturingChanged();
       emit captureUiMayRestore();
       return;
@@ -336,8 +404,10 @@ void CaptureEngine::handlePortalResponse(uint response,
     return;
   }
 
-  saveAndProcessResult(image, m_pendingPortalMode, image.rect());
+  saveAndProcessResult(image, m_pendingPortalMode, image.rect(),
+                       m_pendingAction);
   m_isCapturing = false;
+  m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureUiMayRestore();
 }
@@ -346,6 +416,7 @@ void CaptureEngine::failCapture(const QString &message) {
   disconnectPortalResponse();
   m_isCapturing = false;
   m_pendingLastRegion = false;
+  m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureError(message);
   emit captureUiMayRestore();
@@ -373,14 +444,16 @@ void CaptureEngine::processRegionSelected(int x, int y, int width, int height,
   }
 
   QImage cropped = m_cachedDesktopFrame.copy(targetRect);
-  m_settings->setLastRegion(targetRect);
-  saveAndProcessResult(cropped, CaptureMode::Region, targetRect, action);
+  m_settings->setLastRegionGeometry(targetRect, m_cachedDesktopFrame.size());
+  saveAndProcessResult(cropped, CaptureMode::Region, targetRect,
+                       action.isEmpty() ? m_pendingAction : action);
 
   if (m_settings && m_settings->closeOverlayOnCapture()) {
     emit closeSniperOverlay();
   }
 
   m_isCapturing = false;
+  m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureUiMayRestore();
 }
@@ -388,6 +461,7 @@ void CaptureEngine::processRegionSelected(int x, int y, int width, int height,
 void CaptureEngine::cancelCapture() {
   emit closeSniperOverlay();
   m_isCapturing = false;
+  m_pendingAction.clear();
   emit isCapturingChanged();
   emit captureUiMayRestore();
 }
@@ -442,6 +516,12 @@ bool CaptureEngine::saveAndProcessResult(const QImage &image,
   const bool shouldSave = action == QStringLiteral("save") ||
                           (action.isEmpty() && m_settings->autoSaveToDisk());
 
+  if (!shouldCopy && !shouldSave) {
+    emit captureError(
+        tr("Select at least one capture output: clipboard or disk."));
+    return false;
+  }
+
   if (shouldCopy) {
     QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setImage(image);
@@ -455,7 +535,10 @@ bool CaptureEngine::saveAndProcessResult(const QImage &image,
     int quality =
         (fmt == "JPEG" || fmt == "JPG") ? m_settings->jpegQuality() : -1;
 
-    if (image.save(finalPath, fmt.toUtf8().constData(), quality)) {
+    const bool savedAtomically =
+        writeImageAtomically(image, finalPath, fmt, quality);
+
+    if (savedAtomically) {
       saved = true;
       m_lastCapturedFilePath = finalPath;
       emit lastCaptureChanged();
@@ -489,7 +572,29 @@ bool CaptureEngine::copyImageToClipboard(const QString &filePath) {
 
 bool CaptureEngine::saveImageAs(const QString &sourcePath,
                                 const QString &destinationPath) {
-  return QFile::copy(sourcePath, destinationPath);
+  const QImage image(sourcePath);
+  const QString format = QFileInfo(destinationPath).suffix().toUpper();
+  return writeImageAtomically(image, destinationPath,
+                              format.isEmpty() ? QStringLiteral("PNG") : format,
+                              -1);
+}
+
+QString CaptureEngine::colorAt(int x, int y) const {
+  if (m_cachedDesktopFrame.isNull() ||
+      !m_cachedDesktopFrame.rect().contains(x, y)) {
+    return {};
+  }
+  return m_cachedDesktopFrame.pixelColor(x, y).name(QColor::HexRgb).toUpper();
+}
+
+bool CaptureEngine::copyColorAt(int x, int y) {
+  const QString color = colorAt(x, y);
+  if (color.isEmpty()) {
+    return false;
+  }
+  QGuiApplication::clipboard()->setText(color);
+  emit colorCopied(color);
+  return true;
 }
 
 } // namespace ro_screenshot
