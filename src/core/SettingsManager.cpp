@@ -1,5 +1,6 @@
 #include "SettingsManager.hpp"
 #include <QDir>
+#include <QFileInfo>
 #include <QStandardPaths>
 
 namespace ro_screenshot {
@@ -18,6 +19,7 @@ constexpr const char *KEY_SUBFOLDERS = "Workflow/CreateSubfoldersByMonth";
 constexpr const char *KEY_CLOSE_OVERLAY = "Sniper/CloseOverlayOnCapture";
 constexpr const char *KEY_MAGNIFIER = "Sniper/MagnifierEnabled";
 constexpr const char *KEY_MAGNIFIER_ZOOM = "Sniper/MagnifierZoom";
+constexpr const char *KEY_LAST_REGION = "Sniper/LastRegion";
 
 QString defaultPicturesDir() {
   QString pictures =
@@ -54,6 +56,7 @@ void SettingsManager::load() {
   m_closeOverlayOnCapture = m_settings.value(KEY_CLOSE_OVERLAY, true).toBool();
   m_magnifierEnabled = m_settings.value(KEY_MAGNIFIER, true).toBool();
   m_magnifierZoom = m_settings.value(KEY_MAGNIFIER_ZOOM, 8).toInt();
+  m_lastRegion = m_settings.value(KEY_LAST_REGION).toRect();
 }
 
 void SettingsManager::sync() {
@@ -70,6 +73,7 @@ void SettingsManager::sync() {
   m_settings.setValue(KEY_CLOSE_OVERLAY, m_closeOverlayOnCapture);
   m_settings.setValue(KEY_MAGNIFIER, m_magnifierEnabled);
   m_settings.setValue(KEY_MAGNIFIER_ZOOM, m_magnifierZoom);
+  m_settings.setValue(KEY_LAST_REGION, m_lastRegion);
   m_settings.sync();
 }
 
@@ -87,6 +91,7 @@ void SettingsManager::resetToDefaults() {
   setCloseOverlayOnCapture(true);
   setMagnifierEnabled(true);
   setMagnifierZoom(8);
+  setLastRegion({});
   sync();
 }
 
@@ -238,6 +243,21 @@ void SettingsManager::setMagnifierZoom(int zoom) {
   }
 }
 
+QRect SettingsManager::lastRegion() const { return m_lastRegion; }
+
+void SettingsManager::setLastRegion(const QRect &region) {
+  QRect normalized = region.normalized();
+  if (normalized.width() <= 2 || normalized.height() <= 2) {
+    normalized = {};
+  }
+  if (normalized == m_lastRegion) {
+    return;
+  }
+  m_lastRegion = normalized;
+  m_settings.setValue(KEY_LAST_REGION, m_lastRegion);
+  emit lastRegionChanged();
+}
+
 QString SettingsManager::formatFileName(const QDateTime &dt) const {
   QString result = m_fileNameTemplate;
   result.replace("%Y", dt.toString("yyyy"));
@@ -262,7 +282,26 @@ QString SettingsManager::generateFullPath(const QDateTime &dt) const {
     dir += "/" + dt.toString("yyyy-MM");
   }
   QDir().mkpath(dir);
-  return dir + "/" + formatFileName(dt);
+  QString requestedPath = dir + "/" + formatFileName(dt);
+  if (!QFileInfo::exists(requestedPath)) {
+    return requestedPath;
+  }
+
+  const QFileInfo requestedInfo(requestedPath);
+  const QString baseName = requestedInfo.completeBaseName();
+  const QString suffix = requestedInfo.suffix();
+  for (int copyIndex = 1; copyIndex < 10000; ++copyIndex) {
+    const QString candidate =
+        dir + "/" + baseName + QStringLiteral("_%1").arg(copyIndex) +
+        (suffix.isEmpty() ? QString() : QStringLiteral(".") + suffix);
+    if (!QFileInfo::exists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return dir + "/" + baseName + "_" +
+         QString::number(QDateTime::currentMSecsSinceEpoch()) +
+         (suffix.isEmpty() ? QString() : QStringLiteral(".") + suffix);
 }
 
 QString SettingsManager::previewFileName() const {

@@ -151,10 +151,10 @@ Item {
 
                             Text {
                                 id: storageText
-                                anchors.centerIn: parent
                                 text: qsTr("%1 Dahilinde").arg(libraryManager.totalStorageSize)
                                 color: colors.textSoft
                                 font.pixelSize: 11
+                                Layout.alignment: Qt.AlignVCenter
                             }
                         }
                     }

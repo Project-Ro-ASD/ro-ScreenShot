@@ -52,7 +52,7 @@
         <translation>This Month</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/LibraryView.qml" line="155"/>
+        <location filename="../src/ui/qml/LibraryView.qml" line="154"/>
         <source>%1 Dahilinde</source>
         <translation>Within %1</translation>
     </message>
@@ -120,74 +120,94 @@
         <translation>Ro-ScreenShot Hub</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="111"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="132"/>
         <source>Hızlı Çekim</source>
         <translation>Quick Capture</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="155"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="176"/>
         <source>Galeri</source>
         <translation>Gallery</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="214"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="235"/>
         <source>Ayarlar</source>
         <translation>Settings</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="243"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="264"/>
         <source>Dil</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="338"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="359"/>
         <source>Ekran Görüntüsü Yakalama Merkezi</source>
         <translation>Screenshot Capture Center</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="345"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="366"/>
         <source>Bir çekim modu seçin veya sistem kısayollarını kullanın.</source>
         <translation>Select a capture mode or use the system shortcuts.</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="405"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="426"/>
         <source>Bölge Seçimi (Sniper)</source>
         <translation>Region Selection (Sniper)</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="411"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="432"/>
         <source>Dondurulmuş ekranda serbest dikdörtgen alanı seçin ve kırpın.</source>
         <translation>Select and crop a free rectangular area on the frozen screen.</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="479"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="500"/>
         <source>Tam Ekran Yakala</source>
         <translation>Capture Fullscreen</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="485"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="506"/>
         <source>Tüm monitörlerin görüntüsünü anında yakalayın ve kaydedin.</source>
         <translation>Instantly capture and save the image of all monitors.</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="553"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="574"/>
         <source>Pencere Yakala</source>
         <translation>Capture Window</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="559"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="580"/>
         <source>Aktif pencereyi tek adımda çerçevesiyle yakalayın.</source>
         <translation>Capture the active window with its frame in a single step.</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="627"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="648"/>
         <source>5sn Gecikmeli Yakala</source>
         <translation>Capture with 5s Delay</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/MainHub.qml" line="633"/>
+        <location filename="../src/ui/qml/MainHub.qml" line="654"/>
         <source>Menü ve açılır pencereleri hazırlamak için 5 saniye bekler.</source>
         <translation>Waits 5 seconds to prepare menus and popups.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="720"/>
+        <source>Son bölgeyi tekrar yakala</source>
+        <translation>Capture last region again</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="727"/>
+        <source>Önceki seçim sınırlarını yeniden kullanır.</source>
+        <translation>Reuses the previous selection bounds.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="728"/>
+        <source>İlk bölge çekiminden sonra kullanılabilir.</source>
+        <translation>Available after the first region capture.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="735"/>
+        <source>Son seçim</source>
+        <translation>Last selection</translation>
     </message>
 </context>
 <context>
@@ -311,17 +331,17 @@
 <context>
     <name>SniperOverlay</name>
     <message>
-        <location filename="../src/ui/qml/SniperOverlay.qml" line="167"/>
+        <location filename="../src/ui/qml/SniperOverlay.qml" line="202"/>
         <source>📋 Kopyala</source>
         <translation>Copy</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/SniperOverlay.qml" line="184"/>
+        <location filename="../src/ui/qml/SniperOverlay.qml" line="219"/>
         <source>💾 Kaydet</source>
         <translation>Save</translation>
     </message>
     <message>
-        <location filename="../src/ui/qml/SniperOverlay.qml" line="201"/>
+        <location filename="../src/ui/qml/SniperOverlay.qml" line="236"/>
         <source>✕</source>
         <translation>✕</translation>
     </message>
@@ -342,24 +362,66 @@
 <context>
     <name>ro_screenshot::CaptureEngine</name>
     <message>
-        <location filename="../src/core/CaptureEngine.cpp" line="85"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="117"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="321"/>
+        <source>The previous capture region is no longer available.</source>
+        <translation>The previous capture region is no longer available.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="135"/>
         <source>Ekran görüntüsü yakalanamadı.</source>
         <translation>Screenshot could not be captured.</translation>
     </message>
     <message>
-        <location filename="../src/core/CaptureEngine.cpp" line="102"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="154"/>
         <source>Tam ekran görüntüsü yakalanamadı.</source>
         <translation>Fullscreen capture failed.</translation>
     </message>
     <message>
-        <location filename="../src/core/CaptureEngine.cpp" line="118"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="173"/>
         <source>Aktif ekran bulunamadı.</source>
         <translation>No active screen found.</translation>
     </message>
     <message>
-        <location filename="../src/core/CaptureEngine.cpp" line="127"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="180"/>
         <source>Pencere görüntüsü yakalanamadı.</source>
         <translation>Window capture failed.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="201"/>
+        <source>The Wayland screenshot portal is not available.</source>
+        <translation>The Wayland screenshot portal is not available.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="247"/>
+        <source>The Wayland screenshot request failed: %1</source>
+        <translation>The Wayland screenshot request failed: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="467"/>
+        <source>Could not save the screenshot to %1.</source>
+        <translation>Could not save the screenshot to %1.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="235"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="264"/>
+        <source>Could not monitor the Wayland screenshot request.</source>
+        <translation>Could not monitor the Wayland screenshot request.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="305"/>
+        <source>Screenshot capture was cancelled.</source>
+        <translation>Screenshot capture was cancelled.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="306"/>
+        <source>The screenshot portal rejected the request.</source>
+        <translation>The screenshot portal rejected the request.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="313"/>
+        <source>The screenshot portal returned an invalid image.</source>
+        <translation>The screenshot portal returned an invalid image.</translation>
     </message>
 </context>
 </TS>

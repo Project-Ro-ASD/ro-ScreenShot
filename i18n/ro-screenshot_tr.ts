@@ -2,289 +2,426 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="tr_TR">
 <context>
-    <name>FloatingThumbnail</name><message>
+    <name>FloatingThumbnail</name>
+    <message>
         <location filename="../src/ui/qml/FloatingThumbnail.qml" line="67"/>
         <source>📸 Ekran Görüntüsü Alındı</source>
         <translation>Ekran Görüntüsü Alındı</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/FloatingThumbnail.qml" line="85"/>
         <source>📋 Kopyala</source>
         <translation>Kopyala</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/FloatingThumbnail.qml" line="105"/>
         <source>✕</source>
         <translation>✕</translation>
-    </message></context>
+    </message>
+</context>
 <context>
-    <name>LibraryView</name><message>
+    <name>LibraryView</name>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="68"/>
         <source>Görsellerde ara...</source>
         <translation>Görsellerde ara...</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="95"/>
         <source>Tümü</source>
         <translation>Tümü</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="96"/>
         <source>Bugün</source>
         <translation>Bugün</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="97"/>
         <source>Dün</source>
         <translation>Dün</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="98"/>
         <source>Bu Hafta</source>
         <translation>Bu Hafta</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="99"/>
         <source>Bu Ay</source>
         <translation>Bu Ay</translation>
-    </message><message>
-        <location filename="../src/ui/qml/LibraryView.qml" line="155"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/LibraryView.qml" line="154"/>
         <source>%1 Dahilinde</source>
         <translation>%1 Dahilinde</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="184"/>
         <source>Yenile</source>
         <translation>Yenile</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="216"/>
         <source>Henüz ekran görüntüsü bulunamadı.</source>
         <translation>Henüz ekran görüntüsü bulunamadı.</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="224"/>
         <source>Kayıt klasörü: %1</source>
         <translation>Kayıt klasörü: %1</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="342"/>
         <source>Görsel Detayları</source>
         <translation>Görsel Detayları</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="386"/>
         <source>Dosya Adı</source>
         <translation>Dosya Adı</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="406"/>
         <source>Çözünürlük</source>
         <translation>Çözünürlük</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="420"/>
         <source>Boyut</source>
         <translation>Boyut</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="435"/>
         <source>Oluşturulma Tarihi</source>
         <translation>Oluşturulma Tarihi</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="457"/>
         <source>Panoya Kopyala</source>
         <translation>Panoya Kopyala</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="499"/>
         <source>Klasörde Göster</source>
         <translation>Klasörde Göster</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/LibraryView.qml" line="541"/>
         <source>Görseli Sil</source>
         <translation>Görseli Sil</translation>
-    </message></context>
+    </message>
+</context>
 <context>
-    <name>MainHub</name><message>
+    <name>MainHub</name>
+    <message>
         <location filename="../src/ui/qml/MainHub.qml" line="14"/>
         <source>Ro-ScreenShot Hub</source>
         <translation>Ro-ScreenShot Hub</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="111"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="132"/>
         <source>Hızlı Çekim</source>
         <translation>Hızlı Çekim</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="155"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="176"/>
         <source>Galeri</source>
         <translation>Galeri</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="214"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="235"/>
         <source>Ayarlar</source>
         <translation>Ayarlar</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="243"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="264"/>
         <source>Dil</source>
         <translation>Dil</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="338"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="359"/>
         <source>Ekran Görüntüsü Yakalama Merkezi</source>
         <translation>Ekran Görüntüsü Yakalama Merkezi</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="345"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="366"/>
         <source>Bir çekim modu seçin veya sistem kısayollarını kullanın.</source>
         <translation>Bir çekim modu seçin veya sistem kısayollarını kullanın.</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="405"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="426"/>
         <source>Bölge Seçimi (Sniper)</source>
         <translation>Bölge Seçimi (Sniper)</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="411"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="432"/>
         <source>Dondurulmuş ekranda serbest dikdörtgen alanı seçin ve kırpın.</source>
         <translation>Dondurulmuş ekranda serbest dikdörtgen alanı seçin ve kırpın.</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="479"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="500"/>
         <source>Tam Ekran Yakala</source>
         <translation>Tam Ekran Yakala</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="485"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="506"/>
         <source>Tüm monitörlerin görüntüsünü anında yakalayın ve kaydedin.</source>
         <translation>Tüm monitörlerin görüntüsünü anında yakalayın ve kaydedin.</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="553"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="574"/>
         <source>Pencere Yakala</source>
         <translation>Pencere Yakala</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="559"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="580"/>
         <source>Aktif pencereyi tek adımda çerçevesiyle yakalayın.</source>
         <translation>Aktif pencereyi tek adımda çerçevesiyle yakalayın.</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="627"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="648"/>
         <source>5sn Gecikmeli Yakala</source>
         <translation>5sn Gecikmeli Yakala</translation>
-    </message><message>
-        <location filename="../src/ui/qml/MainHub.qml" line="633"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="654"/>
         <source>Menü ve açılır pencereleri hazırlamak için 5 saniye bekler.</source>
         <translation>Menü ve açılır pencereleri hazırlamak için 5 saniye bekler.</translation>
-    </message></context>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="720"/>
+        <source>Son bölgeyi tekrar yakala</source>
+        <translation>Son bölgeyi tekrar yakala</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="727"/>
+        <source>Önceki seçim sınırlarını yeniden kullanır.</source>
+        <translation>Önceki seçim sınırlarını yeniden kullanır.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="728"/>
+        <source>İlk bölge çekiminden sonra kullanılabilir.</source>
+        <translation>İlk bölge çekiminden sonra kullanılabilir.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/MainHub.qml" line="735"/>
+        <source>Son seçim</source>
+        <translation>Son seçim</translation>
+    </message>
+</context>
 <context>
-    <name>SettingsView</name><message>
+    <name>SettingsView</name>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="14"/>
         <source>Ekran Görüntüleri Kayıt Klasörünü Seçin</source>
         <translation>Ekran Görüntüleri Kayıt Klasörünü Seçin</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="121"/>
         <source>Görselleri Yıl-Ay bazlı alt klasörlerde grupla (Örn: 2026-09/)</source>
         <translation>Görselleri Yıl-Ay bazlı alt klasörlerde grupla (Örn: 2026-09/)</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="72"/>
         <source>Kayıt Dizini ve Klasörleme</source>
         <translation>Kayıt Dizini ve Klasörleme</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="102"/>
         <source>Gözat...</source>
         <translation>Gözat...</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="168"/>
         <source>Dosya İsimlendirme ve Görsel Formatı</source>
         <translation>Dosya İsimlendirme ve Görsel Formatı</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="181"/>
         <source>Dosya Adı Şablonu (%Y: Yıl, %m: Ay, %d: Gün, %H: Saat, %M: Dakika, %S: Saniye)</source>
         <translation>Dosya Adı Şablonu (%Y: Yıl, %m: Ay, %d: Gün, %H: Saat, %M: Dakika, %S: Saniye)</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="209"/>
         <source>Canlı Önizleme: %1</source>
         <translation>Canlı Önizleme: %1</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="223"/>
         <source>Görsel Formatı</source>
         <translation>Görsel Formatı</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="259"/>
         <source>JPEG Kalitesi: %1%</source>
         <translation>JPEG Kalitesi: %1%</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="309"/>
         <source>Çekim Sonrası Otomatik İşlemler</source>
         <translation>Çekim Sonrası Otomatik İşlemler</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="344"/>
         <source>Çekim sonrası sağ altta yüzen Önizleme kartı göster (Floating Thumbnail)</source>
         <translation>Çekim sonrası sağ altta yüzen Önizleme kartı göster (Floating Thumbnail)</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="404"/>
         <source>Sniper Seçim Katmanı ve Büyüteç (Loupe)</source>
         <translation>Sniper Seçim Katmanı ve Büyüteç (Loupe)</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="431"/>
         <source>Büyüteç Yakınlaştirması: %1x</source>
         <translation>Büyüteç Yakınlaştırması: %1x</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="494"/>
         <source>Dil ve Arayüz Seçenekleri</source>
         <translation>Dil ve Arayüz Seçenekleri</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="574"/>
         <source>Tema</source>
         <translation>Tema</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="587"/>
         <source>Uygulama Teması</source>
         <translation>Uygulama Teması</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="626"/>
         <source>Varsayılan Ayarlara Sıfırla</source>
         <translation>Varsayılan Ayarlara Sıfırla</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="318"/>
         <source>Otomatik olarak panoya kopyala (Clipboard)</source>
         <translation>Otomatik olarak panoya kopyala (Clipboard)</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="331"/>
         <source>Otomatik olarak diske kaydet</source>
         <translation>Otomatik olarak diske kaydet</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="357"/>
         <source>Masaüstü bildirimi göster</source>
         <translation>Masaüstü bildirimi göster</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="413"/>
         <source>Piksel Büyüteci ve Canlı Renk Damlalığını (Loupe) aktif et</source>
         <translation>Piksel Büyüteci ve Canlı Renk Damlalığını (Loupe) aktif et</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="447"/>
         <source>Seçim tamamlandığında Sniper katmanını otomatik kapat</source>
         <translation>Seçim tamamlandığında Sniper katmanını otomatik kapat</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/ui/qml/SettingsView.qml" line="507"/>
         <source>Uygulama Dili</source>
         <translation>Uygulama Dili</translation>
-    </message></context>
+    </message>
+</context>
 <context>
-    <name>SniperOverlay</name><message>
-        <location filename="../src/ui/qml/SniperOverlay.qml" line="167"/>
+    <name>SniperOverlay</name>
+    <message>
+        <location filename="../src/ui/qml/SniperOverlay.qml" line="202"/>
         <source>📋 Kopyala</source>
         <translation>Kopyala</translation>
-    </message><message>
-        <location filename="../src/ui/qml/SniperOverlay.qml" line="184"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/SniperOverlay.qml" line="219"/>
         <source>💾 Kaydet</source>
         <translation>Kaydet</translation>
-    </message><message>
-        <location filename="../src/ui/qml/SniperOverlay.qml" line="201"/>
+    </message>
+    <message>
+        <location filename="../src/ui/qml/SniperOverlay.qml" line="236"/>
         <source>✕</source>
         <translation>✕</translation>
-    </message></context>
+    </message>
+</context>
 <context>
-    <name>UiPreferencesManager</name><message>
+    <name>UiPreferencesManager</name>
+    <message>
         <location filename="../src/core/UiPreferencesManager.cpp" line="24"/>
         <source>Light</source>
         <translation>Açık</translation>
-    </message><message>
+    </message>
+    <message>
         <location filename="../src/core/UiPreferencesManager.cpp" line="27"/>
         <source>Dark</source>
         <translation>Koyu</translation>
-    </message></context>
+    </message>
+</context>
 <context>
-    <name>ro_screenshot::CaptureEngine</name><message>
-        <location filename="../src/core/CaptureEngine.cpp" line="85"/>
+    <name>ro_screenshot::CaptureEngine</name>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="117"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="321"/>
+        <source>The previous capture region is no longer available.</source>
+        <translation>Önceki yakalama bölgesi artık kullanılamıyor.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="135"/>
         <source>Ekran görüntüsü yakalanamadı.</source>
         <translation>Ekran görüntüsü yakalanamadı.</translation>
-    </message><message>
-        <location filename="../src/core/CaptureEngine.cpp" line="102"/>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="154"/>
         <source>Tam ekran görüntüsü yakalanamadı.</source>
         <translation>Tam ekran görüntüsü yakalanamadı.</translation>
-    </message><message>
-        <location filename="../src/core/CaptureEngine.cpp" line="118"/>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="173"/>
         <source>Aktif ekran bulunamadı.</source>
         <translation>Aktif ekran bulunamadı.</translation>
-    </message><message>
-        <location filename="../src/core/CaptureEngine.cpp" line="127"/>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="180"/>
         <source>Pencere görüntüsü yakalanamadı.</source>
         <translation>Pencere görüntüsü yakalanamadı.</translation>
-    </message></context>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="201"/>
+        <source>The Wayland screenshot portal is not available.</source>
+        <translation>Wayland ekran görüntüsü portalı kullanılamıyor.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="247"/>
+        <source>The Wayland screenshot request failed: %1</source>
+        <translation>Wayland ekran görüntüsü isteği başarısız oldu: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="467"/>
+        <source>Could not save the screenshot to %1.</source>
+        <translation>Ekran görüntüsü %1 konumuna kaydedilemedi.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="235"/>
+        <location filename="../src/core/CaptureEngine.cpp" line="264"/>
+        <source>Could not monitor the Wayland screenshot request.</source>
+        <translation>Wayland ekran görüntüsü isteği izlenemedi.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="305"/>
+        <source>Screenshot capture was cancelled.</source>
+        <translation>Ekran görüntüsü yakalama iptal edildi.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="306"/>
+        <source>The screenshot portal rejected the request.</source>
+        <translation>Ekran görüntüsü portalı isteği reddetti.</translation>
+    </message>
+    <message>
+        <location filename="../src/core/CaptureEngine.cpp" line="313"/>
+        <source>The screenshot portal returned an invalid image.</source>
+        <translation>Ekran görüntüsü portalı geçersiz bir görüntü döndürdü.</translation>
+    </message>
+</context>
 </TS>

@@ -2,6 +2,7 @@
 #include "core/SettingsManager.hpp"
 #include <QDir>
 #include <QImage>
+#include <QSettings>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -10,7 +11,15 @@ using namespace ro_screenshot;
 class TestLibrary : public QObject {
   Q_OBJECT
 
+  QTemporaryDir m_configDir;
+
 private slots:
+  void initTestCase() {
+    QVERIFY(m_configDir.isValid());
+    QSettings::setPath(QSettings::NativeFormat, QSettings::UserScope,
+                       m_configDir.path());
+  }
+
   void testScanAndFilter() {
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());

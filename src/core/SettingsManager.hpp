@@ -3,6 +3,7 @@
 #include "Types.hpp"
 #include <QDateTime>
 #include <QObject>
+#include <QRect>
 #include <QSettings>
 #include <QString>
 
@@ -40,6 +41,8 @@ class SettingsManager : public QObject {
                  magnifierZoomChanged)
   Q_PROPERTY(QString previewFileName READ previewFileName NOTIFY
                  fileNameTemplateChanged)
+  Q_PROPERTY(QRect lastRegion READ lastRegion WRITE setLastRegion NOTIFY
+                 lastRegionChanged)
 
 public:
   explicit SettingsManager(QObject *parent = nullptr);
@@ -84,6 +87,9 @@ public:
   int magnifierZoom() const;
   void setMagnifierZoom(int zoom);
 
+  QRect lastRegion() const;
+  void setLastRegion(const QRect &region);
+
   Q_INVOKABLE QString
   formatFileName(const QDateTime &dt = QDateTime::currentDateTime()) const;
   Q_INVOKABLE QString
@@ -106,6 +112,7 @@ signals:
   void closeOverlayOnCaptureChanged();
   void magnifierEnabledChanged();
   void magnifierZoomChanged();
+  void lastRegionChanged();
 
 private:
   void load();
@@ -125,6 +132,7 @@ private:
   bool m_closeOverlayOnCapture{true};
   bool m_magnifierEnabled{true};
   int m_magnifierZoom{8};
+  QRect m_lastRegion;
 };
 
 } // namespace ro_screenshot

@@ -22,21 +22,56 @@ Window {
 
     // Keyboard Shortcuts
     Item {
+        id: keyboardController
         focus: true
+        Component.onCompleted: forceActiveFocus()
         Keys.onEscapePressed: {
             captureEngine.cancelCapture()
         }
         Keys.onReturnPressed: {
-            confirmCapture()
+            confirmCapture("")
         }
         Keys.onEnterPressed: {
-            confirmCapture()
+            confirmCapture("")
+        }
+        Keys.onPressed: (event) => {
+            if (!sniperWindow.hasSelection)
+                return
+            const resize = (event.modifiers & Qt.ShiftModifier) !== 0
+            if (event.key === Qt.Key_Left) {
+                sniperWindow.adjustSelection(-1, 0, resize)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Right) {
+                sniperWindow.adjustSelection(1, 0, resize)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Up) {
+                sniperWindow.adjustSelection(0, -1, resize)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Down) {
+                sniperWindow.adjustSelection(0, 1, resize)
+                event.accepted = true
+            }
         }
     }
 
-    function confirmCapture() {
+    function adjustSelection(dx, dy, resize) {
+        if (resize) {
+            currentX = Math.max(0, Math.min(width, currentX + dx))
+            currentY = Math.max(0, Math.min(height, currentY + dy))
+            return
+        }
+
+        const nextX = Math.max(0, Math.min(width - selW, selX + dx))
+        const nextY = Math.max(0, Math.min(height - selH, selY + dy))
+        startX = nextX
+        startY = nextY
+        currentX = nextX + selW
+        currentY = nextY + selH
+    }
+
+    function confirmCapture(action) {
         if (hasSelection && selW > 2 && selH > 2) {
-            captureEngine.processRegionSelected(Math.round(selX), Math.round(selY), Math.round(selW), Math.round(selH))
+            captureEngine.processRegionSelected(Math.round(selX), Math.round(selY), Math.round(selW), Math.round(selH), action || "")
         } else {
             captureEngine.cancelCapture()
         }
@@ -165,7 +200,7 @@ Window {
 
                 Button {
                     text: qsTr("📋 Kopyala")
-                    onClicked: sniperWindow.confirmCapture()
+                    onClicked: sniperWindow.confirmCapture("copy")
                     contentItem: Text {
                         text: parent.text
                         color: "#FFFFFF"
@@ -182,7 +217,7 @@ Window {
 
                 Button {
                     text: qsTr("💾 Kaydet")
-                    onClicked: sniperWindow.confirmCapture()
+                    onClicked: sniperWindow.confirmCapture("save")
                     contentItem: Text {
                         text: parent.text
                         color: "#E2E8F0"
@@ -289,6 +324,7 @@ Window {
         cursorShape: Qt.CrossCursor
 
         onPressed: (mouse) => {
+            keyboardController.forceActiveFocus()
             sniperWindow.startX = mouse.x
             sniperWindow.startY = mouse.y
             sniperWindow.currentX = mouse.x
@@ -315,7 +351,7 @@ Window {
         }
 
         onDoubleClicked: {
-            sniperWindow.confirmCapture()
+            sniperWindow.confirmCapture("")
         }
     }
 }

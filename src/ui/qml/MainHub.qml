@@ -15,6 +15,27 @@ ApplicationWindow {
 
     property int currentTab: 0 // 0: Quick Capture, 1: Library, 2: Settings
 
+    Shortcut {
+        sequence: "Shift+Print"
+        context: Qt.ApplicationShortcut
+        onActivated: captureEngine.requestRegionCapture(0)
+    }
+    Shortcut {
+        sequence: "Print"
+        context: Qt.ApplicationShortcut
+        onActivated: captureEngine.requestFullscreenCapture(0)
+    }
+    Shortcut {
+        sequence: "Alt+Print"
+        context: Qt.ApplicationShortcut
+        onActivated: captureEngine.requestWindowCapture(0)
+    }
+    Shortcut {
+        sequence: "Ctrl+Print"
+        context: Qt.ApplicationShortcut
+        onActivated: captureEngine.requestRegionCapture(5)
+    }
+
     readonly property bool hasUiPreferences: UiPreferencesManager !== null
     readonly property string themeMode: hasUiPreferences ? UiPreferencesManager.themeMode : "light"
     readonly property bool darkMode: themeMode === "dark"
@@ -649,6 +670,71 @@ ApplicationWindow {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 58
+                        radius: 10
+                        color: repeatRegionMouse.containsMouse && captureEngine.hasLastRegion
+                               ? colors.selected : colors.card
+                        border.width: 1
+                        border.color: repeatRegionMouse.containsMouse && captureEngine.hasLastRegion
+                                      ? colors.accentA : colors.border
+                        opacity: captureEngine.hasLastRegion ? 1.0 : 0.55
+
+                        MouseArea {
+                            id: repeatRegionMouse
+                            anchors.fill: parent
+                            enabled: captureEngine.hasLastRegion && !captureEngine.isCapturing
+                            hoverEnabled: true
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: captureEngine.requestLastRegionCapture(0)
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 16
+                            spacing: 12
+
+                            Image {
+                                source: "assets/icon-refresh.svg"
+                                sourceSize.width: 20
+                                sourceSize.height: 20
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: captureEngine.hasLastRegion ? colors.accentA : colors.muted
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 1
+                                Text {
+                                    text: qsTr("Son bölgeyi tekrar yakala")
+                                    color: colors.text
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: captureEngine.hasLastRegion
+                                          ? qsTr("Önceki seçim sınırlarını yeniden kullanır.")
+                                          : qsTr("İlk bölge çekiminden sonra kullanılabilir.")
+                                    color: colors.textSoft
+                                    font.pixelSize: 11
+                                }
+                            }
+
+                            Text {
+                                text: qsTr("Son seçim")
+                                color: colors.textMuted
+                                font.pixelSize: 10
                             }
                         }
                     }

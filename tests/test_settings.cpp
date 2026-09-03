@@ -1,5 +1,8 @@
 #include "core/SettingsManager.hpp"
+#include <QFile>
+#include <QSettings>
 #include <QSignalSpy>
+#include <QTemporaryDir>
 #include <QTest>
 
 using namespace ro_screenshot;
@@ -7,8 +10,13 @@ using namespace ro_screenshot;
 class TestSettings : public QObject {
   Q_OBJECT
 
+  QTemporaryDir m_configDir;
+
 private slots:
   void initTestCase() {
+    QVERIFY(m_configDir.isValid());
+    QSettings::setPath(QSettings::NativeFormat, QSettings::UserScope,
+                       m_configDir.path());
     QCoreApplication::setOrganizationName("ro-asd-test");
     QCoreApplication::setApplicationName("ro-screenshot-test");
   }
@@ -24,6 +32,39 @@ private slots:
     QCOMPARE(settings.showFloatingThumbnail(), true);
     QCOMPARE(settings.magnifierEnabled(), true);
     QCOMPARE(settings.magnifierZoom(), 8);
+    QVERIFY(!settings.lastRegion().isValid());
+  }
+
+  void testGeneratedPathDoesNotOverwriteExistingCapture() {
+    QTemporaryDir outputDir;
+    QVERIFY(outputDir.isValid());
+
+    SettingsManager settings;
+    settings.setSaveDirectory(outputDir.path());
+    settings.setFileNameTemplate("collision-test");
+    settings.setImageFormat("png");
+
+    const QDateTime timestamp = QDateTime::fromSecsSinceEpoch(1700000000);
+    const QString firstPath = settings.generateFullPath(timestamp);
+    QFile existing(firstPath);
+    QVERIFY(existing.open(QIODevice::WriteOnly));
+    existing.close();
+
+    const QString secondPath = settings.generateFullPath(timestamp);
+    QVERIFY(secondPath != firstPath);
+    QVERIFY(secondPath.endsWith("collision-test_1.png"));
+  }
+
+  void testLastRegionPersistence() {
+    SettingsManager settings;
+    const QRect region(12, 24, 640, 360);
+    QSignalSpy spy(&settings, &SettingsManager::lastRegionChanged);
+    settings.setLastRegion(region);
+    QCOMPARE(settings.lastRegion(), region);
+    QCOMPARE(spy.count(), 1);
+
+    SettingsManager reloaded;
+    QCOMPARE(reloaded.lastRegion(), region);
   }
 
   void testFileNameFormatting() {

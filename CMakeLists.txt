@@ -30,15 +30,19 @@ else()
     )
 endif()
 
+include(CTest)
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS
     Core
     Gui
     Quick
     Qml
     DBus
-    Widgets
-    Test
 )
+
+if(BUILD_TESTING)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Test)
+endif()
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -128,7 +132,6 @@ target_link_libraries(ro-screenshot PRIVATE
     Qt6::Quick
     Qt6::Qml
     Qt6::DBus
-    Qt6::Widgets
 )
 
 # Desktop & AppStream metadata installation
@@ -137,7 +140,6 @@ install(TARGETS ro-screenshot DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES data/org.ro_asd.ro_screenshot.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 
 # Testing
-include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()

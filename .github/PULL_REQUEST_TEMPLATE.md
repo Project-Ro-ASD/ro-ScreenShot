@@ -9,6 +9,6 @@ Provide a concise summary of the changes introduced in this pull request.
 - [ ] Refactoring
 
 ## Verification
-- [ ] Unit tests pass (`ctest --test-dir build`)
+- [ ] Unit tests pass (`QT_QPA_PLATFORM=offscreen ctest --test-dir build-local --output-on-failure`)
 - [ ] Code formatted with `clang-format`
 - [ ] Verified on Wayland / Fedora 44+

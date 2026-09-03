@@ -6,25 +6,34 @@ Exec=ro-screenshot
 Icon=org.ro_asd.ro_screenshot
 Terminal=false
 Type=Application
-Categories=Utility;Graphics;RasterGraphics;
+Categories=Graphics;2DGraphics;RasterGraphics;
 Keywords=screenshot;capture;sniper;region;ekran;yakalama;galeri;
 StartupNotify=true
-Actions=CaptureRegion;CaptureFullscreen;CaptureWindow;OpenLibrary;OpenSettings;
+Actions=CaptureRegion;CaptureFullscreen;CaptureWindow;CaptureDelayed;OpenLibrary;OpenSettings;
 
 [Desktop Action CaptureRegion]
 Name=Bölge Seçimi Yakala
 Exec=ro-screenshot --region
 Icon=camera-photo
+X-KDE-Shortcuts=Shift+Print
 
 [Desktop Action CaptureFullscreen]
 Name=Tam Ekran Yakala
 Exec=ro-screenshot --fullscreen
 Icon=view-fullscreen
+X-KDE-Shortcuts=Print
 
 [Desktop Action CaptureWindow]
 Name=Pencere Yakala
 Exec=ro-screenshot --window
 Icon=window-duplicate
+X-KDE-Shortcuts=Alt+Print
+
+[Desktop Action CaptureDelayed]
+Name=5 Saniye Gecikmeli Bölge Yakala
+Exec=ro-screenshot --region --delay 5
+Icon=chronometer
+X-KDE-Shortcuts=Ctrl+Print
 
 [Desktop Action OpenLibrary]
 Name=Galeri / Kütüphane

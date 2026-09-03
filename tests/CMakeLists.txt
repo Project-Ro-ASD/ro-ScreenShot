@@ -23,7 +23,6 @@ macro(add_ro_test TEST_NAME TEST_SOURCE)
         Qt6::Gui
         Qt6::Quick
         Qt6::DBus
-        Qt6::Widgets
         Qt6::Test
     )
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})

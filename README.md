@@ -31,11 +31,38 @@ When launched without arguments, `ro-screenshot` opens the graphical **Hub & Lib
 | **Open Library** | `ro-screenshot --library` (`-l`) | `Super + Shift + G` | Opens screenshot gallery and management view |
 | **Open Settings** | `ro-screenshot --settings` (`-s`) | — | Opens preferences and workflow configuration |
 
+On KDE Plasma, the installed desktop actions publish the listed PrintScreen
+shortcuts. If Spectacle already owns one, reassign that binding under **System
+Settings -> Keyboard -> Shortcuts**; KDE permits only one owner per global
+shortcut.
+
 ### Controls during Sniper Mode:
 - **`Mouse Drag`**: Draw selection box.
 - **`Enter / Return` / `Double Click`**: Confirm and process capture.
+- **`Arrow Keys`**: Move the selection by one pixel.
+- **`Shift + Arrow Keys`**: Resize the selection by one pixel.
 - **`C`**: Copy hovered pixel HEX color code to clipboard.
 - **`Escape`**: Cancel capture.
+
+---
+
+## Build and Run
+
+Linux paths are case-sensitive. Clone into and consistently use the exact
+`ro-ScreenShot` directory name:
+
+```bash
+git clone https://github.com/Project-Ro-ASD/Ro-ScreenShot.git ro-ScreenShot
+cd ro-ScreenShot
+
+cmake -S . -B build-local -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_TESTING=ON
+cmake --build build-local --parallel
+./build-local/ro-screenshot
+```
+
+See the [build guide](docs/BUILD.md) for testing and CMake cache troubleshooting.
 
 ---
 

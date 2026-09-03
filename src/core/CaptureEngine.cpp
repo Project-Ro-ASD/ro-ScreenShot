@@ -1,5 +1,9 @@
 #include "CaptureEngine.hpp"
 #include <QClipboard>
+#include <QDBusConnection>
+#include <QDBusInterface>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -8,6 +12,9 @@
 #include <QPixmap>
 #include <QScreen>
 #include <QStandardPaths>
+#include <QUrl>
+#include <QUuid>
+#include <algorithm>
 
 namespace ro_screenshot {
 
@@ -21,6 +28,10 @@ CaptureEngine::CaptureEngine(SettingsManager *settings, LibraryManager *library,
   }
   QDir().mkpath(cacheBase);
   m_frozenFramePath = cacheBase + "/frozen_frame.png";
+  if (m_settings) {
+    connect(m_settings, &SettingsManager::lastRegionChanged, this,
+            &CaptureEngine::lastRegionChanged);
+  }
 }
 
 bool CaptureEngine::isCapturing() const { return m_isCapturing; }
@@ -31,12 +42,18 @@ QString CaptureEngine::lastCapturedFilePath() const {
 
 QString CaptureEngine::frozenFramePath() const { return m_frozenFramePath; }
 
+bool CaptureEngine::hasLastRegion() const {
+  return m_settings && m_settings->lastRegion().isValid();
+}
+
 void CaptureEngine::requestRegionCapture(int delaySeconds) {
   if (m_isCapturing) {
     return;
   }
   m_isCapturing = true;
+  m_pendingLastRegion = false;
   emit isCapturingChanged();
+  emit captureUiShouldHide();
 
   if (delaySeconds > 0) {
     QTimer::singleShot(delaySeconds * 1000, this,
@@ -52,7 +69,9 @@ void CaptureEngine::requestFullscreenCapture(int delaySeconds) {
     return;
   }
   m_isCapturing = true;
+  m_pendingLastRegion = false;
   emit isCapturingChanged();
+  emit captureUiShouldHide();
 
   if (delaySeconds > 0) {
     QTimer::singleShot(delaySeconds * 1000, this,
@@ -67,7 +86,9 @@ void CaptureEngine::requestWindowCapture(int delaySeconds) {
     return;
   }
   m_isCapturing = true;
+  m_pendingLastRegion = false;
   emit isCapturingChanged();
+  emit captureUiShouldHide();
 
   if (delaySeconds > 0) {
     QTimer::singleShot(delaySeconds * 1000, this,
@@ -77,12 +98,41 @@ void CaptureEngine::requestWindowCapture(int delaySeconds) {
   }
 }
 
+void CaptureEngine::requestLastRegionCapture(int delaySeconds) {
+  if (m_isCapturing || !hasLastRegion()) {
+    return;
+  }
+  m_isCapturing = true;
+  m_pendingLastRegion = true;
+  emit isCapturingChanged();
+  emit captureUiShouldHide();
+  QTimer::singleShot(std::max(0, delaySeconds) * 1000, this, [this]() {
+    if (shouldUsePortal()) {
+      requestPortalCapture(CaptureMode::Region);
+      return;
+    }
+    const QImage desktop = captureCombinedDesktop();
+    const QRect region = m_settings->lastRegion().intersected(desktop.rect());
+    if (desktop.isNull() || region.width() <= 2 || region.height() <= 2) {
+      failCapture(tr("The previous capture region is no longer available."));
+      return;
+    }
+    saveAndProcessResult(desktop.copy(region), CaptureMode::Region, region);
+    m_isCapturing = false;
+    m_pendingLastRegion = false;
+    emit isCapturingChanged();
+    emit captureUiMayRestore();
+  });
+}
+
 void CaptureEngine::executeRegionCapture() {
+  if (shouldUsePortal()) {
+    requestPortalCapture(CaptureMode::Region);
+    return;
+  }
   m_cachedDesktopFrame = captureCombinedDesktop();
   if (m_cachedDesktopFrame.isNull()) {
-    m_isCapturing = false;
-    emit isCapturingChanged();
-    emit captureError(tr("Ekran görüntüsü yakalanamadı."));
+    failCapture(tr("Ekran görüntüsü yakalanamadı."));
     return;
   }
 
@@ -95,45 +145,214 @@ void CaptureEngine::executeRegionCapture() {
 }
 
 void CaptureEngine::executeFullscreenCapture() {
+  if (shouldUsePortal()) {
+    requestPortalCapture(CaptureMode::Fullscreen);
+    return;
+  }
   QImage full = captureCombinedDesktop();
   if (full.isNull()) {
-    m_isCapturing = false;
-    emit isCapturingChanged();
-    emit captureError(tr("Tam ekran görüntüsü yakalanamadı."));
+    failCapture(tr("Tam ekran görüntüsü yakalanamadı."));
     return;
   }
 
   saveAndProcessResult(full, CaptureMode::Fullscreen, full.rect());
   m_isCapturing = false;
   emit isCapturingChanged();
+  emit captureUiMayRestore();
 }
 
 void CaptureEngine::executeWindowCapture() {
+  if (shouldUsePortal()) {
+    requestPortalCapture(CaptureMode::Window);
+    return;
+  }
   // For window capture in Wayland/X11, fallback to active screen or primary
   // screen
   QScreen *primary = QGuiApplication::primaryScreen();
   if (!primary) {
-    m_isCapturing = false;
-    emit isCapturingChanged();
-    emit captureError(tr("Aktif ekran bulunamadı."));
+    failCapture(tr("Aktif ekran bulunamadı."));
     return;
   }
 
   QPixmap pixmap = primary->grabWindow(0);
   QImage img = pixmap.toImage();
   if (img.isNull()) {
-    m_isCapturing = false;
-    emit isCapturingChanged();
-    emit captureError(tr("Pencere görüntüsü yakalanamadı."));
+    failCapture(tr("Pencere görüntüsü yakalanamadı."));
     return;
   }
 
   saveAndProcessResult(img, CaptureMode::Window, img.rect());
   m_isCapturing = false;
   emit isCapturingChanged();
+  emit captureUiMayRestore();
 }
 
-void CaptureEngine::processRegionSelected(int x, int y, int width, int height) {
+bool CaptureEngine::shouldUsePortal() const {
+  return QGuiApplication::platformName().contains(QStringLiteral("wayland"),
+                                                  Qt::CaseInsensitive);
+}
+
+void CaptureEngine::requestPortalCapture(CaptureMode mode) {
+  QDBusInterface portal(QStringLiteral("org.freedesktop.portal.Desktop"),
+                        QStringLiteral("/org/freedesktop/portal/desktop"),
+                        QStringLiteral("org.freedesktop.portal.Screenshot"),
+                        QDBusConnection::sessionBus());
+  if (!portal.isValid()) {
+    failCapture(tr("The Wayland screenshot portal is not available."));
+    return;
+  }
+
+  m_pendingPortalMode = mode;
+  QVariantMap options;
+  const QString token = QStringLiteral("ro_screenshot_%1")
+                            .arg(QUuid::createUuid().toString(QUuid::Id128));
+  options.insert(QStringLiteral("handle_token"), token);
+
+  const uint version = portal.property("version").toUInt();
+  const uint availableTargets = portal.property("AvailableTargets").toUInt();
+  if (version >= 3U && availableTargets != 0U) {
+    constexpr uint screenTarget = 1U;
+    constexpr uint windowTarget = 2U;
+    constexpr uint activeWindowTarget = 8U;
+    uint target = screenTarget;
+    if (mode == CaptureMode::Window) {
+      target = (availableTargets & activeWindowTarget) != 0U
+                   ? activeWindowTarget
+                   : windowTarget;
+    }
+    if ((availableTargets & target) != 0U) {
+      options.insert(QStringLiteral("target"), target);
+      options.insert(QStringLiteral("interactive"), false);
+    } else {
+      options.insert(QStringLiteral("interactive"),
+                     mode == CaptureMode::Window);
+    }
+  } else {
+    options.insert(QStringLiteral("interactive"), mode == CaptureMode::Window);
+  }
+
+  m_pendingPortalRequestPath = expectedPortalRequestPath(token);
+  if (!connectPortalResponse(m_pendingPortalRequestPath)) {
+    failCapture(tr("Could not monitor the Wayland screenshot request."));
+    return;
+  }
+
+  auto *watcher = new QDBusPendingCallWatcher(
+      portal.asyncCall(QStringLiteral("Screenshot"), QString(), options), this);
+  connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, watcher]() {
+    QDBusPendingReply<QDBusObjectPath> reply = *watcher;
+    watcher->deleteLater();
+    if (reply.isError()) {
+      disconnectPortalResponse();
+      failCapture(tr("The Wayland screenshot request failed: %1")
+                      .arg(reply.error().message()));
+      return;
+    }
+
+    // A very fast backend may emit Response before this async method
+    // reply is delivered. In that case the response handler has
+    // already completed and disconnected the request path.
+    if (!m_isCapturing) {
+      return;
+    }
+
+    const QString returnedPath = reply.value().path();
+    if (returnedPath != m_pendingPortalRequestPath) {
+      disconnectPortalResponse();
+      m_pendingPortalRequestPath = returnedPath;
+      if (!connectPortalResponse(m_pendingPortalRequestPath)) {
+        failCapture(tr("Could not monitor the Wayland screenshot request."));
+      }
+    }
+  });
+}
+
+QString CaptureEngine::expectedPortalRequestPath(const QString &token) const {
+  QString sender = QDBusConnection::sessionBus().baseService();
+  sender.remove(QLatin1Char(':'));
+  sender.replace(QLatin1Char('.'), QLatin1Char('_'));
+  return QStringLiteral("/org/freedesktop/portal/desktop/request/%1/%2")
+      .arg(sender, token);
+}
+
+bool CaptureEngine::connectPortalResponse(const QString &path) {
+  return !path.isEmpty() &&
+         QDBusConnection::sessionBus().connect(
+             QStringLiteral("org.freedesktop.portal.Desktop"), path,
+             QStringLiteral("org.freedesktop.portal.Request"),
+             QStringLiteral("Response"), this,
+             SLOT(handlePortalResponse(uint, QVariantMap)));
+}
+
+void CaptureEngine::disconnectPortalResponse() {
+  if (m_pendingPortalRequestPath.isEmpty()) {
+    return;
+  }
+  QDBusConnection::sessionBus().disconnect(
+      QStringLiteral("org.freedesktop.portal.Desktop"),
+      m_pendingPortalRequestPath,
+      QStringLiteral("org.freedesktop.portal.Request"),
+      QStringLiteral("Response"), this,
+      SLOT(handlePortalResponse(uint, QVariantMap)));
+  m_pendingPortalRequestPath.clear();
+}
+
+void CaptureEngine::handlePortalResponse(uint response,
+                                         const QVariantMap &results) {
+  disconnectPortalResponse();
+
+  if (response != 0U) {
+    failCapture(response == 1U
+                    ? tr("Screenshot capture was cancelled.")
+                    : tr("The screenshot portal rejected the request."));
+    return;
+  }
+
+  const QString uri = results.value(QStringLiteral("uri")).toString();
+  const QImage image(QUrl(uri).toLocalFile());
+  if (image.isNull()) {
+    failCapture(tr("The screenshot portal returned an invalid image."));
+    return;
+  }
+
+  if (m_pendingPortalMode == CaptureMode::Region) {
+    if (m_pendingLastRegion) {
+      const QRect region = m_settings->lastRegion().intersected(image.rect());
+      if (region.width() <= 2 || region.height() <= 2) {
+        failCapture(tr("The previous capture region is no longer available."));
+        return;
+      }
+      saveAndProcessResult(image.copy(region), CaptureMode::Region, region);
+      m_pendingLastRegion = false;
+      m_isCapturing = false;
+      emit isCapturingChanged();
+      emit captureUiMayRestore();
+      return;
+    }
+    m_cachedDesktopFrame = image;
+    m_cachedDesktopFrame.save(m_frozenFramePath, "PNG");
+    emit frozenFrameChanged();
+    emit openSniperOverlay(m_frozenFramePath, image.width(), image.height());
+    return;
+  }
+
+  saveAndProcessResult(image, m_pendingPortalMode, image.rect());
+  m_isCapturing = false;
+  emit isCapturingChanged();
+  emit captureUiMayRestore();
+}
+
+void CaptureEngine::failCapture(const QString &message) {
+  disconnectPortalResponse();
+  m_isCapturing = false;
+  m_pendingLastRegion = false;
+  emit isCapturingChanged();
+  emit captureError(message);
+  emit captureUiMayRestore();
+}
+
+void CaptureEngine::processRegionSelected(int x, int y, int width, int height,
+                                          const QString &action) {
   if (m_cachedDesktopFrame.isNull()) {
     m_isCapturing = false;
     emit isCapturingChanged();
@@ -154,7 +373,8 @@ void CaptureEngine::processRegionSelected(int x, int y, int width, int height) {
   }
 
   QImage cropped = m_cachedDesktopFrame.copy(targetRect);
-  saveAndProcessResult(cropped, CaptureMode::Region, targetRect);
+  m_settings->setLastRegion(targetRect);
+  saveAndProcessResult(cropped, CaptureMode::Region, targetRect, action);
 
   if (m_settings && m_settings->closeOverlayOnCapture()) {
     emit closeSniperOverlay();
@@ -162,12 +382,14 @@ void CaptureEngine::processRegionSelected(int x, int y, int width, int height) {
 
   m_isCapturing = false;
   emit isCapturingChanged();
+  emit captureUiMayRestore();
 }
 
 void CaptureEngine::cancelCapture() {
   emit closeSniperOverlay();
   m_isCapturing = false;
   emit isCapturingChanged();
+  emit captureUiMayRestore();
 }
 
 QImage CaptureEngine::captureCombinedDesktop() const {
@@ -203,7 +425,8 @@ QImage CaptureEngine::captureCombinedDesktop() const {
 
 bool CaptureEngine::saveAndProcessResult(const QImage &image,
                                          CaptureMode /*mode*/,
-                                         const QRect & /*sourceRect*/) {
+                                         const QRect & /*sourceRect*/,
+                                         const QString &action) {
   if (image.isNull() || !m_settings) {
     return false;
   }
@@ -213,14 +436,20 @@ bool CaptureEngine::saveAndProcessResult(const QImage &image,
   QString finalPath;
 
   // 1. Pano (Clipboard)
-  if (m_settings->autoCopyToClipboard()) {
+  const bool shouldCopy =
+      action == QStringLiteral("copy") ||
+      (action.isEmpty() && m_settings->autoCopyToClipboard());
+  const bool shouldSave = action == QStringLiteral("save") ||
+                          (action.isEmpty() && m_settings->autoSaveToDisk());
+
+  if (shouldCopy) {
     QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setImage(image);
     copied = true;
   }
 
   // 2. Diske Kaydetme (Disk Save)
-  if (m_settings->autoSaveToDisk()) {
+  if (shouldSave) {
     finalPath = m_settings->generateFullPath();
     QString fmt = m_settings->imageFormat().toUpper();
     int quality =
@@ -234,7 +463,14 @@ bool CaptureEngine::saveAndProcessResult(const QImage &image,
       if (m_library) {
         m_library->refresh();
       }
+    } else {
+      emit captureError(
+          tr("Could not save the screenshot to %1.").arg(finalPath));
     }
+  }
+
+  if (!saved && !copied) {
+    return false;
   }
 
   QFileInfo info(finalPath);

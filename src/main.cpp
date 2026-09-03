@@ -127,6 +127,29 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().first();
   QQuickWindow *mainWindow = qobject_cast<QQuickWindow *>(rootObject);
+  const bool captureOnlyLaunch = parser.isSet(regionOption) ||
+                                 parser.isSet(fullscreenOption) ||
+                                 parser.isSet(windowOption);
+
+  QObject::connect(&captureEngine, &CaptureEngine::captureUiShouldHide, &app,
+                   [mainWindow]() {
+                     if (mainWindow) {
+                       mainWindow->hide();
+                     }
+                   });
+  QObject::connect(&captureEngine, &CaptureEngine::captureUiMayRestore, &app,
+                   [mainWindow, captureOnlyLaunch]() {
+                     if (captureOnlyLaunch) {
+                       QTimer::singleShot(0, QCoreApplication::instance(),
+                                          &QCoreApplication::quit);
+                       return;
+                     }
+                     if (mainWindow && !captureOnlyLaunch) {
+                       mainWindow->show();
+                       mainWindow->raise();
+                       mainWindow->requestActivate();
+                     }
+                   });
 
   // Sniper Overlay Window Component
   QQmlComponent sniperComponent(&engine, "ro_screenshot", "SniperOverlay");
