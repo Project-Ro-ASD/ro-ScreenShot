@@ -19,6 +19,8 @@ set(RO_COMMON_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/src/core/platform/ScreenGeometryManager.cpp
     ${CMAKE_SOURCE_DIR}/src/core/platform/SafeImageWriter.hpp
     ${CMAKE_SOURCE_DIR}/src/core/platform/SafeImageWriter.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/WlrScreencopyProvider.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/platform/WlrScreencopyProvider.cpp
     ${CMAKE_SOURCE_DIR}/src/core/platform/XdgPortalProvider.hpp
     ${CMAKE_SOURCE_DIR}/src/core/platform/XdgPortalProvider.cpp
     ${CMAKE_SOURCE_DIR}/src/core/platform/X11FallbackProvider.hpp
@@ -37,6 +39,41 @@ set(RO_COMMON_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/src/core/advanced/AutostartManager.cpp
     ${CMAKE_SOURCE_DIR}/src/core/advanced/SystemTrayManager.hpp
     ${CMAKE_SOURCE_DIR}/src/core/advanced/SystemTrayManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SensitiveDataDetector.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/MockupFrameGenerator.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/MockupFrameGenerator.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/PaletteExtractor.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/PaletteExtractor.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SmartDimensionGuide.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SmartDimensionGuide.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/TableExtractor.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/TableExtractor.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/VaultManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/VaultManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/EphemeralShotManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/EphemeralShotManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/MetadataSanitizer.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/MetadataSanitizer.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/PerceptualHashEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/PerceptualHashEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/DuplicateCleaner.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/DuplicateCleaner.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/AccessibilityAnalyzer.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/AccessibilityAnalyzer.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/PdfReportGenerator.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/PdfReportGenerator.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/ImageDiffEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/ImageDiffEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/LiveTranslator.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/LiveTranslator.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/AiAssistantEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/AiAssistantEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/ScrollingCaptureEngine.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/ScrollingCaptureEngine.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SmartWindowDetector.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/SmartWindowDetector.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/LivePresentationOverlay.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/advanced/LivePresentationOverlay.cpp
 )
 
 macro(add_ro_test TEST_NAME TEST_SOURCE)
@@ -67,5 +104,4 @@ add_ro_test(test_safe_image_io test_safe_image_io.cpp)
 add_ro_test(test_portal_backend test_portal_backend.cpp)
 add_ro_test(test_shortcuts_and_advanced test_shortcuts_and_advanced.cpp)
 add_ro_test(test_cli_dbus test_cli_dbus.cpp)
-
-
+add_ro_test(test_innovations test_innovations.cpp)
