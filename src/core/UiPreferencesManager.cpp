@@ -56,9 +56,15 @@ UiPreferencesManager::UiPreferencesManager(QObject *parent) : QObject(parent) {
   const QString savedThemeMode =
       settings.value(QStringLiteral("ui/themeMode")).toString();
   m_themeMode = normalizeThemeMode(savedThemeMode);
+  m_sidebarCollapsed =
+      settings.value(QStringLiteral("ui/sidebarCollapsed"), false).toBool();
 }
 
 QString UiPreferencesManager::themeMode() const { return m_themeMode; }
+
+bool UiPreferencesManager::isSidebarCollapsed() const {
+  return m_sidebarCollapsed;
+}
 
 QVariantList UiPreferencesManager::availableThemeModes() const {
   QVariantList modes;
@@ -83,8 +89,23 @@ void UiPreferencesManager::setThemeMode(const QString &themeMode) {
   emit themeModeChanged();
 }
 
+void UiPreferencesManager::setSidebarCollapsed(bool collapsed) {
+  if (m_sidebarCollapsed == collapsed) {
+    return;
+  }
+
+  m_sidebarCollapsed = collapsed;
+  persistValue(QStringLiteral("ui/sidebarCollapsed"), m_sidebarCollapsed);
+  emit sidebarCollapsedChanged();
+}
+
+void UiPreferencesManager::toggleSidebar() {
+  setSidebarCollapsed(!m_sidebarCollapsed);
+}
+
 void UiPreferencesManager::resetToDefaults() {
   setThemeMode(systemThemeMode());
+  setSidebarCollapsed(false);
 }
 
 QString

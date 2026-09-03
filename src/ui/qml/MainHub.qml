@@ -11,7 +11,7 @@ ApplicationWindow {
     height: 720
     minimumWidth: 880
     minimumHeight: 600
-    title: qsTr("Ro-ScreenShot Hub")
+    title: qsTr("ro-ScreenShot Hub")
 
     property int currentTab: 0 // 0: Quick Capture, 1: Library, 2: Settings
 
@@ -61,12 +61,31 @@ ApplicationWindow {
         context: Qt.ApplicationShortcut
         onActivated: root.currentTab = 2
     }
+    Shortcut {
+        sequence: "Ctrl+B"
+        context: Qt.ApplicationShortcut
+        onActivated: if (root.hasUiPreferences) UiPreferencesManager.toggleSidebar()
+    }
 
     readonly property bool hasUiPreferences: UiPreferencesManager !== null
+    readonly property bool sidebarCollapsed: hasUiPreferences ? UiPreferencesManager.sidebarCollapsed : false
     readonly property string themeMode: hasUiPreferences ? UiPreferencesManager.themeMode : "light"
     readonly property bool darkMode: themeMode === "dark"
     readonly property var visibleThemeModes: hasUiPreferences ? UiPreferencesManager.availableThemeModes : []
     readonly property var uiColors: colors
+
+    function cycleLanguage() {
+        var langs = LanguageManager.availableLanguages
+        if (!langs || langs.length === 0) return
+        for (var i = 0; i < langs.length; ++i) {
+            if (langs[i].code === LanguageManager.currentLanguage) {
+                var nextIndex = (i + 1) % langs.length
+                LanguageManager.setCurrentLanguage(langs[nextIndex].code)
+                return
+            }
+        }
+        LanguageManager.setCurrentLanguage(langs[0].code)
+    }
 
     QtObject {
         id: colors
@@ -182,18 +201,101 @@ ApplicationWindow {
         anchors.fill: parent
         spacing: 0
 
-        // ─── Left Sidebar Navigation (no brand header, icon+label only) ─────────
+        // ─── Left Sidebar Navigation (Collapsible) ─────────
         Rectangle {
-            Layout.preferredWidth: 230
+            id: sidebarContainer
+            Layout.preferredWidth: root.sidebarCollapsed ? 64 : 230
             Layout.fillHeight: true
             color: colors.shell
             border.color: colors.border
             border.width: 1
+            clip: true
+
+            Behavior on Layout.preferredWidth {
+                NumberAnimation {
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 16
+                anchors.margins: root.sidebarCollapsed ? 8 : 14
                 spacing: 8
+
+                // Header: App Logo & Collapse/Expand Toggle
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    spacing: 8
+
+                    // Brand Title (visible only when expanded)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        visible: !root.sidebarCollapsed
+                        opacity: root.sidebarCollapsed ? 0 : 1
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 120 }
+                        }
+
+                        Image {
+                            source: "qrc:/qt/qml/ro_screenshot/assets/logo.svg"
+                            sourceSize.width: 20
+                            sourceSize.height: 20
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                        }
+
+                        Text {
+                            text: "ro-ScreenShot"
+                            color: colors.text
+                            font.pixelSize: 13
+                            font.bold: true
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    // Toggle Button (Accessible in both expanded and collapsed modes)
+                    Rectangle {
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 32
+                        Layout.alignment: root.sidebarCollapsed ? Qt.AlignHCenter : Qt.AlignRight
+                        radius: 6
+                        color: toggleBtnMouse.containsMouse ? colors.cardStrong : "transparent"
+                        border.color: toggleBtnMouse.containsMouse ? colors.border : "transparent"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.sidebarCollapsed ? "☰" : "◀"
+                            color: toggleBtnMouse.containsMouse ? colors.accentA : colors.textSoft
+                            font.pixelSize: root.sidebarCollapsed ? 15 : 12
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: toggleBtnMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: if (root.hasUiPreferences) UiPreferencesManager.toggleSidebar()
+                        }
+
+                        ToolTip.visible: toggleBtnMouse.containsMouse
+                        ToolTip.delay: 300
+                        ToolTip.text: root.sidebarCollapsed ? qsTr("Kenar Çubuğunu Aç (Ctrl+B)") : qsTr("Kenar Çubuğunu Kapat (Ctrl+B)")
+                    }
+                }
+
+                // Divider
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: colors.border
+                }
 
                 // Nav Menu Items
                 ColumnLayout {
@@ -215,18 +317,27 @@ ApplicationWindow {
                             onClicked: root.currentTab = 0
                         }
 
+                        ToolTip.visible: root.sidebarCollapsed && btn1Mouse.containsMouse
+                        ToolTip.delay: 300
+                        ToolTip.text: qsTr("Hızlı Çekim")
+
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 12
+                            anchors.leftMargin: root.sidebarCollapsed ? 0 : 12
+                            anchors.rightMargin: root.sidebarCollapsed ? 0 : 12
+                            spacing: root.sidebarCollapsed ? 0 : 12
 
-                            Image {
-                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
-                                sourceSize.width: 20
-                                sourceSize.height: 20
+                            Item {
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
+                                Layout.alignment: root.sidebarCollapsed ? Qt.AlignHCenter : Qt.AlignVCenter
+
+                                Image {
+                                    anchors.centerIn: parent
+                                    source: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
+                                    sourceSize.width: 20
+                                    sourceSize.height: 20
+                                }
                             }
 
                             Text {
@@ -235,6 +346,9 @@ ApplicationWindow {
                                 font.pixelSize: 13
                                 font.bold: root.currentTab === 0
                                 Layout.fillWidth: true
+                                visible: !root.sidebarCollapsed
+                                opacity: root.sidebarCollapsed ? 0 : 1
+                                elide: Text.ElideRight
                             }
                         }
                     }
@@ -254,18 +368,27 @@ ApplicationWindow {
                             onClicked: root.currentTab = 1
                         }
 
+                        ToolTip.visible: root.sidebarCollapsed && btn2Mouse.containsMouse
+                        ToolTip.delay: 300
+                        ToolTip.text: qsTr("Galeri (%1)").arg(libraryManager.count)
+
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 12
+                            anchors.leftMargin: root.sidebarCollapsed ? 0 : 12
+                            anchors.rightMargin: root.sidebarCollapsed ? 0 : 12
+                            spacing: root.sidebarCollapsed ? 0 : 12
 
-                            Image {
-                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery.svg"
-                                sourceSize.width: 20
-                                sourceSize.height: 20
+                            Item {
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
+                                Layout.alignment: root.sidebarCollapsed ? Qt.AlignHCenter : Qt.AlignVCenter
+
+                                Image {
+                                    anchors.centerIn: parent
+                                    source: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery.svg"
+                                    sourceSize.width: 20
+                                    sourceSize.height: 20
+                                }
                             }
 
                             Text {
@@ -274,9 +397,13 @@ ApplicationWindow {
                                 font.pixelSize: 13
                                 font.bold: root.currentTab === 1
                                 Layout.fillWidth: true
+                                visible: !root.sidebarCollapsed
+                                opacity: root.sidebarCollapsed ? 0 : 1
+                                elide: Text.ElideRight
                             }
 
                             Rectangle {
+                                visible: !root.sidebarCollapsed
                                 height: 20
                                 width: countBadgeText.implicitWidth + 10
                                 radius: 10
@@ -308,18 +435,27 @@ ApplicationWindow {
                             onClicked: root.currentTab = 2
                         }
 
+                        ToolTip.visible: root.sidebarCollapsed && btn3Mouse.containsMouse
+                        ToolTip.delay: 300
+                        ToolTip.text: qsTr("Ayarlar")
+
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 12
+                            anchors.leftMargin: root.sidebarCollapsed ? 0 : 12
+                            anchors.rightMargin: root.sidebarCollapsed ? 0 : 12
+                            spacing: root.sidebarCollapsed ? 0 : 12
 
-                            Image {
-                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-settings.svg"
-                                sourceSize.width: 20
-                                sourceSize.height: 20
+                            Item {
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
+                                Layout.alignment: root.sidebarCollapsed ? Qt.AlignHCenter : Qt.AlignVCenter
+
+                                Image {
+                                    anchors.centerIn: parent
+                                    source: "qrc:/qt/qml/ro_screenshot/assets/icon-settings.svg"
+                                    sourceSize.width: 20
+                                    sourceSize.height: 20
+                                }
                             }
 
                             Text {
@@ -328,6 +464,9 @@ ApplicationWindow {
                                 font.pixelSize: 13
                                 font.bold: root.currentTab === 2
                                 Layout.fillWidth: true
+                                visible: !root.sidebarCollapsed
+                                opacity: root.sidebarCollapsed ? 0 : 1
+                                elide: Text.ElideRight
                             }
                         }
                     }
@@ -335,10 +474,10 @@ ApplicationWindow {
 
                 Item { Layout.fillHeight: true }
 
-                // Bottom Sidebar: Language Selector (toggle buttons, icon-free) + Storage Status
+                // Bottom Sidebar: Language & Storage
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: 8
 
                     Rectangle {
                         Layout.fillWidth: true
@@ -346,10 +485,11 @@ ApplicationWindow {
                         color: colors.border
                     }
 
-                    // Language Row: native label toggle buttons (ro-Control style)
+                    // Language Section (Expanded Mode)
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 6
+                        visible: !root.sidebarCollapsed
 
                         Text {
                             text: qsTr("Dil")
@@ -360,14 +500,14 @@ ApplicationWindow {
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 6
+                            spacing: 4
 
                             Repeater {
                                 model: LanguageManager.availableLanguages
                                 delegate: Button {
                                     required property var modelData
                                     Layout.fillWidth: true
-                                    implicitHeight: 32
+                                    implicitHeight: 30
                                     text: modelData.nativeLabel
                                     checkable: true
                                     checked: LanguageManager.currentLanguage === modelData.code
@@ -375,7 +515,7 @@ ApplicationWindow {
                                     contentItem: Text {
                                         text: parent.text
                                         color: parent.checked ? "#FFFFFF" : colors.textMuted
-                                        font.pixelSize: 11
+                                        font.pixelSize: 10
                                         font.bold: parent.checked
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
@@ -391,11 +531,44 @@ ApplicationWindow {
                         }
                     }
 
-                    // Storage Badge
+                    // Compact Language Button (Collapsed Mode)
+                    Rectangle {
+                        Layout.preferredWidth: 42
+                        Layout.preferredHeight: 34
+                        Layout.alignment: Qt.AlignHCenter
+                        radius: 6
+                        visible: root.sidebarCollapsed
+                        color: langCollapsedMouse.containsMouse ? colors.accentA : colors.cardStrong
+                        border.color: colors.border
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: LanguageManager.currentLanguage.toUpperCase()
+                            color: langCollapsedMouse.containsMouse ? "#FFFFFF" : colors.text
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: langCollapsedMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.cycleLanguage()
+                        }
+
+                        ToolTip.visible: langCollapsedMouse.containsMouse
+                        ToolTip.delay: 300
+                        ToolTip.text: qsTr("Dil: %1 (Değiştirmek için tıkla)").arg(LanguageManager.currentLanguageLabel)
+                    }
+
+                    // Storage Badge (Expanded Mode)
                     Rectangle {
                         Layout.fillWidth: true
                         height: 28
                         radius: 6
+                        visible: !root.sidebarCollapsed
                         color: colors.shellAlt
                         border.color: colors.border
 
@@ -417,6 +590,36 @@ ApplicationWindow {
                                 font.pixelSize: 10
                             }
                         }
+                    }
+
+                    // Compact Storage Icon (Collapsed Mode)
+                    Rectangle {
+                        Layout.preferredWidth: 42
+                        Layout.preferredHeight: 28
+                        Layout.alignment: Qt.AlignHCenter
+                        radius: 6
+                        visible: root.sidebarCollapsed
+                        color: storageCollapsedMouse.containsMouse ? colors.cardStrong : colors.shellAlt
+                        border.color: colors.border
+
+                        Image {
+                            anchors.centerIn: parent
+                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-folder.svg"
+                            sourceSize.width: 14
+                            sourceSize.height: 14
+                        }
+
+                        MouseArea {
+                            id: storageCollapsedMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: settingsManager.openSaveDirectory()
+                        }
+
+                        ToolTip.visible: storageCollapsedMouse.containsMouse
+                        ToolTip.delay: 300
+                        ToolTip.text: qsTr("Kayıt Alanı: %1").arg(libraryManager.totalStorageSize)
                     }
                 }
             }

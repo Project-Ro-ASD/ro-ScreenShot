@@ -100,6 +100,7 @@ public:
   Q_INVOKABLE QString
   generateFullPath(const QDateTime &dt = QDateTime::currentDateTime()) const;
   Q_INVOKABLE QString previewFileName() const;
+  Q_INVOKABLE void openSaveDirectory() const;
   Q_INVOKABLE void resetToDefaults();
   Q_INVOKABLE void sync();
 

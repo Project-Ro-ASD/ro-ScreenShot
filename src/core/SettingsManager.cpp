@@ -1,7 +1,9 @@
 #include "SettingsManager.hpp"
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QUrl>
 
 namespace ro_screenshot {
 
@@ -338,6 +340,11 @@ QString SettingsManager::generateFullPath(const QDateTime &dt) const {
 
 QString SettingsManager::previewFileName() const {
   return formatFileName(QDateTime::currentDateTime());
+}
+
+void SettingsManager::openSaveDirectory() const {
+  ensureSaveDirectoryExists();
+  QDesktopServices::openUrl(QUrl::fromLocalFile(m_saveDirectory));
 }
 
 void SettingsManager::ensureSaveDirectoryExists() const {
