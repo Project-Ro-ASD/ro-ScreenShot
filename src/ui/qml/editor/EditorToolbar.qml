@@ -1,12 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 
 Rectangle {
     id: toolbar
 
-    property int currentTool: 0 // 0: Select, 1: Crop, 2: Pen, 3: Highlighter, 4: Line, 5: Arrow, 6: Rect, 7: Ellipse, 8: Text, 9: Blur, 10: Step
+    property int currentTool: 0
     property color selectedColor: "#EF4444"
     property real strokeWidth: 3.0
     property bool canUndo: false
@@ -22,200 +21,106 @@ Rectangle {
     signal saveRequested()
     signal closeRequested()
 
-    height: 52
-    color: (colors && colors.shell) ? colors.shell : "#131D31"
-    border.color: (colors && colors.border) ? colors.border : "#334155"
+    height: 48
+    color: (colors && colors.card) ? colors.card : "#FFFFFF"
+    border.color: (colors && colors.border) ? colors.border : "#E6E8EC"
     border.width: 1
-    radius: 8
+    radius: 10
 
     readonly property var tools: [
-        { id: 0, label: qsTr("Seç"), icon: "↖" },
-        { id: 1, label: qsTr("Kırp"), icon: "✂" },
-        { id: 2, label: qsTr("Kalem"), icon: "✏" },
-        { id: 3, label: qsTr("Vurgu"), icon: "🖊" },
-        { id: 4, label: qsTr("Çizgi"), icon: "╱" },
-        { id: 5, label: qsTr("Ok"), icon: "↗" },
-        { id: 6, label: qsTr("Kutu"), icon: "▢" },
-        { id: 7, label: qsTr("Daire"), icon: "◯" },
-        { id: 8, label: qsTr("Metin"), icon: "T" },
-        { id: 9, label: qsTr("Bulanık"), icon: "░" },
-        { id: 10, label: qsTr("Numara"), icon: "①" }
+        { id: 0, label: qsTr("Select"), short: "S" },
+        { id: 1, label: qsTr("Crop"), short: "C" },
+        { id: 2, label: qsTr("Pen"), short: "P" },
+        { id: 3, label: qsTr("Highlight"), short: "H" },
+        { id: 4, label: qsTr("Line"), short: "L" },
+        { id: 5, label: qsTr("Arrow"), short: "A" },
+        { id: 6, label: qsTr("Rectangle"), short: "R" },
+        { id: 7, label: qsTr("Ellipse"), short: "O" },
+        { id: 8, label: qsTr("Text"), short: "T" },
+        { id: 9, label: qsTr("Blur"), short: "B" },
+        { id: 10, label: qsTr("Step"), short: "1" }
     ]
 
     readonly property var colorPalette: [
-        "#EF4444", // Red
-        "#F59E0B", // Amber
-        "#10B981", // Emerald
-        "#3B82F6", // Blue
-        "#8B5CF6", // Purple
-        "#EC4899", // Pink
-        "#FFFFFF", // White
-        "#000000"  // Black
+        "#EF4444", "#F59E0B", "#10B981", "#3B82F6",
+        "#8B5CF6", "#EC4899", "#111827", "#FFFFFF"
     ]
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
-        spacing: 6
+        anchors.leftMargin: 10; anchors.rightMargin: 10
+        spacing: 4
 
-        // Tools Repeater
         Repeater {
             model: toolbar.tools
             delegate: Button {
-                text: modelData.icon
+                text: modelData.short
                 checkable: true
                 checked: toolbar.currentTool === modelData.id
-                onClicked: {
-                    toolbar.currentTool = modelData.id
-                    toolbar.toolSelected(modelData.id)
-                }
+                onClicked: { toolbar.currentTool = modelData.id; toolbar.toolSelected(modelData.id) }
                 contentItem: Text {
                     text: parent.text
-                    color: parent.checked ? "#FFFFFF" : ((toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#94A3B8")
-                    font.pixelSize: 14
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    color: parent.checked ? "#FFFFFF" : ((toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#6B7280")
+                    font.pixelSize: 12; font.bold: true
+                    horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                 }
                 background: Rectangle {
-                    implicitWidth: 34
-                    implicitHeight: 34
-                    radius: 6
-                    color: parent.checked ? ((toolbar.colors && toolbar.colors.accentA) ? toolbar.colors.accentA : "#2563EB")
-                                          : (parent.hovered ? ((toolbar.colors && toolbar.colors.cardStrong) ? toolbar.colors.cardStrong : "#1E293B") : "transparent")
-                    border.color: parent.checked ? "transparent" : (parent.hovered ? ((toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#334155") : "transparent")
+                    implicitWidth: 30; implicitHeight: 30; radius: 7
+                    color: parent.checked ? ((toolbar.colors && toolbar.colors.accent) ? toolbar.colors.accent : "#2563EB")
+                                          : (parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent")
                 }
-                ToolTip.visible: hovered
-                ToolTip.text: modelData.label
-                ToolTip.delay: 300
+                ToolTip.visible: hovered; ToolTip.text: modelData.label; ToolTip.delay: 300
             }
         }
 
-        // Separator
-        Rectangle {
-            width: 1
-            height: 24
-            color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#334155"
-        }
+        Rectangle { width: 1; height: 22; color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#E6E8EC" }
 
-        // Color Palette
         RowLayout {
-            spacing: 4
+            spacing: 5
             Repeater {
                 model: toolbar.colorPalette
                 delegate: Rectangle {
-                    width: 20
-                    height: 20
-                    radius: 10
+                    width: 18; height: 18; radius: 9
                     color: modelData
-                    border.color: toolbar.selectedColor === modelData ? "#FFFFFF" : "#475569"
-                    border.width: toolbar.selectedColor === modelData ? 2 : 1
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            toolbar.selectedColor = modelData
-                            toolbar.colorSelected(modelData)
-                        }
-                    }
+                    border.color: toolbar.selectedColor == modelData ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : "#111827") : ((toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#E6E8EC")
+                    border.width: toolbar.selectedColor == modelData ? 2 : 1
+                    MouseArea { anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { toolbar.selectedColor = modelData; toolbar.colorSelected(modelData) } }
                 }
             }
         }
 
-        // Separator
-        Rectangle {
-            width: 1
-            height: 24
-            color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#334155"
-        }
-
-        // Undo / Redo
-        Button {
-            text: "↶"
-            enabled: toolbar.canUndo
-            onClicked: toolbar.undoRequested()
-            contentItem: Text {
-                text: parent.text
-                color: parent.enabled ? "#F8FAFC" : "#64748B"
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            background: Rectangle {
-                implicitWidth: 32
-                implicitHeight: 32
-                radius: 6
-                color: parent.hovered && parent.enabled ? "#1E293B" : "transparent"
-            }
-            ToolTip.visible: hovered
-            ToolTip.text: qsTr("Geri Al (Undo)")
-            ToolTip.delay: 300
-        }
+        Rectangle { width: 1; height: 22; color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#E6E8EC" }
 
         Button {
-            text: "↷"
-            enabled: toolbar.canRedo
-            onClicked: toolbar.redoRequested()
-            contentItem: Text {
-                text: parent.text
-                color: parent.enabled ? "#F8FAFC" : "#64748B"
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            background: Rectangle {
-                implicitWidth: 32
-                implicitHeight: 32
-                radius: 6
-                color: parent.hovered && parent.enabled ? "#1E293B" : "transparent"
-            }
-            ToolTip.visible: hovered
-            ToolTip.text: qsTr("Yinele (Redo)")
-            ToolTip.delay: 300
+            text: "↶"; enabled: toolbar.canUndo; onClicked: toolbar.undoRequested()
+            contentItem: Text { text: parent.text; color: parent.enabled ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : "#111827") : "#9CA3AF"; font.pixelSize: 15; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            background: Rectangle { implicitWidth: 30; implicitHeight: 30; radius: 7; color: parent.hovered && parent.enabled ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent" }
+            ToolTip.visible: hovered; ToolTip.text: qsTr("Undo"); ToolTip.delay: 300
+        }
+        Button {
+            text: "↷"; enabled: toolbar.canRedo; onClicked: toolbar.redoRequested()
+            contentItem: Text { text: parent.text; color: parent.enabled ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : "#111827") : "#9CA3AF"; font.pixelSize: 15; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            background: Rectangle { implicitWidth: 30; implicitHeight: 30; radius: 7; color: parent.hovered && parent.enabled ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent" }
+            ToolTip.visible: hovered; ToolTip.text: qsTr("Redo"); ToolTip.delay: 300
+        }
+        Button {
+            text: qsTr("Clear"); onClicked: toolbar.clearRequested()
+            contentItem: Text { text: parent.text; color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#6B7280"; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            background: Rectangle { implicitWidth: 52; implicitHeight: 30; radius: 7; color: parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent" }
         }
 
         Item { Layout.fillWidth: true }
 
-        // Save / Export
         Button {
-            text: qsTr("Kaydet")
+            text: qsTr("Save")
             onClicked: toolbar.saveRequested()
-            contentItem: Text {
-                text: parent.text
-                color: "#FFFFFF"
-                font.bold: true
-                font.pixelSize: 12
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            background: Rectangle {
-                implicitWidth: 72
-                implicitHeight: 32
-                radius: 6
-                color: parent.hovered ? "#16A34A" : "#10B981"
-            }
+            contentItem: Text { text: parent.text; color: "#FFFFFF"; font.bold: true; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            background: Rectangle { implicitWidth: 76; implicitHeight: 32; radius: 8; color: parent.hovered ? "#1D4ED8" : "#2563EB" }
         }
-
-        // Close
         Button {
-            text: "✕"
-            onClicked: toolbar.closeRequested()
-            contentItem: Text {
-                text: parent.text
-                color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#94A3B8"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            background: Rectangle {
-                implicitWidth: 32
-                implicitHeight: 32
-                radius: 6
-                color: parent.hovered ? "#1E293B" : "transparent"
-            }
+            text: "✕"; onClicked: toolbar.closeRequested()
+            contentItem: Text { text: parent.text; color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#6B7280"; font.pixelSize: 13; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            background: Rectangle { implicitWidth: 32; implicitHeight: 32; radius: 8; color: parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent" }
         }
     }
 }

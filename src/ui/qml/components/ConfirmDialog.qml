@@ -88,12 +88,14 @@ Item {
                     width: 32
                     height: 32
                     radius: 8
-                    color: dialogRoot.isDestructive ? "#450A0A" : "#1E3A8A"
+                    color: dialogRoot.isDestructive ? "#FEE2E2" : "#EFF4FF"
 
                     Text {
                         anchors.centerIn: parent
-                        text: dialogRoot.isDestructive ? "⚠️" : "ℹ"
+                        text: dialogRoot.isDestructive ? "!" : "i"
+                        color: dialogRoot.isDestructive ? "#DC2626" : "#2563EB"
                         font.pixelSize: 16
+                        font.bold: true
                     }
                 }
 
