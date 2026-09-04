@@ -166,6 +166,13 @@ set_source_files_properties(src/ui/qml/components/PdfExportDialog.qml PROPERTIES
 set_source_files_properties(src/ui/qml/components/MockupFrameDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/MockupFrameDialog.qml")
 set_source_files_properties(src/ui/qml/components/DevKitDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/DevKitDialog.qml")
 set_source_files_properties(src/ui/qml/components/VaultDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/VaultDialog.qml")
+set_source_files_properties(src/ui/qml/components/RoCard.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoCard.qml")
+set_source_files_properties(src/ui/qml/components/RoButton.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoButton.qml")
+set_source_files_properties(src/ui/qml/components/RoNavItem.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoNavItem.qml")
+set_source_files_properties(src/ui/qml/components/RoListRow.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoListRow.qml")
+set_source_files_properties(src/ui/qml/components/RoCaptureCard.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoCaptureCard.qml")
+set_source_files_properties(src/ui/qml/components/RoPageHeader.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoPageHeader.qml")
+set_source_files_properties(src/ui/qml/components/RoSection.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoSection.qml")
 set_source_files_properties(src/ui/qml/editor/AnnotationEditor.qml PROPERTIES QT_RESOURCE_ALIAS "editor/AnnotationEditor.qml")
 set_source_files_properties(src/ui/qml/editor/EditorCanvas.qml PROPERTIES QT_RESOURCE_ALIAS "editor/EditorCanvas.qml")
 set_source_files_properties(src/ui/qml/editor/EditorToolbar.qml PROPERTIES QT_RESOURCE_ALIAS "editor/EditorToolbar.qml")
@@ -217,6 +224,13 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/components/MockupFrameDialog.qml
         src/ui/qml/components/DevKitDialog.qml
         src/ui/qml/components/VaultDialog.qml
+        src/ui/qml/components/RoCard.qml
+        src/ui/qml/components/RoButton.qml
+        src/ui/qml/components/RoNavItem.qml
+        src/ui/qml/components/RoListRow.qml
+        src/ui/qml/components/RoCaptureCard.qml
+        src/ui/qml/components/RoPageHeader.qml
+        src/ui/qml/components/RoSection.qml
         src/ui/qml/editor/AnnotationEditor.qml
         src/ui/qml/editor/EditorCanvas.qml
         src/ui/qml/editor/EditorToolbar.qml
