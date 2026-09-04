@@ -42,7 +42,7 @@ Rectangle {
         { id: 10, label: qsTr("Numara"), icon: "①" }
     ]
 
-    readonly property var palette: [
+    readonly property var colorPalette: [
         "#EF4444", // Red
         "#F59E0B", // Amber
         "#10B981", // Emerald
@@ -103,7 +103,7 @@ Rectangle {
         RowLayout {
             spacing: 4
             Repeater {
-                model: toolbar.palette
+                model: toolbar.colorPalette
                 delegate: Rectangle {
                     width: 20
                     height: 20
