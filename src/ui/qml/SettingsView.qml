@@ -2,727 +2,183 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import QtQuick.Effects
 import "components"
 
 Item {
     id: root
-
     property var colors: ({})
     property bool isSaveDirValid: settingsManager.saveDirectory.length > 0
 
     FolderDialog {
         id: folderDialog
-        title: qsTr("Ekran Görüntüleri Kayıt Klasörünü Seçin")
+        title: qsTr("Choose save folder")
         currentFolder: "file://" + settingsManager.saveDirectory
         onAccepted: {
             var path = selectedFolder.toString()
-            if (path.startsWith("file://")) {
-                path = path.substring(7)
-            }
+            if (path.startsWith("file://")) path = path.substring(7)
             settingsManager.saveDirectory = path
-            snackbar.showMessage(qsTr("Kayıt klasörü güncellendi."), "success")
+            snackbar.showMessage(qsTr("Save folder updated."), "success")
         }
     }
 
     ScrollView {
         anchors.fill: parent
-        contentWidth: Math.min(parent.width - 40, 780)
-        contentHeight: settingsColumn.implicitHeight + 40
+        contentWidth: Math.min(parent.width - 48, 720)
+        contentHeight: settingsColumn.implicitHeight + 48
         clip: true
-
         ColumnLayout {
             id: settingsColumn
-            width: Math.min(parent.width - 40, 780)
+            width: Math.min(parent.width - 48, 720)
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 20
+            spacing: 14
+            Item { height: 12 }
 
-            Item { height: 10 }
-
-            // Section 1: Kayıt Dizini
-            Rectangle {
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: sec1Col.implicitHeight + 32
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
-
-                ColumnLayout {
-                    id: sec1Col
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 14
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-
-                        Image {
-                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-folder.svg"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-
-                        Text {
-                            text: qsTr("Kayıt Dizini ve Klasörleme")
-                            color: colors.text
-                            font.pixelSize: 15
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 10
-
-                        TextField {
-                            id: saveDirField
-                            Layout.fillWidth: true
-                            text: settingsManager.saveDirectory
-                            color: colors.text
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                implicitHeight: 38
-                                color: colors.cardStrong
-                                border.color: colors.border
-                                radius: 6
-                            }
-                            onEditingFinished: {
-                                settingsManager.saveDirectory = text
-                                snackbar.showMessage(qsTr("Kayıt dizini kaydedildi."), "success")
-                            }
-                        }
-
-                        Button {
-                            text: qsTr("Gözat...")
-                            onClicked: folderDialog.open()
-                            contentItem: Text {
-                                text: parent.text
-                                color: "#FFFFFF"
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            background: Rectangle {
-                                implicitWidth: 100
-                                implicitHeight: 38
-                                color: parent.hovered ? colors.accentA : colors.accentC
-                                radius: 6
-                            }
-                        }
-                    }
-
-                    InlineStatus {
-                        status: root.isSaveDirValid ? "success" : "error"
-                        text: root.isSaveDirValid ? qsTr("Kayıt dizini geçerli ve yazılabilir.") : qsTr("Geçersiz veya erişilemeyen kayıt dizini.")
-                        colors: root.colors
-                    }
-
-                    CheckBox {
-                        text: qsTr("Görselleri Yıl-Ay bazlı alt klasörlerde grupla (Örn: 2026-09/)")
-                        checked: settingsManager.createSubfoldersByMonth
-                        onToggled: settingsManager.createSubfoldersByMonth = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
+                Text { text: qsTr("Settings"); color: colors.text; font.pixelSize: 20; font.bold: true; Layout.fillWidth: true }
             }
 
-            // Section 2: İsimlendirme ve Format
-            Rectangle {
+            RoSection {
                 Layout.fillWidth: true
-                Layout.preferredHeight: sec2Col.implicitHeight + 32
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
-
-                ColumnLayout {
-                    id: sec2Col
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 14
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-
-                        Image {
-                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-tags.svg"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-
-                        Text {
-                            text: qsTr("Dosya İsimlendirme ve Görsel Formatı")
-                            color: colors.text
-                            font.pixelSize: 15
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-
-                        Text {
-                            text: qsTr("Dosya Adı Şablonu (%Y: Yıl, %m: Ay, %d: Gün, %H: Saat, %M: Dakika, %S: Saniye)")
-                            color: colors.textSoft
-                            font.pixelSize: 12
-                        }
-
-                        TextField {
-                            id: templateField
-                            Layout.fillWidth: true
-                            text: settingsManager.fileNameTemplate
-                            color: colors.text
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                implicitHeight: 38
-                                color: colors.cardStrong
-                                border.color: colors.border
-                                radius: 6
-                            }
-                            onEditingFinished: {
-                                settingsManager.fileNameTemplate = text
-                            }
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 32
-                            color: colors.shellAlt
-                            radius: 4
-                            border.color: colors.border
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: qsTr("Canlı Önizleme: %1").arg(settingsManager.previewFileName)
-                                color: "#38BDF8"
-                                font.pixelSize: 12
-                            }
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 20
-
-                        ColumnLayout {
-                            spacing: 6
-                            Text {
-                                text: qsTr("Görsel Formatı")
-                                color: colors.textSoft
-                                font.pixelSize: 12
-                            }
-                            RowLayout {
-                                spacing: 8
-                                Repeater {
-                                    model: ["png", "jpg", "webp"]
-                                    delegate: Button {
-                                        text: modelData.toUpperCase()
-                                        checkable: true
-                                        checked: settingsManager.imageFormat === modelData
-                                        onClicked: settingsManager.imageFormat = modelData
-                                        contentItem: Text {
-                                            text: parent.text
-                                            color: parent.checked ? "#FFFFFF" : colors.textSoft
-                                            font.bold: parent.checked
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                        }
-                                        background: Rectangle {
-                                            implicitWidth: 70
-                                            implicitHeight: 34
-                                            color: parent.checked ? colors.accentB : (parent.hovered ? colors.border : colors.cardStrong)
-                                            radius: 6
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        ColumnLayout {
-                            visible: settingsManager.imageFormat === "jpg"
-                            Layout.fillWidth: true
-                            spacing: 4
-                            Text {
-                                text: qsTr("JPEG Kalitesi: %1%").arg(settingsManager.jpegQuality)
-                                color: colors.textSoft
-                                font.pixelSize: 12
-                            }
-                            Slider {
-                                Layout.fillWidth: true
-                                from: 10
-                                to: 100
-                                stepSize: 5
-                                value: settingsManager.jpegQuality
-                                onMoved: settingsManager.jpegQuality = value
-                            }
-                        }
-                    }
-
-                    // Format Trade-offs Explanation Card
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: formatDescText.implicitHeight + 16
-                        color: colors.shellAlt
-                        radius: 6
-                        border.color: colors.border
-
-                        Text {
-                            id: formatDescText
-                            anchors.fill: parent
-                            anchors.margins: 10
-                            text: {
-                                if (settingsManager.imageFormat === "png")
-                                    return qsTr("ℹ PNG: Kayıpsız sıkıştırma ve şeffaflık desteği sunar. En yüksek kalite için önerilir.")
-                                if (settingsManager.imageFormat === "jpg")
-                                    return qsTr("ℹ JPEG: Yüksek sıkıştırma oranı ve ayarlanabilir kalite ile küçük dosya boyutu sağlar.")
-                                return qsTr("ℹ WebP: Modern web standardı, PNG ve JPEG'e göre %30 daha küçük dosya boyutu sağlar.")
-                            }
-                            color: colors.textMuted
-                            font.pixelSize: 11
-                            wrapMode: Text.WordWrap
-                        }
-                    }
-                }
-            }
-
-            // Section 3: Çekim Sonrası İş Akışı
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: sec3Col.implicitHeight + 32
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
-
-                ColumnLayout {
-                    id: sec3Col
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 12
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-
-                        Image {
-                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-bolt.svg"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-
-                        Text {
-                            text: qsTr("Çekim Sonrası Otomatik İşlemler")
-                            color: colors.text
-                            font.pixelSize: 15
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    // Warning if both auto-save and auto-copy are disabled
-                    InlineStatus {
-                        visible: !settingsManager.autoCopyToClipboard && !settingsManager.autoSaveToDisk
-                        status: "warning"
-                        text: qsTr("Uyarı: Hem panoya kopyalama hem diske kaydetme kapalı. Çekilen görüntüler saklanmayacaktır.")
-                        colors: root.colors
-                    }
-
-                    CheckBox {
-                        text: qsTr("Otomatik olarak panoya kopyala (Clipboard)")
-                        checked: settingsManager.autoCopyToClipboard
-                        onToggled: settingsManager.autoCopyToClipboard = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    CheckBox {
-                        text: qsTr("Otomatik olarak diske kaydet")
-                        checked: settingsManager.autoSaveToDisk
-                        onToggled: settingsManager.autoSaveToDisk = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    CheckBox {
-                        text: qsTr("Çekim sonrası sağ altta yüzen Önizleme kartı göster (Floating Thumbnail)")
-                        checked: settingsManager.showFloatingThumbnail
-                        onToggled: settingsManager.showFloatingThumbnail = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    CheckBox {
-                        text: qsTr("Masaüstü bildirimi göster")
-                        checked: settingsManager.showNotification
-                        onToggled: settingsManager.showNotification = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
-            }
-
-            // Section 4: Sniper ve Büyüteç
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: sec4Col.implicitHeight + 32
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
-
-                ColumnLayout {
-                    id: sec4Col
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 12
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-
-                        Image {
-                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-crosshair.svg"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-
-                        Text {
-                            text: qsTr("Sniper Seçim Katmanı ve Büyüteç (Loupe)")
-                            color: colors.text
-                            font.pixelSize: 15
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    CheckBox {
-                        text: qsTr("Piksel Büyüteci ve Canlı Renk Damlalığını (Loupe) aktif et")
-                        checked: settingsManager.magnifierEnabled
-                        onToggled: settingsManager.magnifierEnabled = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    RowLayout {
-                        visible: settingsManager.magnifierEnabled
-                        Layout.fillWidth: true
-                        spacing: 16
-
-                        Text {
-                            text: qsTr("Büyüteç Yakınlaştırması: %1x").arg(settingsManager.magnifierZoom)
-                            color: colors.textSoft
-                            font.pixelSize: 12
-                        }
-
-                        Slider {
-                            Layout.fillWidth: true
-                            from: 2
-                            to: 16
-                            stepSize: 2
-                            value: settingsManager.magnifierZoom
-                            onMoved: settingsManager.magnifierZoom = value
-                        }
-                    }
-
-                    CheckBox {
-                        text: qsTr("Seçim tamamlandığında Sniper katmanını otomatik kapat")
-                        checked: settingsManager.closeOverlayOnCapture
-                        onToggled: settingsManager.closeOverlayOnCapture = checked
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 13
-                            leftPadding: parent.indicator.width + 8
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
-            }
-
-            // Section 5: Dil ve Arayüz Seçenekleri
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: sec5Col.implicitHeight + 32
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
-
-                ColumnLayout {
-                    id: sec5Col
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 14
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-
-                        Image {
-                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-language.svg"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-
-                        Text {
-                            text: qsTr("Dil ve Arayüz Seçenekleri")
-                            color: colors.text
-                            font.pixelSize: 15
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 16
-
-                        Text {
-                            text: qsTr("Uygulama Dili")
-                            color: colors.textSoft
-                            font.pixelSize: 13
-                        }
-
-                        RowLayout {
-                            spacing: 8
-                            Repeater {
-                                model: LanguageManager.availableLanguages
-                                delegate: Button {
-                                    text: modelData.nativeLabel
-                                    checkable: true
-                                    checked: LanguageManager.currentLanguage === modelData.code
-                                    onClicked: LanguageManager.setCurrentLanguage(modelData.code)
-                                    contentItem: Text {
-                                        text: parent.text
-                                        color: parent.checked ? "#FFFFFF" : colors.textSoft
-                                        font.bold: parent.checked
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-                                    background: Rectangle {
-                                        implicitWidth: 80
-                                        implicitHeight: 34
-                                        color: parent.checked ? colors.accentB : (parent.hovered ? colors.border : colors.cardStrong)
-                                        radius: 6
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Section 6: Tema Seçenekleri
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: sec6Col.implicitHeight + 32
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
-
-                ColumnLayout {
-                    id: sec6Col
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 14
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-
-                        Image {
-                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-theme.svg"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-
-                        Text {
-                            text: qsTr("Tema")
-                            color: colors.text
-                            font.pixelSize: 15
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 16
-
-                        Text {
-                            text: qsTr("Uygulama Teması")
-                            color: colors.textSoft
-                            font.pixelSize: 13
-                        }
-
-                        RowLayout {
-                            spacing: 8
-                            Repeater {
-                                model: UiPreferencesManager.availableThemeModes
-                                delegate: Button {
-                                    required property var modelData
-                                    implicitWidth: 100
-                                    implicitHeight: 34
-                                    text: modelData.label
-                                    checkable: true
-                                    checked: UiPreferencesManager.themeMode === modelData.code
-                                    onClicked: UiPreferencesManager.setThemeMode(modelData.code)
-                                    contentItem: Text {
-                                        text: parent.text
-                                        color: parent.checked ? "#FFFFFF" : colors.text
-                                        font.bold: parent.checked
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-                                    background: Rectangle {
-                                        color: parent.checked ? colors.accentA : (parent.hovered ? colors.border : colors.cardStrong)
-                                        border.color: parent.checked ? colors.accentA : colors.border
-                                        border.width: 1
-                                        radius: 6
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Section 7: Önizleme Önbelleği Temizleme
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 64
-                color: colors.card
-                border.color: colors.border
-                border.width: 1
-                radius: 10
+                title: qsTr("Storage")
+                iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-folder.svg"
+                colors: root.colors
 
                 RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 12
-
-                    Text {
-                        text: qsTr("Küçük Resim (Thumbnail) Önbelleğini Temizle")
-                        color: colors.text
-                        font.pixelSize: 13
+                    Layout.fillWidth: true; spacing: 8
+                    TextField {
                         Layout.fillWidth: true
+                        text: settingsManager.saveDirectory
+                        color: colors.text; font.pixelSize: 13
+                        background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: 8 }
+                        onEditingFinished: { settingsManager.saveDirectory = text; snackbar.showMessage(qsTr("Save folder updated."), "success") }
                     }
+                    RoButton { text: qsTr("Browse"); variant: "primary"; colors: root.colors; implicitWidth: 92; onClicked: folderDialog.open() }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: qsTr("Group by month subfolders"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true }
+                    Switch { checked: settingsManager.createSubfoldersByMonth; onToggled: settingsManager.createSubfoldersByMonth = checked }
+                }
+            }
 
-                    Button {
-                        text: qsTr("Önbelleği Boşalt")
-                        onClicked: {
-                            if (libraryManager.clearThumbnailCache()) {
-                                snackbar.showMessage(qsTr("Küçük resim önbelleği temizlendi."), "success")
-                            }
+            RoSection {
+                Layout.fillWidth: true
+                title: qsTr("File naming & format")
+                iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-tags.svg"
+                colors: root.colors
+
+                TextField {
+                    Layout.fillWidth: true
+                    text: settingsManager.fileNameTemplate
+                    color: colors.text; font.pixelSize: 13; font.family: "monospace"
+                    background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: 8 }
+                    onEditingFinished: settingsManager.fileNameTemplate = text
+                }
+                Text { text: qsTr("Preview: %1").arg(settingsManager.previewFileName); color: colors.placeholder; font.pixelSize: 11; font.family: "monospace" }
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 6
+                    Text { text: qsTr("Format"); color: colors.textMuted; font.pixelSize: 12; Layout.preferredWidth: 60 }
+                    Repeater {
+                        model: ["png", "jpg", "webp"]
+                        delegate: Button {
+                            text: modelData.toUpperCase()
+                            checkable: true; checked: settingsManager.imageFormat === modelData
+                            onClicked: settingsManager.imageFormat = modelData
+                            contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; font.bold: parent.checked; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            background: Rectangle { implicitWidth: 64; implicitHeight: 30; color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            color: colors.textMuted
-                            font.pixelSize: 12
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text { visible: settingsManager.imageFormat === "jpg"; text: qsTr("Quality %1%").arg(settingsManager.jpegQuality); color: colors.textSoft; font.pixelSize: 12 }
+                    Slider { visible: settingsManager.imageFormat === "jpg"; Layout.preferredWidth: 140; from: 10; to: 100; stepSize: 5; value: settingsManager.jpegQuality; onMoved: settingsManager.jpegQuality = value }
+                }
+            }
+
+            RoSection {
+                Layout.fillWidth: true
+                title: qsTr("After capture")
+                iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-bolt.svg"
+                colors: root.colors
+
+                InlineStatus {
+                    visible: !settingsManager.autoCopyToClipboard && !settingsManager.autoSaveToDisk
+                    status: "warning"
+                    text: qsTr("Both copy and save are off — captures will be lost.")
+                    colors: root.colors
+                }
+                RowLayout { Layout.fillWidth: true; Text { text: qsTr("Copy to clipboard"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true } Switch { checked: settingsManager.autoCopyToClipboard; onToggled: settingsManager.autoCopyToClipboard = checked } }
+                RowLayout { Layout.fillWidth: true; Text { text: qsTr("Save to disk"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true } Switch { checked: settingsManager.autoSaveToDisk; onToggled: settingsManager.autoSaveToDisk = checked } }
+                RowLayout { Layout.fillWidth: true; Text { text: qsTr("Floating preview card"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true } Switch { checked: settingsManager.showFloatingThumbnail; onToggled: settingsManager.showFloatingThumbnail = checked } }
+                RowLayout { Layout.fillWidth: true; Text { text: qsTr("Desktop notification"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true } Switch { checked: settingsManager.showNotification; onToggled: settingsManager.showNotification = checked } }
+            }
+
+            RoSection {
+                Layout.fillWidth: true
+                title: qsTr("Selection & loupe")
+                iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-crosshair.svg"
+                colors: root.colors
+
+                RowLayout { Layout.fillWidth: true; Text { text: qsTr("Magnifier loupe with color picker"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true } Switch { checked: settingsManager.magnifierEnabled; onToggled: settingsManager.magnifierEnabled = checked } }
+                RowLayout {
+                    visible: settingsManager.magnifierEnabled
+                    Layout.fillWidth: true; spacing: 10
+                    Text { text: qsTr("Zoom %1x").arg(settingsManager.magnifierZoom); color: colors.textSoft; font.pixelSize: 12; Layout.preferredWidth: 70 }
+                    Slider { Layout.fillWidth: true; from: 2; to: 16; stepSize: 2; value: settingsManager.magnifierZoom; onMoved: settingsManager.magnifierZoom = value }
+                }
+                RowLayout { Layout.fillWidth: true; Text { text: qsTr("Close overlay after capture"); color: colors.textMuted; font.pixelSize: 13; Layout.fillWidth: true } Switch { checked: settingsManager.closeOverlayOnCapture; onToggled: settingsManager.closeOverlayOnCapture = checked } }
+            }
+
+            RoSection {
+                Layout.fillWidth: true
+                title: qsTr("Appearance")
+                iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-theme.svg"
+                colors: root.colors
+
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 8
+                    Text { text: qsTr("Theme"); color: colors.textMuted; font.pixelSize: 12; Layout.preferredWidth: 70 }
+                    Repeater {
+                        model: UiPreferencesManager.availableThemeModes
+                        delegate: Button {
+                            required property var modelData
+                            implicitWidth: 84; implicitHeight: 30
+                            text: modelData.label
+                            checkable: true; checked: UiPreferencesManager.themeMode === modelData.code
+                            onClicked: UiPreferencesManager.setThemeMode(modelData.code)
+                            contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            background: Rectangle { color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
                         }
-                        background: Rectangle {
-                            implicitWidth: 130
-                            implicitHeight: 34
-                            color: parent.hovered ? colors.border : colors.cardStrong
-                            border.color: colors.border
-                            radius: 6
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 8
+                    Text { text: qsTr("Language"); color: colors.textMuted; font.pixelSize: 12; Layout.preferredWidth: 70 }
+                    Repeater {
+                        model: LanguageManager.availableLanguages
+                        delegate: Button {
+                            text: modelData.nativeLabel
+                            checkable: true; checked: LanguageManager.currentLanguage === modelData.code
+                            onClicked: LanguageManager.setCurrentLanguage(modelData.code)
+                            contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            background: Rectangle { implicitWidth: 76; implicitHeight: 30; color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
                         }
                     }
                 }
             }
 
-            // Reset Button with Confirmation
-            Button {
-                text: qsTr("Varsayılan Ayarlara Sıfırla")
-                Layout.alignment: Qt.AlignRight
-                onClicked: {
-                    resetConfirmDialog.open(
-                        qsTr("Ayarları Sıfırla"),
-                        qsTr("Tüm ayarları fabrika varsayılanlarına döndürmek istediğinizden emin misiniz?"),
-                        true,
-                        function() {
-                            settingsManager.resetToDefaults()
-                            snackbar.showMessage(qsTr("Ayarlar varsayılana sıfırlandı."), "info")
-                        }
-                    )
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: colors.danger
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle {
-                    implicitWidth: 200
-                    implicitHeight: 38
-                    color: parent.hovered ? "#450A0A" : colors.cardStrong
-                    border.color: "#7F1D1D"
-                    radius: 6
+            RowLayout {
+                Layout.fillWidth: true; spacing: 8
+                RoButton { text: qsTr("Clear thumbnail cache"); colors: root.colors; Layout.fillWidth: true; onClicked: if (libraryManager.clearThumbnailCache()) snackbar.showMessage(qsTr("Thumbnail cache cleared."), "success") }
+                RoButton {
+                    text: qsTr("Reset to defaults"); variant: "dangerGhost"; colors: root.colors; Layout.fillWidth: true
+                    onClicked: resetConfirmDialog.open(qsTr("Reset settings"), qsTr("Return all settings to factory defaults?"), true, function() { settingsManager.resetToDefaults(); snackbar.showMessage(qsTr("Settings reset."), "info") })
                 }
             }
-
-            Item { height: 20 }
+            Item { height: 16 }
         }
     }
 
-    ConfirmDialog {
-        id: resetConfirmDialog
-        colors: root.colors
-    }
-
-    AppSnackbar {
-        id: snackbar
-        colors: root.colors
-    }
+    ConfirmDialog { id: resetConfirmDialog; colors: root.colors }
+    AppSnackbar { id: snackbar; colors: root.colors }
 }
