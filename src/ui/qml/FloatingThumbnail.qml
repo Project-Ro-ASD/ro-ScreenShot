@@ -1,13 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 
 Window {
     id: toastWindow
-
     width: 320
-    height: 100
+    height: 92
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SubWindow
     color: "transparent"
 
@@ -15,171 +13,60 @@ Window {
     property string fileName: ""
     property bool hasFile: imagePath.length > 0
 
-    // Position dynamically in bottom right of active screen taking DPI and available space into account
     x: Screen.virtualX + Screen.desktopAvailableWidth - width - 24
     y: Screen.virtualY + Screen.desktopAvailableHeight - height - 48
 
-    Shortcut {
-        sequence: "Escape"
-        onActivated: toastWindow.dismiss()
-    }
-
-    Timer {
-        id: hideTimer
-        interval: 4500
-        repeat: false
-        onTriggered: toastWindow.dismiss()
-    }
+    Shortcut { sequence: "Escape"; onActivated: toastWindow.dismiss() }
+    Timer { id: hideTimer; interval: 4500; repeat: false; onTriggered: toastWindow.dismiss() }
 
     function showToast(path, name) {
         imagePath = path || ""
-        fileName = name || qsTr("Ekran Görüntüsü")
+        fileName = name || qsTr("Screenshot")
         hasFile = imagePath.length > 0
         visible = true
         hideTimer.restart()
     }
-
-    function dismiss() {
-        hideTimer.stop()
-        visible = false
-    }
+    function dismiss() { hideTimer.stop(); visible = false }
 
     Rectangle {
         anchors.fill: parent
-        color: "#131D31"
-        border.color: "#3B82F6"
-        border.width: 1.5
-        radius: 10
+        color: "#111827"
+        border.color: "#2A3448"
+        border.width: 1
+        radius: 12
 
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            onEntered: hideTimer.stop()
-            onExited: hideTimer.restart()
-        }
+        MouseArea { anchors.fill: parent; hoverEnabled: true; onEntered: hideTimer.stop(); onExited: hideTimer.restart() }
 
         RowLayout {
-            anchors.fill: parent
-            anchors.margins: 12
-            spacing: 12
-
-            // Thumbnail Image Card
+            anchors.fill: parent; anchors.margins: 10; spacing: 10
             Rectangle {
-                width: 76
-                height: 76
-                radius: 6
-                color: "#0F172A"
-                border.color: "#334155"
-                border.width: 1
-                clip: true
-
-                Image {
-                    anchors.fill: parent
-                    source: toastWindow.imagePath ? ("file://" + toastWindow.imagePath) : ""
-                    fillMode: Image.PreserveAspectFit
-                    asynchronous: true
-                }
-
-                // Fallback icon if no file or loading
-                Text {
-                    anchors.centerIn: parent
-                    text: "📷"
-                    font.pixelSize: 24
-                    visible: !toastWindow.imagePath
-                }
+                Layout.preferredWidth: 68; Layout.preferredHeight: 68
+                radius: 8; color: "#1F2937"; border.color: "#2A3448"; border.width: 1; clip: true
+                Image { anchors.fill: parent; source: toastWindow.imagePath ? ("file://" + toastWindow.imagePath) : ""; fillMode: Image.PreserveAspectCrop; asynchronous: true }
             }
-
-            // Info & Buttons Column
             ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 4
-
+                Layout.fillWidth: true; spacing: 2
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-
-                    Text {
-                        text: qsTr("Ekran Görüntüsü Alındı")
-                        color: "#38BDF8"
-                        font.pixelSize: 12
-                        font.bold: true
-                        Layout.fillWidth: true
-                    }
-
-                    Button {
-                        flat: true
-                        onClicked: toastWindow.dismiss()
-                        contentItem: Text {
-                            text: "✕"
-                            color: "#94A3B8"
-                            font.pixelSize: 12
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Item {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                        }
-                        Accessible.name: qsTr("Kapat")
-                    }
+                    Layout.fillWidth: true; spacing: 6
+                    Rectangle { width: 7; height: 7; radius: 3.5; color: "#10B981" }
+                    Text { text: qsTr("Screenshot ready"); color: "#F9FAFB"; font.pixelSize: 12; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+                    Text { text: "✕"; color: "#9CA3AF"; font.pixelSize: 12; MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: toastWindow.dismiss() } }
                 }
-
-                Text {
-                    text: toastWindow.fileName
-                    color: "#F8FAFC"
-                    font.pixelSize: 11
-                    elide: Text.ElideMiddle
-                    Layout.fillWidth: true
-                }
-
+                Text { text: toastWindow.fileName; color: "#9CA3AF"; font.pixelSize: 11; elide: Text.ElideMiddle; Layout.fillWidth: true }
                 RowLayout {
-                    spacing: 6
-                    Layout.fillWidth: true
-
-                    // Copy Button
+                    spacing: 6; Layout.topMargin: 4
                     Button {
-                        text: qsTr("Kopyala")
-                        onClicked: {
-                            captureEngine.copyImageToClipboard(toastWindow.imagePath)
-                            toastWindow.dismiss()
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#FFFFFF"
-                            font.pixelSize: 10
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Rectangle {
-                            implicitWidth: 64
-                            implicitHeight: 24
-                            color: parent.hovered ? "#2563EB" : "#1D4ED8"
-                            radius: 4
-                        }
-                        Accessible.name: qsTr("Panoya kopyala")
+                        text: qsTr("Copy")
+                        onClicked: { captureEngine.copyImageToClipboard(toastWindow.imagePath); toastWindow.dismiss() }
+                        contentItem: Text { text: parent.text; color: "#FFFFFF"; font.pixelSize: 11; font.bold: true; horizontalAlignment: Text.AlignHCenter }
+                        background: Rectangle { implicitWidth: 62; implicitHeight: 26; color: parent.hovered ? "#1D4ED8" : "#2563EB"; radius: 6 }
                     }
-
-                    // Open / Folder buttons if file exists
                     Button {
                         visible: toastWindow.hasFile
-                        text: qsTr("Klasör")
-                        onClicked: {
-                            libraryManager.openInFolder(0)
-                            toastWindow.dismiss()
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#CBD5E1"
-                            font.pixelSize: 10
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        background: Rectangle {
-                            implicitWidth: 54
-                            implicitHeight: 24
-                            color: parent.hovered ? "#334155" : "#1E293B"
-                            border.color: "#334155"
-                            radius: 4
-                        }
-                        Accessible.name: qsTr("Klasörde göster")
+                        text: qsTr("Show in folder")
+                        onClicked: { libraryManager.openInFolder(0); toastWindow.dismiss() }
+                        contentItem: Text { text: parent.text; color: "#D1D5DB"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                        background: Rectangle { implicitWidth: 96; implicitHeight: 26; color: parent.hovered ? "#2A3448" : "#1F2937"; radius: 6 }
                     }
                 }
             }
