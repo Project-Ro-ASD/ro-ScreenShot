@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QProcess>
 #include <QScreen>
+#include <QStandardPaths>
 
 namespace ro_screenshot {
 
@@ -10,7 +11,7 @@ WlrScreencopyProvider::WlrScreencopyProvider(QObject *parent)
     : IScreenshotProvider(parent) {}
 
 bool WlrScreencopyProvider::isAvailable() const {
-  return (QProcess::execute("which", {"grim"}) == 0);
+  return !QStandardPaths::findExecutable(QStringLiteral("grim")).isEmpty();
 }
 
 void WlrScreencopyProvider::cancel() { emit captureCancelled(); }

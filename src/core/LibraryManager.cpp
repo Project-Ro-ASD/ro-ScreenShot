@@ -915,7 +915,7 @@ QVariantMap LibraryManager::findDuplicatesInLibrary(int tolerance) {
   res["totalReclaimableFormatted"] = formatFileSize(totalReclaim);
   res["groups"] = groupList;
 
-  emit duplicateScanFinished(groups.size(), totalReclaim);
+  emit duplicateScanFinished(static_cast<int>(groups.size()), totalReclaim);
   return res;
 }
 

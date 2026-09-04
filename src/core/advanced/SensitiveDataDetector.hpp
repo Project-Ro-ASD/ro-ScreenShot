@@ -72,7 +72,7 @@ public:
 
     int sum = 0;
     bool alternate = false;
-    for (int i = clean.length() - 1; i >= 0; --i) {
+    for (qsizetype i = clean.length() - 1; i >= 0; --i) {
       int n = clean[i].digitValue();
       if (alternate) {
         n *= 2;
@@ -95,7 +95,7 @@ public:
       }
       return "***********";
     case SensitiveDataType::Email: {
-      int atIdx = val.indexOf('@');
+      qsizetype atIdx = val.indexOf('@');
       if (atIdx > 2) {
         return val.left(2) + "***" + val.mid(atIdx);
       }

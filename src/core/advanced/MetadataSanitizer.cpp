@@ -5,6 +5,7 @@
 #include <QImageReader>
 #include <QImageWriter>
 #include <QProcess>
+#include <QStandardPaths>
 
 namespace ro_screenshot {
 
@@ -27,29 +28,34 @@ bool MetadataSanitizer::sanitizeFile(const QString &sourcePath,
   QFileInfo fi(sourcePath);
   QString fmt = fi.suffix().toUpper();
   if (fmt.isEmpty())
-    fmt = "PNG";
+    fmt = QStringLiteral("PNG");
 
   QImageWriter writer(target, fmt.toLatin1());
-  writer.setQuality(100);
-  writer.setCompression(9);
+  writer.setQuality(95);
   return writer.write(img);
 }
 
 QByteArray MetadataSanitizer::sanitizeBytes(const QByteArray &rawImageData,
                                             const QString &format) {
   QImage img;
-  if (!img.loadFromData(rawImageData))
+  if (!img.loadFromData(rawImageData, format.toLatin1().constData()) ||
+      img.isNull()) {
     return rawImageData;
+  }
 
   for (const QString &key : img.textKeys()) {
     img.setText(key, QString());
   }
 
-  QByteArray out;
-  QBuffer buf(&out);
-  buf.open(QIODevice::WriteOnly);
-  img.save(&buf, format.toLatin1().constData());
-  return out;
+  QByteArray outData;
+  QBuffer buffer(&outData);
+  buffer.open(QIODevice::WriteOnly);
+  QImageWriter writer(&buffer, format.toLatin1().constData());
+  writer.setQuality(95);
+  if (writer.write(img)) {
+    return outData;
+  }
+  return rawImageData;
 }
 
 CompressionStats MetadataSanitizer::optimizeLossless(const QString &filePath,
@@ -65,21 +71,24 @@ CompressionStats MetadataSanitizer::optimizeLossless(const QString &filePath,
 
   QString suffix = fi.suffix().toLower();
   if (suffix == "png") {
-    if (QProcess::execute("which", {"oxipng"}) == 0) {
+    QString oxipng = QStandardPaths::findExecutable(QStringLiteral("oxipng"));
+    QString optipng = QStandardPaths::findExecutable(QStringLiteral("optipng"));
+    if (!oxipng.isEmpty()) {
       QProcess proc;
-      proc.start("oxipng", {"-o", "4", "--strip", "all", filePath});
+      proc.start(oxipng, {"-o", "4", "--strip", "all", filePath});
       proc.waitForFinished(10000);
-    } else if (QProcess::execute("which", {"optipng"}) == 0) {
+    } else if (!optipng.isEmpty()) {
       QProcess proc;
-      proc.start("optipng", {"-o7", "-strip", "all", filePath});
+      proc.start(optipng, {"-o7", "-strip", "all", filePath});
       proc.waitForFinished(10000);
     } else {
       sanitizeFile(filePath, filePath);
     }
   } else if (suffix == "webp") {
-    if (QProcess::execute("which", {"cwebp"}) == 0) {
+    QString cwebp = QStandardPaths::findExecutable(QStringLiteral("cwebp"));
+    if (!cwebp.isEmpty()) {
       QProcess proc;
-      proc.start("cwebp", {"-lossless", "-q", "100", filePath, "-o", filePath});
+      proc.start(cwebp, {"-lossless", "-q", "100", filePath, "-o", filePath});
       proc.waitForFinished(10000);
     } else {
       sanitizeFile(filePath, filePath);
