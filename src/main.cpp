@@ -303,6 +303,8 @@ int main(int argc, char *argv[]) {
                                            &ephemeralManager);
   engine.rootContext()->setContextProperty("presentationOverlay",
                                            &presentationOverlay);
+  engine.rootContext()->setContextProperty("livePresentationOverlay",
+                                           &presentationOverlay);
 
   // Load Main Hub using modern QML module API
   QObject::connect(&engine, &QQmlEngine::warnings,

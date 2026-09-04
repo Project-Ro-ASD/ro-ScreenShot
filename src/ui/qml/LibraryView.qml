@@ -707,6 +707,55 @@ Item {
                         }
                     }
 
+                    // Mockup Frame Generator Button
+                    Button {
+                        Layout.fillWidth: true
+                        text: qsTr("🖼️ Mockup Çerçevesi Ekle")
+                        onClicked: {
+                            if (root.selectedIndex >= 0 && root.Window.window && root.Window.window.openMockupDialog) {
+                                root.Window.window.openMockupDialog(root.selectedIndex)
+                            }
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.text
+                            font.pixelSize: 11
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            implicitHeight: 32
+                            color: parent.hovered ? colors.border : colors.cardStrong
+                            border.color: colors.border
+                            radius: 6
+                        }
+                    }
+
+                    // DevKit & Palette Button
+                    Button {
+                        Layout.fillWidth: true
+                        text: qsTr("🎨 Renk & Tablo Kiti")
+                        onClicked: {
+                            if (root.selectedIndex >= 0 && root.Window.window && root.Window.window.openDevKitDialog) {
+                                root.Window.window.openDevKitDialog(root.selectedIndex)
+                            }
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: colors.text
+                            font.pixelSize: 11
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            implicitHeight: 32
+                            color: parent.hovered ? colors.border : colors.cardStrong
+                            border.color: colors.border
+                            radius: 6
+                        }
+                    }
+
                     // Copy to Clipboard
                     Button {
                         Layout.fillWidth: true

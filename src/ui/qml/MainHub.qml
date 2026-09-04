@@ -633,380 +633,685 @@ ApplicationWindow {
             currentIndex: root.currentTab
 
             // TAB 0: Quick Capture Hub
-            Item {
-                id: quickCaptureTab
+            ScrollView {
+                id: quickCaptureScroll
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 32
-                    width: Math.min(parent.width - 64, 860)
+                Flickable {
+                    contentWidth: width
+                    contentHeight: captureColumn.implicitHeight + 48
 
                     ColumnLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: 8
-                        Text {
-                            text: qsTr("Ekran Görüntüsü Yakalama Merkezi")
-                            color: colors.text
-                            font.pixelSize: 24
-                            font.bold: true
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Text {
-                            text: qsTr("Bir çekim modu seçin veya sistem kısayollarını kullanın.")
-                            color: colors.textSoft
-                            font.pixelSize: 14
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
+                        id: captureColumn
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: 24
+                        spacing: 28
+                        width: Math.min(parent.width - 48, 880)
 
-                    // Grid of 4 Action Cards with Vector Icons
-                    GridLayout {
-                        columns: 2
-                        rowSpacing: 20
-                        columnSpacing: 20
-                        Layout.fillWidth: true
-
-                        // Card 1: Region
+                        // Hero Banner with subtle glowing gradient
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 140
-                            color: regionMouse.containsMouse ? colors.cardStrong : colors.card
-                            border.color: regionMouse.containsMouse ? colors.accentB : colors.border
-                            border.width: 1.5
-                            radius: 12
-
-                            MouseArea {
-                                id: regionMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    captureEngine.requestRegionCapture(0)
-                                }
-                            }
+                            Layout.preferredHeight: 92
+                            radius: 14
+                            color: root.darkMode ? "#131D31" : "#FFFFFF"
+                            border.color: root.darkMode ? "#1E293B" : "#E2E8F0"
+                            border.width: 1
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: 20
+                                anchors.margins: 18
                                 spacing: 16
 
                                 Rectangle {
-                                    width: 56
-                                    height: 56
-                                    radius: 10
-                                    color: colors.accentC
-                                    Image {
+                                    width: 48
+                                    height: 48
+                                    radius: 12
+                                    color: colors.accentA
+
+                                    Text {
                                         anchors.centerIn: parent
-                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
-                                        width: 28
-                                        height: 28
-                                        sourceSize.width: 28
-                                        sourceSize.height: 28
+                                        text: "📸"
+                                        font.pixelSize: 22
                                     }
                                 }
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 4
+                                    spacing: 3
                                     Text {
-                                        text: qsTr("Bölge Seçimi (Sniper)")
+                                        text: qsTr("Ekran Görüntüsü & Prodüksiyon Merkezi")
                                         color: colors.text
-                                        font.pixelSize: 16
+                                        font.pixelSize: 18
                                         font.bold: true
                                     }
                                     Text {
-                                        text: qsTr("Dondurulmuş ekranda serbest dikdörtgen alanı seçin ve kırpın.")
+                                        text: qsTr("Hızlı çekim modlarını başlatın veya tasarım & geliştirici araçlarını kullanın.")
                                         color: colors.textSoft
                                         font.pixelSize: 12
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
                                     }
-                                    Rectangle {
-                                        height: 22
-                                        width: 120
-                                        radius: 4
-                                        color: colors.border
+                                }
+
+                                Rectangle {
+                                    height: 28
+                                    radius: 14
+                                    color: root.darkMode ? "#1E293B" : "#F1F5F9"
+                                    border.color: colors.border
+                                    border.width: 1
+                                    implicitWidth: statusPillRow.implicitWidth + 18
+
+                                    RowLayout {
+                                        id: statusPillRow
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        Rectangle {
+                                            width: 8; height: 8; radius: 4
+                                            color: "#10B981"
+                                        }
                                         Text {
-                                            anchors.centerIn: parent
-                                            text: "Shift + PrtScr"
+                                            text: qsTr("Wayland / Portal Aktif")
                                             color: colors.textMuted
                                             font.pixelSize: 11
+                                            font.bold: true
                                         }
                                     }
                                 }
                             }
                         }
 
-                        // Card 2: Fullscreen
-                        Rectangle {
+                        // Grid of 4 Primary Capture Cards
+                        GridLayout {
+                            columns: 2
+                            rowSpacing: 16
+                            columnSpacing: 16
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 140
-                            color: fullMouse.containsMouse ? colors.cardStrong : colors.card
-                            border.color: fullMouse.containsMouse ? colors.success : colors.border
-                            border.width: 1.5
-                            radius: 12
 
-                            MouseArea {
-                                id: fullMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    captureEngine.requestFullscreenCapture(0)
-                                }
-                            }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 20
-                                spacing: 16
-
-                                Rectangle {
-                                    width: 56
-                                    height: 56
-                                    radius: 10
-                                    color: "#047857"
-                                    Image {
-                                        anchors.centerIn: parent
-                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-fullscreen.svg"
-                                        width: 28
-                                        height: 28
-                                        sourceSize.width: 28
-                                        sourceSize.height: 28
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 4
-                                    Text {
-                                        text: qsTr("Tam Ekran Yakala")
-                                        color: colors.text
-                                        font.pixelSize: 16
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: qsTr("Tüm monitörlerin görüntüsünü anında yakalayın ve kaydedin.")
-                                        color: colors.textSoft
-                                        font.pixelSize: 12
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                    Rectangle {
-                                        height: 22
-                                        width: 80
-                                        radius: 4
-                                        color: colors.border
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "PrtScr"
-                                            color: colors.textMuted
-                                            font.pixelSize: 11
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Card 3: Window
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 140
-                            color: winMouse.containsMouse ? colors.cardStrong : colors.card
-                            border.color: winMouse.containsMouse ? "#8B5CF6" : colors.border
-                            border.width: 1.5
-                            radius: 12
-
-                            MouseArea {
-                                id: winMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    captureEngine.requestWindowCapture(0)
-                                }
-                            }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 20
-                                spacing: 16
-
-                                Rectangle {
-                                    width: 56
-                                    height: 56
-                                    radius: 10
-                                    color: "#6D28D9"
-                                    Image {
-                                        anchors.centerIn: parent
-                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-window.svg"
-                                        width: 28
-                                        height: 28
-                                        sourceSize.width: 28
-                                        sourceSize.height: 28
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 4
-                                    Text {
-                                        text: qsTr("Pencere Yakala")
-                                        color: colors.text
-                                        font.pixelSize: 16
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: qsTr("Aktif pencereyi tek adımda çerçevesiyle yakalayın.")
-                                        color: colors.textSoft
-                                        font.pixelSize: 12
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                    Rectangle {
-                                        height: 22
-                                        width: 100
-                                        radius: 4
-                                        color: colors.border
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "Alt + PrtScr"
-                                            color: colors.textMuted
-                                            font.pixelSize: 11
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Card 4: Delayed Capture
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 140
-                            color: delayMouse.containsMouse ? colors.cardStrong : colors.card
-                            border.color: delayMouse.containsMouse ? colors.warning : colors.border
-                            border.width: 1.5
-                            radius: 12
-
-                            MouseArea {
-                                id: delayMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    captureEngine.requestRegionCapture(5)
-                                }
-                            }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 20
-                                spacing: 16
-
-                                Rectangle {
-                                    width: 56
-                                    height: 56
-                                    radius: 10
-                                    color: "#B45309"
-                                    Image {
-                                        anchors.centerIn: parent
-                                        source: "qrc:/qt/qml/ro_screenshot/assets/icon-timer.svg"
-                                        width: 28
-                                        height: 28
-                                        sourceSize.width: 28
-                                        sourceSize.height: 28
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 4
-                                    Text {
-                                        text: qsTr("5sn Gecikmeli Yakala")
-                                        color: colors.text
-                                        font.pixelSize: 16
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: qsTr("Menü ve açılır pencereleri hazırlamak için 5 saniye bekler.")
-                                        color: colors.textSoft
-                                        font.pixelSize: 12
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                    Rectangle {
-                                        height: 22
-                                        width: 110
-                                        radius: 4
-                                        color: colors.border
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "Ctrl + PrtScr"
-                                            color: colors.textMuted
-                                            font.pixelSize: 11
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 58
-                        radius: 10
-                        color: repeatRegionMouse.containsMouse && captureEngine.hasLastRegion
-                               ? colors.selected : colors.card
-                        border.width: 1
-                        border.color: repeatRegionMouse.containsMouse && captureEngine.hasLastRegion
-                                      ? colors.accentA : colors.border
-                        opacity: captureEngine.hasLastRegion ? 1.0 : 0.55
-
-                        MouseArea {
-                            id: repeatRegionMouse
-                            anchors.fill: parent
-                            enabled: captureEngine.hasLastRegion && !captureEngine.isCapturing
-                            hoverEnabled: true
-                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: captureEngine.requestLastRegionCapture(0)
-                        }
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 16
-                            anchors.rightMargin: 16
-                            spacing: 12
-
-                            Image {
-                                source: "qrc:/qt/qml/ro_screenshot/assets/icon-refresh.svg"
-                                sourceSize.width: 20
-                                sourceSize.height: 20
-                                Layout.preferredWidth: 20
-                                Layout.preferredHeight: 20
-                            }
-
-                            ColumnLayout {
+                            // Card 1: Region (Sniper)
+                            Rectangle {
                                 Layout.fillWidth: true
-                                spacing: 1
+                                Layout.preferredHeight: 128
+                                color: regionMouse.containsMouse ? colors.cardStrong : colors.card
+                                border.color: regionMouse.containsMouse ? colors.accentB : colors.border
+                                border.width: regionMouse.containsMouse ? 2 : 1
+                                radius: 12
+
+                                MouseArea {
+                                    id: regionMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: captureEngine.requestRegionCapture(0)
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 18
+                                    spacing: 16
+
+                                    Rectangle {
+                                        width: 52
+                                        height: 52
+                                        radius: 12
+                                        color: colors.accentC
+                                        Image {
+                                            anchors.centerIn: parent
+                                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
+                                            sourceSize.width: 26
+                                            sourceSize.height: 26
+                                        }
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 4
+                                        Text {
+                                            text: qsTr("Bölge Seçimi (Sniper)")
+                                            color: colors.text
+                                            font.pixelSize: 15
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: qsTr("Büyüteç loupe ile piksel hassasiyetinde serbest dikdörtgen kırpın.")
+                                            color: colors.textSoft
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                        Rectangle {
+                                            height: 20
+                                            implicitWidth: rKeyText.implicitWidth + 14
+                                            radius: 4
+                                            color: colors.border
+                                            Text {
+                                                id: rKeyText
+                                                anchors.centerIn: parent
+                                                text: "Shift + PrtScr"
+                                                color: colors.textMuted
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Card 2: Fullscreen
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 128
+                                color: fullMouse.containsMouse ? colors.cardStrong : colors.card
+                                border.color: fullMouse.containsMouse ? colors.success : colors.border
+                                border.width: fullMouse.containsMouse ? 2 : 1
+                                radius: 12
+
+                                MouseArea {
+                                    id: fullMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: captureEngine.requestFullscreenCapture(0)
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 18
+                                    spacing: 16
+
+                                    Rectangle {
+                                        width: 52
+                                        height: 52
+                                        radius: 12
+                                        color: "#047857"
+                                        Image {
+                                            anchors.centerIn: parent
+                                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-fullscreen.svg"
+                                            sourceSize.width: 26
+                                            sourceSize.height: 26
+                                        }
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 4
+                                        Text {
+                                            text: qsTr("Tam Ekran Yakala")
+                                            color: colors.text
+                                            font.pixelSize: 15
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: qsTr("Bağlı tüm monitörlerin görüntüsünü anında dondurup kaydedin.")
+                                            color: colors.textSoft
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                        Rectangle {
+                                            height: 20
+                                            implicitWidth: fKeyText.implicitWidth + 14
+                                            radius: 4
+                                            color: colors.border
+                                            Text {
+                                                id: fKeyText
+                                                anchors.centerIn: parent
+                                                text: "PrtScr"
+                                                color: colors.textMuted
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Card 3: Window
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 128
+                                color: winMouse.containsMouse ? colors.cardStrong : colors.card
+                                border.color: winMouse.containsMouse ? "#8B5CF6" : colors.border
+                                border.width: winMouse.containsMouse ? 2 : 1
+                                radius: 12
+
+                                MouseArea {
+                                    id: winMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: captureEngine.requestWindowCapture(0)
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 18
+                                    spacing: 16
+
+                                    Rectangle {
+                                        width: 52
+                                        height: 52
+                                        radius: 12
+                                        color: "#6D28D9"
+                                        Image {
+                                            anchors.centerIn: parent
+                                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-window.svg"
+                                            sourceSize.width: 26
+                                            sourceSize.height: 26
+                                        }
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 4
+                                        Text {
+                                            text: qsTr("Pencere Yakala")
+                                            color: colors.text
+                                            font.pixelSize: 15
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: qsTr("Aktif pencereyi tek adımda kenarlık ve gölgesiyle yakalayın.")
+                                            color: colors.textSoft
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                        Rectangle {
+                                            height: 20
+                                            implicitWidth: wKeyText.implicitWidth + 14
+                                            radius: 4
+                                            color: colors.border
+                                            Text {
+                                                id: wKeyText
+                                                anchors.centerIn: parent
+                                                text: "Alt + PrtScr"
+                                                color: colors.textMuted
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Card 4: Delayed Capture
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 128
+                                color: delayMouse.containsMouse ? colors.cardStrong : colors.card
+                                border.color: delayMouse.containsMouse ? colors.warning : colors.border
+                                border.width: delayMouse.containsMouse ? 2 : 1
+                                radius: 12
+
+                                MouseArea {
+                                    id: delayMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: captureEngine.requestRegionCapture(5)
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 18
+                                    spacing: 16
+
+                                    Rectangle {
+                                        width: 52
+                                        height: 52
+                                        radius: 12
+                                        color: "#B45309"
+                                        Image {
+                                            anchors.centerIn: parent
+                                            source: "qrc:/qt/qml/ro_screenshot/assets/icon-timer.svg"
+                                            sourceSize.width: 26
+                                            sourceSize.height: 26
+                                        }
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 4
+                                        Text {
+                                            text: qsTr("5sn Gecikmeli Yakala")
+                                            color: colors.text
+                                            font.pixelSize: 15
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: qsTr("Menü ve açılır pencereleri açmak için 5 saniye sayaç başlatır.")
+                                            color: colors.textSoft
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                        Rectangle {
+                                            height: 20
+                                            implicitWidth: dKeyText.implicitWidth + 14
+                                            radius: 4
+                                            color: colors.border
+                                            Text {
+                                                id: dKeyText
+                                                anchors.centerIn: parent
+                                                text: "Ctrl + PrtScr"
+                                                color: colors.textMuted
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Last Region Repeat Bar
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 52
+                            radius: 10
+                            color: repeatRegionMouse.containsMouse && captureEngine.hasLastRegion
+                                   ? colors.selected : colors.card
+                            border.width: 1
+                            border.color: repeatRegionMouse.containsMouse && captureEngine.hasLastRegion
+                                          ? colors.accentA : colors.border
+                            opacity: captureEngine.hasLastRegion ? 1.0 : 0.55
+
+                            MouseArea {
+                                id: repeatRegionMouse
+                                anchors.fill: parent
+                                enabled: captureEngine.hasLastRegion && !captureEngine.isCapturing
+                                hoverEnabled: true
+                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked: captureEngine.requestLastRegionCapture(0)
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                spacing: 12
+
+                                Image {
+                                    source: "qrc:/qt/qml/ro_screenshot/assets/icon-refresh.svg"
+                                    sourceSize.width: 18
+                                    sourceSize.height: 18
+                                    Layout.preferredWidth: 18
+                                    Layout.preferredHeight: 18
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 1
+                                    Text {
+                                        text: qsTr("Son bölgeyi tekrar yakala")
+                                        color: colors.text
+                                        font.pixelSize: 12
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: captureEngine.hasLastRegion
+                                              ? qsTr("Önceki seçim koordinatlarını aynen dondurur.")
+                                              : qsTr("İlk bölge çekiminden sonra aktifleşir.")
+                                        color: colors.textSoft
+                                        font.pixelSize: 10
+                                    }
+                                }
+
                                 Text {
-                                    text: qsTr("Son bölgeyi tekrar yakala")
-                                    color: colors.text
-                                    font.pixelSize: 13
+                                    text: "Ctrl + Shift + R"
+                                    color: colors.textMuted
+                                    font.pixelSize: 10
                                     font.bold: true
                                 }
-                                Text {
-                                    text: captureEngine.hasLastRegion
-                                          ? qsTr("Önceki seçim sınırlarını yeniden kullanır.")
-                                          : qsTr("İlk bölge çekiminden sonra kullanılabilir.")
-                                    color: colors.textSoft
-                                    font.pixelSize: 11
+                            }
+                        }
+
+                        // Section Title: Designer & Developer Suite
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Text {
+                                text: qsTr("🛠️ Mühendislik & Tasarım Araç Kiti")
+                                color: colors.text
+                                font.pixelSize: 16
+                                font.bold: true
+                            }
+                            Item { Layout.fillWidth: true }
+                            Text {
+                                text: qsTr("8 Akıllı Araç")
+                                color: colors.accentB
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                        }
+
+                        // Grid of 6 Innovative Tool Cards
+                        GridLayout {
+                            columns: 3
+                            rowSpacing: 12
+                            columnSpacing: 12
+                            Layout.fillWidth: true
+
+                            // Tool 1: Mockup Frame
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 74
+                                radius: 10
+                                color: tool1M.containsMouse ? colors.cardStrong : colors.card
+                                border.color: tool1M.containsMouse ? colors.accentA : colors.border
+                                border.width: 1
+
+                                MouseArea {
+                                    id: tool1M
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openMockupDialog(0)
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    Rectangle {
+                                        width: 36; height: 36; radius: 8
+                                        color: "#3B82F6"
+                                        Text { anchors.centerIn: parent; text: "🖼️"; font.pixelSize: 16 }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: qsTr("Mockup Çerçevesi"); color: colors.text; font.pixelSize: 12; font.bold: true }
+                                        Text { text: qsTr("Sosyal medya gradyanları"); color: colors.textSoft; font.pixelSize: 10 }
+                                    }
                                 }
                             }
 
-                            Text {
-                                text: qsTr("Son seçim")
-                                color: colors.textMuted
-                                font.pixelSize: 10
+                            // Tool 2: DevKit (Palette & Table)
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 74
+                                radius: 10
+                                color: tool2M.containsMouse ? colors.cardStrong : colors.card
+                                border.color: tool2M.containsMouse ? colors.accentA : colors.border
+                                border.width: 1
+
+                                MouseArea {
+                                    id: tool2M
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openDevKitDialog(0)
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    Rectangle {
+                                        width: 36; height: 36; radius: 8
+                                        color: "#10B981"
+                                        Text { anchors.centerIn: parent; text: "🎨"; font.pixelSize: 16 }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: qsTr("Renk & Tablo Kiti"); color: colors.text; font.pixelSize: 12; font.bold: true }
+                                        Text { text: qsTr("Tailwind CSS & Markdown"); color: colors.textSoft; font.pixelSize: 10 }
+                                    }
+                                }
+                            }
+
+                            // Tool 3: PDF Export
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 74
+                                radius: 10
+                                color: tool3M.containsMouse ? colors.cardStrong : colors.card
+                                border.color: tool3M.containsMouse ? colors.accentA : colors.border
+                                border.width: 1
+
+                                MouseArea {
+                                    id: tool3M
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openPdfExportDialog()
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    Rectangle {
+                                        width: 36; height: 36; radius: 8
+                                        color: "#EF4444"
+                                        Text { anchors.centerIn: parent; text: "📑"; font.pixelSize: 16 }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: qsTr("PDF Raporlayıcı"); color: colors.text; font.pixelSize: 12; font.bold: true }
+                                        Text { text: qsTr("Çoklu çekim kılavuz binder"); color: colors.textSoft; font.pixelSize: 10 }
+                                    }
+                                }
+                            }
+
+                            // Tool 4: Image Diff
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 74
+                                radius: 10
+                                color: tool4M.containsMouse ? colors.cardStrong : colors.card
+                                border.color: tool4M.containsMouse ? colors.accentA : colors.border
+                                border.width: 1
+
+                                MouseArea {
+                                    id: tool4M
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openImageDiffDialog()
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    Rectangle {
+                                        width: 36; height: 36; radius: 8
+                                        color: "#8B5CF6"
+                                        Text { anchors.centerIn: parent; text: "🔍"; font.pixelSize: 16 }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: qsTr("Görsel Diff"); color: colors.text; font.pixelSize: 12; font.bold: true }
+                                        Text { text: qsTr("Split slider karşılaştırma"); color: colors.textSoft; font.pixelSize: 10 }
+                                    }
+                                }
+                            }
+
+                            // Tool 5: Secure Vault
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 74
+                                radius: 10
+                                color: tool5M.containsMouse ? colors.cardStrong : colors.card
+                                border.color: tool5M.containsMouse ? colors.accentA : colors.border
+                                border.width: 1
+
+                                MouseArea {
+                                    id: tool5M
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openVaultDialog()
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    Rectangle {
+                                        width: 36; height: 36; radius: 8
+                                        color: "#F59E0B"
+                                        Text { anchors.centerIn: parent; text: "🔒"; font.pixelSize: 16 }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: qsTr("Gizlilik Kasası"); color: colors.text; font.pixelSize: 12; font.bold: true }
+                                        Text { text: qsTr("AES-256 şifreli saklama"); color: colors.textSoft; font.pixelSize: 10 }
+                                    }
+                                }
+                            }
+
+                            // Tool 6: Presentation Laser
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 74
+                                radius: 10
+                                color: tool6M.containsMouse ? colors.cardStrong : colors.card
+                                border.color: tool6M.containsMouse ? colors.accentA : colors.border
+                                border.width: 1
+
+                                MouseArea {
+                                    id: tool6M
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (livePresentationOverlay) {
+                                            livePresentationOverlay.togglePresentation();
+                                            root.showCaptureStatus(qsTr("Canlı Sunum & Lazer Modu Açıldı"), false);
+                                        }
+                                    }
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    Rectangle {
+                                        width: 36; height: 36; radius: 8
+                                        color: "#EC4899"
+                                        Text { anchors.centerIn: parent; text: "🪄"; font.pixelSize: 16 }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: qsTr("Canlı Lazer Sunum"); color: colors.text; font.pixelSize: 12; font.bold: true }
+                                        Text { text: qsTr("İmleç izi & tuş gösterici"); color: colors.textSoft; font.pixelSize: 10 }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1025,5 +1330,93 @@ ApplicationWindow {
                 colors: root.uiColors
             }
         }
+    }
+
+    // ─── Global Dialogs & Modals ──────────────────────────────────────────────
+    DevKitDialog {
+        id: globalDevKitDialog
+    }
+
+    MockupFrameDialog {
+        id: globalMockupDialog
+        onExportRequested: (row, preset, padding) => {
+            var res = libraryManager.exportWithMockupFrame(row, preset, padding);
+            if (res.length > 0) {
+                root.showCaptureStatus(qsTr("Mockup kaydedildi: %1").arg(res), false);
+                libraryManager.refresh();
+            }
+        }
+    }
+
+    PdfExportDialog {
+        id: globalPdfDialog
+        selectedCount: libraryManager.selectedCount > 0 ? libraryManager.selectedCount : libraryManager.count
+        onGenerateRequested: (title, notes, outPath) => {
+            var target = outPath.length > 0 ? outPath : (settingsManager.saveDirectory + "/Report_" + Date.now() + ".pdf");
+            if (libraryManager.generatePdfReportFromSelected(target, title, notes)) {
+                root.showCaptureStatus(qsTr("PDF başarıyla oluşturuldu: %1").arg(target), false);
+            }
+        }
+    }
+
+    ImageDiffDialog {
+        id: globalDiffDialog
+    }
+
+    VaultDialog {
+        id: globalVaultDialog
+        onUnlockRequested: (password) => {
+            if (vaultManager && vaultManager.unlock(password)) {
+                isUnlocked = true;
+                statusText = qsTr("Kasa başarıyla açıldı.");
+                root.showCaptureStatus(statusText, false);
+            } else {
+                statusText = qsTr("Hatalı parola!");
+                root.showCaptureStatus(statusText, true);
+            }
+        }
+        onLockRequested: {
+            if (vaultManager) {
+                vaultManager.lock();
+                isUnlocked = false;
+                statusText = qsTr("Kasa kilitlendi.");
+                root.showCaptureStatus(statusText, false);
+            }
+        }
+    }
+
+    function openDevKitDialog(row) {
+        if (libraryManager.count > 0) {
+            var targetRow = (row >= 0) ? row : 0;
+            globalDevKitDialog.paletteData = libraryManager.extractPaletteFromItem(targetRow, 6);
+            globalDevKitDialog.extractedTableText = libraryManager.extractTableFromItem(targetRow, "markdown");
+        }
+        globalDevKitDialog.open();
+    }
+
+    function openMockupDialog(row) {
+        globalMockupDialog.itemRow = (row >= 0 && row < libraryManager.count) ? row : 0;
+        globalMockupDialog.open();
+    }
+
+    function openPdfExportDialog() {
+        globalPdfDialog.open();
+    }
+
+    function openImageDiffDialog() {
+        if (libraryManager.count >= 2) {
+            var item0 = libraryManager.getItem(0);
+            var item1 = libraryManager.getItem(1);
+            if (item0 && item1) {
+                globalDiffDialog.imagePathA = item0.filePath;
+                globalDiffDialog.imagePathB = item1.filePath;
+                globalDiffDialog.diffStats = libraryManager.compareSelectedImages();
+            }
+        }
+        globalDiffDialog.open();
+    }
+
+    function openVaultDialog() {
+        globalVaultDialog.open();
     }
 }

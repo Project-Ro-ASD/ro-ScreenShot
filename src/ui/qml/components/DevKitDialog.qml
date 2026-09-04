@@ -86,15 +86,28 @@ Dialog {
             font.pixelSize: 14
         }
 
-        TextArea {
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            text: extractedTableText
-            readOnly: true
-            color: "#F8FAFC"
-            font.family: "Monospace"
-            font.pixelSize: 12
-            background: Rectangle { color: "#1E293B"; radius: 6; border.color: "#334155" }
+            color: "#1E293B"
+            radius: 6
+            border.color: "#334155"
+
+            ScrollView {
+                anchors.fill: parent
+                anchors.margins: 8
+                clip: true
+
+                TextEdit {
+                    text: extractedTableText
+                    readOnly: true
+                    color: "#F8FAFC"
+                    font.family: "Monospace"
+                    font.pixelSize: 12
+                    wrapMode: TextEdit.Wrap
+                    selectByMouse: true
+                }
+            }
         }
     }
 

@@ -58,14 +58,26 @@ Dialog {
             font.pixelSize: 13
         }
 
-        TextArea {
-            id: notesField
+        Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 90
-            placeholderText: "Raporla ilgili detaylar, adımlar ve sistem bilgileri..."
-            color: "white"
-            wrapMode: Text.Wrap
-            background: Rectangle { color: "#1E293B"; radius: 6; border.color: "#334155" }
+            color: "#1E293B"
+            radius: 6
+            border.color: "#334155"
+
+            ScrollView {
+                anchors.fill: parent
+                anchors.margins: 6
+                clip: true
+
+                TextEdit {
+                    id: notesField
+                    color: "white"
+                    font.pixelSize: 12
+                    wrapMode: TextEdit.Wrap
+                    selectByMouse: true
+                }
+            }
         }
 
         Text {
