@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QProcess>
 #include <QUrl>
 
 namespace ro_screenshot {
@@ -30,12 +31,12 @@ DesktopFeedback::DesktopFeedback(QObject *parent) : QObject(parent) {
 }
 
 void DesktopFeedback::setupShutterSound() {
+  // QSoundEffect in Qt 6 requires uncompressed PCM WAV files
   const QStringList candidatePaths = {
-      QStringLiteral("/usr/share/sounds/freedesktop/stereo/camera-shutter.oga"),
+      QStringLiteral("/usr/share/sounds/freedesktop/stereo/camera-shutter.wav"),
       QStringLiteral(
-          "/usr/share/sounds/gnome/default/alerts/camera-shutter.ogg"),
-      QStringLiteral("/usr/share/sounds/oxygen/stereo/camera-shutter.ogg"),
-      QStringLiteral("/usr/share/sounds/freedesktop/stereo/complete.oga")};
+          "/usr/share/sounds/gnome/default/alerts/camera-shutter.wav"),
+      QStringLiteral("/usr/share/sounds/oxygen/stereo/camera-shutter.wav")};
 
   for (const QString &path : candidatePaths) {
     if (QFile::exists(path)) {
@@ -106,9 +107,19 @@ void DesktopFeedback::showProgress(int percent, const QString &statusText) {
 }
 
 void DesktopFeedback::playShutter() {
-  if (m_shutterSound.source().isLocalFile() && !isDoNotDisturbActive()) {
-    m_shutterSound.play();
+  if (isDoNotDisturbActive()) {
+    return;
   }
+  if (m_shutterSound.source().isLocalFile() &&
+      m_shutterSound.status() != QSoundEffect::Error) {
+    m_shutterSound.play();
+    return;
+  }
+  // Native freedesktop sound event fallback for modern Linux desktops
+  QProcess::startDetached(
+      QStringLiteral("canberra-gtk-play"),
+      {QStringLiteral("-i"), QStringLiteral("screen-capture"),
+       QStringLiteral("-d"), QStringLiteral("ro-ScreenShot")});
 }
 
 void DesktopFeedback::notify(const QString &summary, const QString &body,
