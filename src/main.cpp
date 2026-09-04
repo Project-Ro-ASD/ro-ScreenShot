@@ -27,6 +27,7 @@
 #include <QIcon>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLoggingCategory>
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -40,6 +41,11 @@
 using namespace ro_screenshot;
 
 int main(int argc, char *argv[]) {
+  // Silence verbose Qt internal framework info logs
+  QLoggingCategory::setFilterRules(
+      QStringLiteral("qt.multimedia.ffmpeg*=false\n"
+                     "qt.multimedia*=false"));
+
   QGuiApplication app(argc, argv);
   app.setApplicationName("ro-screenshot");
   app.setApplicationDisplayName("ro-ScreenShot");
