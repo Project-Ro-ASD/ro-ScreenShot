@@ -160,6 +160,7 @@ set_source_files_properties(src/ui/qml/components/AccessibleIconButton.qml PROPE
 set_source_files_properties(src/ui/qml/components/AppSnackbar.qml PROPERTIES QT_RESOURCE_ALIAS "components/AppSnackbar.qml")
 set_source_files_properties(src/ui/qml/components/BusyOverlay.qml PROPERTIES QT_RESOURCE_ALIAS "components/BusyOverlay.qml")
 set_source_files_properties(src/ui/qml/components/ConfirmDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/ConfirmDialog.qml")
+set_source_files_properties(src/ui/qml/components/RoDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoDialog.qml")
 set_source_files_properties(src/ui/qml/components/InlineStatus.qml PROPERTIES QT_RESOURCE_ALIAS "components/InlineStatus.qml")
 set_source_files_properties(src/ui/qml/components/ImageDiffDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/ImageDiffDialog.qml")
 set_source_files_properties(src/ui/qml/components/PdfExportDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/PdfExportDialog.qml")
@@ -219,6 +220,7 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/components/AppSnackbar.qml
         src/ui/qml/components/BusyOverlay.qml
         src/ui/qml/components/ConfirmDialog.qml
+        src/ui/qml/components/RoDialog.qml
         src/ui/qml/components/InlineStatus.qml
         src/ui/qml/components/ImageDiffDialog.qml
         src/ui/qml/components/PdfExportDialog.qml

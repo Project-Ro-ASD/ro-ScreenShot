@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: busyRoot
+    RoMotion { id: motion }
 
     property bool isBusy: false
     property string text: qsTr("İşleniyor...")
@@ -14,23 +15,23 @@ Item {
     opacity: isBusy ? 1.0 : 0.0
 
     Behavior on opacity {
-        NumberAnimation { duration: 150 }
+        NumberAnimation { duration: motion.standard; easing.type: Easing.OutCubic }
     }
 
     // Semi-transparent background
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        opacity: 0.35
+        opacity: 0.46
     }
 
     Rectangle {
         anchors.centerIn: parent
         width: Math.max(160, layout.implicitWidth + 32)
         height: 60
-        radius: 8
-        color: (busyRoot.colors && busyRoot.colors.cardStrong) ? busyRoot.colors.cardStrong : "#1E293B"
-        border.color: (busyRoot.colors && busyRoot.colors.border) ? busyRoot.colors.border : "#334155"
+        radius: 14
+        color: (busyRoot.colors && busyRoot.colors.cardStrong) ? busyRoot.colors.cardStrong : "#342D4A"
+        border.color: (busyRoot.colors && busyRoot.colors.border) ? busyRoot.colors.border : "#4D436B"
         border.width: 1
 
         RowLayout {
