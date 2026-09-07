@@ -83,6 +83,12 @@ public:
       return;
     }
 
+    // Avoid an O(n²) cache-directory walk when a large gallery requires many
+    // new thumbnails; trim the bounded cache exactly once per completed scan.
+    if (m_cache) {
+      m_cache->pruneCache();
+    }
+
     // Sort newest-first deterministically
     std::sort(items.begin(), items.end(),
               [](const ScreenshotItem &a, const ScreenshotItem &b) {
@@ -179,7 +185,7 @@ private:
 
       if (m_cache) {
         item.thumbnailUrl = m_cache->getThumbnailPath(
-            item.filePath, item.fileSize, item.createdAt);
+            item.filePath, item.fileSize, item.createdAt, true);
       }
       if (item.thumbnailUrl.isEmpty()) {
         item.thumbnailUrl = QUrl::fromLocalFile(item.filePath).toString();
@@ -194,7 +200,7 @@ private:
 
     // Scan subdirectories
     QFileInfoList subDirs = currentDir.entryInfoList(
-        QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable);
+        QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks | QDir::Readable);
     for (const auto &subDirInfo : subDirs) {
       if (isCancelled()) {
         return;

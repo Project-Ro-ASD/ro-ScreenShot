@@ -65,7 +65,8 @@ public:
   }
 
   QString getThumbnailPath(const QString &imagePath, qint64 fileSize = -1,
-                           const QDateTime &mtime = QDateTime()) {
+                           const QDateTime &mtime = QDateTime(),
+                           bool deferPrune = false) {
     QMutexLocker locker(&m_mutex);
     QFileInfo info(imagePath);
     QString canonicalPath = info.canonicalFilePath();
@@ -108,7 +109,12 @@ public:
     if (saveFile.open(QIODevice::WriteOnly)) {
       if (thumb.save(&saveFile, "PNG")) {
         if (saveFile.commit()) {
-          pruneCacheIfNeeded();
+          // A library scan can create hundreds of thumbnails. Defer its
+          // filesystem-wide cache walk until the scan completes, while
+          // preserving immediate bounds for one-off thumbnail requests.
+          if (!deferPrune) {
+            pruneCacheIfNeeded();
+          }
           return QUrl::fromLocalFile(thumbPath).toString();
         }
       } else {
@@ -146,6 +152,37 @@ public:
     }
   }
 
+  void pruneCache() {
+    QMutexLocker locker(&m_mutex);
+    pruneCacheIfNeeded();
+  }
+
+  qint64 currentCacheSize() const {
+    QMutexLocker locker(&m_mutex);
+    QDir dir(m_cacheDir);
+    if (!dir.exists()) {
+      return 0;
+    }
+    qint64 total = 0;
+    QFileInfoList entries =
+        dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+    for (const auto &entry : entries) {
+      total += entry.size();
+    }
+    return total;
+  }
+
+  int currentCacheItemCount() const {
+    QMutexLocker locker(&m_mutex);
+    QDir dir(m_cacheDir);
+    if (!dir.exists()) {
+      return 0;
+    }
+    return static_cast<int>(
+        dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot).size());
+  }
+
+private:
   void pruneCacheIfNeeded() {
     // Note: Called under m_mutex
     QDir dir(m_cacheDir);
@@ -175,32 +212,6 @@ public:
     }
   }
 
-  qint64 currentCacheSize() const {
-    QMutexLocker locker(&m_mutex);
-    QDir dir(m_cacheDir);
-    if (!dir.exists()) {
-      return 0;
-    }
-    qint64 total = 0;
-    QFileInfoList entries =
-        dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
-    for (const auto &entry : entries) {
-      total += entry.size();
-    }
-    return total;
-  }
-
-  int currentCacheItemCount() const {
-    QMutexLocker locker(&m_mutex);
-    QDir dir(m_cacheDir);
-    if (!dir.exists()) {
-      return 0;
-    }
-    return static_cast<int>(
-        dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot).size());
-  }
-
-private:
   mutable QMutex m_mutex;
   QString m_cacheDir;
   qint64 m_maxCacheSizeBytes{100 * 1024 * 1024}; // 100 MB default
