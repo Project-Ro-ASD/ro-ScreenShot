@@ -16,6 +16,10 @@ class LanguageManager : public QObject {
                  setCurrentLanguage NOTIFY currentLanguageChanged)
   Q_PROPERTY(QString currentLanguageLabel READ currentLanguageLabel NOTIFY
                  currentLanguageChanged)
+  Q_PROPERTY(bool followsSystemLanguage READ followsSystemLanguage NOTIFY
+                 currentLanguageChanged)
+  Q_PROPERTY(QString systemLanguageLabel READ systemLanguageLabel NOTIFY
+                 currentLanguageChanged)
   Q_PROPERTY(QVariantList availableLanguages READ availableLanguages CONSTANT)
 
 public:
@@ -25,9 +29,12 @@ public:
 
   QString currentLanguage() const;
   QString currentLanguageLabel() const;
+  bool followsSystemLanguage() const;
+  QString systemLanguageLabel() const;
   QVariantList availableLanguages() const;
 
   Q_INVOKABLE void setCurrentLanguage(const QString &languageCode);
+  Q_INVOKABLE void useSystemLanguage();
   Q_INVOKABLE QString displayNameForLanguage(const QString &languageCode) const;
 
 signals:
@@ -36,12 +43,14 @@ signals:
 private:
   QString normalizeLanguageCode(const QString &code) const;
   QString systemLanguageCode() const;
+  void applyLanguage(const QString &code);
   bool loadLanguage(const QString &code);
 
   QCoreApplication *m_app{nullptr};
   QQmlEngine *m_engine{nullptr};
   QTranslator *m_translator{nullptr};
-  QString m_currentLanguage{"tr"};
+  QString m_currentLanguage{"en"};
+  bool m_followsSystemLanguage{true};
 };
 
 } // namespace ro_screenshot

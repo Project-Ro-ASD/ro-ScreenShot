@@ -31,16 +31,31 @@ LanguageManager::LanguageManager(QCoreApplication *app, QQmlEngine *engine,
                                  QTranslator *translator, QObject *parent)
     : QObject(parent), m_app(app), m_engine(engine), m_translator(translator) {
   QSettings settings("ro-asd", "ro-screenshot");
-  QString defaultLang = normalizeLanguageCode(systemLanguageCode());
-  QString savedLang =
-      settings.value("General/Language", defaultLang).toString();
-  setCurrentLanguage(savedLang);
+  // Before this key existed, the application persisted the detected system
+  // language as if it were a user choice. Prefer native system following for
+  // that legacy state; an explicit selection creates an override below.
+  m_followsSystemLanguage =
+      settings.value("General/FollowSystemLanguage", true).toBool();
+  if (m_followsSystemLanguage) {
+    applyLanguage(normalizeLanguageCode(systemLanguageCode()));
+  } else {
+    applyLanguage(normalizeLanguageCode(
+        settings.value("General/LanguageOverride", "en").toString()));
+  }
 }
 
 QString LanguageManager::currentLanguage() const { return m_currentLanguage; }
 
 QString LanguageManager::currentLanguageLabel() const {
   return displayNameForLanguage(m_currentLanguage);
+}
+
+bool LanguageManager::followsSystemLanguage() const {
+  return m_followsSystemLanguage;
+}
+
+QString LanguageManager::systemLanguageLabel() const {
+  return displayNameForLanguage(normalizeLanguageCode(systemLanguageCode()));
 }
 
 QVariantList LanguageManager::availableLanguages() const {
@@ -56,19 +71,37 @@ QVariantList LanguageManager::availableLanguages() const {
 }
 
 void LanguageManager::setCurrentLanguage(const QString &languageCode) {
-  QString normalized = normalizeLanguageCode(languageCode);
-  if (m_currentLanguage == normalized && m_app && m_translator &&
-      !m_translator->isEmpty()) {
-    return;
-  }
-
-  loadLanguage(normalized);
-  m_currentLanguage = normalized;
+  const QString normalized = normalizeLanguageCode(languageCode);
+  const bool changed =
+      m_followsSystemLanguage || m_currentLanguage != normalized;
+  m_followsSystemLanguage = false;
+  applyLanguage(normalized);
 
   QSettings settings("ro-asd", "ro-screenshot");
-  settings.setValue("General/Language", m_currentLanguage);
+  settings.setValue("General/FollowSystemLanguage", false);
+  settings.setValue("General/LanguageOverride", m_currentLanguage);
+  settings.remove("General/Language");
 
-  emit currentLanguageChanged();
+  if (changed) {
+    emit currentLanguageChanged();
+  }
+}
+
+void LanguageManager::useSystemLanguage() {
+  const QString systemLanguage = normalizeLanguageCode(systemLanguageCode());
+  const bool changed =
+      !m_followsSystemLanguage || m_currentLanguage != systemLanguage;
+  m_followsSystemLanguage = true;
+  applyLanguage(systemLanguage);
+
+  QSettings settings("ro-asd", "ro-screenshot");
+  settings.setValue("General/FollowSystemLanguage", true);
+  settings.remove("General/LanguageOverride");
+  settings.remove("General/Language");
+
+  if (changed) {
+    emit currentLanguageChanged();
+  }
 }
 
 QString
@@ -92,11 +125,20 @@ QString LanguageManager::normalizeLanguageCode(const QString &code) const {
   if (isSupported(lower)) {
     return lower;
   }
-  return "tr";
+  return "en";
 }
 
 QString LanguageManager::systemLanguageCode() const {
   return QLocale::system().name().section('_', 0, 0).toLower();
+}
+
+void LanguageManager::applyLanguage(const QString &code) {
+  if (m_currentLanguage == code && m_app && m_translator &&
+      !m_translator->isEmpty()) {
+    return;
+  }
+  loadLanguage(code);
+  m_currentLanguage = code;
 }
 
 bool LanguageManager::loadLanguage(const QString &code) {

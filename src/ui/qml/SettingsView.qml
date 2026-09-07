@@ -154,11 +154,22 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8
                     Text { text: qsTr("Language"); color: colors.textMuted; font.pixelSize: 12; Layout.preferredWidth: 70 }
+                    RoButton {
+                        text: qsTr("System default (%1)").arg(LanguageManager.systemLanguageLabel)
+                        variant: LanguageManager.followsSystemLanguage ? "primary" : "ghost"
+                        colors: root.colors
+                        implicitHeight: 30
+                        onClicked: LanguageManager.useSystemLanguage()
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 8
+                    Text { text: qsTr("Manual override"); color: colors.placeholder; font.pixelSize: 11; Layout.preferredWidth: 70 }
                     Repeater {
                         model: LanguageManager.availableLanguages
                         delegate: Button {
                             text: modelData.nativeLabel
-                            checkable: true; checked: LanguageManager.currentLanguage === modelData.code
+                            checkable: true; checked: !LanguageManager.followsSystemLanguage && LanguageManager.currentLanguage === modelData.code
                             onClicked: LanguageManager.setCurrentLanguage(modelData.code)
                             contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { implicitWidth: 76; implicitHeight: 30; color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
