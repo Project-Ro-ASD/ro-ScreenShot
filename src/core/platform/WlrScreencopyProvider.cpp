@@ -1,9 +1,9 @@
 #include "WlrScreencopyProvider.hpp"
-#include <QBuffer>
 #include <QGuiApplication>
 #include <QProcess>
 #include <QScreen>
 #include <QStandardPaths>
+#include <QTimer>
 
 namespace ro_screenshot {
 
@@ -14,49 +14,106 @@ bool WlrScreencopyProvider::isAvailable() const {
   return !QStandardPaths::findExecutable(QStringLiteral("grim")).isEmpty();
 }
 
-void WlrScreencopyProvider::cancel() { emit captureCancelled(); }
-
-bool WlrScreencopyProvider::executeGrim(const QStringList &args,
-                                        const QRect &targetRect) {
-  QProcess process;
-  process.start("grim", QStringList() << "-t" << "png" << args << "-");
-
-  if (!process.waitForStarted(3000)) {
-    emit captureFailed(QStringLiteral("grim process could not be started."),
-                       CaptureErrorCode::PortalUnavailable);
-    return false;
+void WlrScreencopyProvider::cancel() {
+  if (!m_isCapturing) {
+    return;
   }
 
-  if (!process.waitForFinished(6000)) {
-    process.kill();
-    emit captureFailed(QStringLiteral("grim process timed out."),
-                       CaptureErrorCode::Timeout);
-    return false;
+  m_isCapturing = false;
+  if (m_timeoutTimer) {
+    m_timeoutTimer->stop();
+    m_timeoutTimer->deleteLater();
+    m_timeoutTimer = nullptr;
   }
-
-  if (process.exitCode() != 0) {
-    emit captureFailed(QStringLiteral("grim capture failed: ") +
-                           QString::fromUtf8(process.readAllStandardError()),
-                       CaptureErrorCode::Unknown);
-    return false;
+  if (m_process) {
+    m_process->disconnect(this);
+    m_process->kill();
+    m_process->deleteLater();
+    m_process = nullptr;
   }
-
-  QByteArray data = process.readAllStandardOutput();
-  QImage img;
-  if (!img.loadFromData(data, "PNG") || img.isNull()) {
-    emit captureFailed(QStringLiteral("Invalid image stream returned by grim."),
-                       CaptureErrorCode::InvalidImage);
-    return false;
-  }
-
-  emit captureReady(img, targetRect.isValid() ? targetRect : img.rect());
-  return true;
+  emit captureCancelled();
 }
 
 void WlrScreencopyProvider::capture(CaptureMode mode,
                                     const QVariantMap & /*options*/) {
+  cancel();
+  m_isCapturing = true;
   emit captureStarted(mode);
-  executeGrim({}, QRect());
+
+  auto *process = new QProcess(this);
+  auto *timeout = new QTimer(this);
+  timeout->setSingleShot(true);
+  m_process = process;
+  m_timeoutTimer = timeout;
+
+  connect(timeout, &QTimer::timeout, this, [this, process, timeout]() {
+    if (!m_isCapturing || process != m_process) {
+      return;
+    }
+    m_isCapturing = false;
+    m_process = nullptr;
+    m_timeoutTimer = nullptr;
+    process->kill();
+    process->deleteLater();
+    timeout->deleteLater();
+    emit captureFailed(QStringLiteral("grim capture timed out."),
+                       CaptureErrorCode::Timeout);
+  });
+
+  connect(process, &QProcess::errorOccurred, this,
+          [this, process, timeout](QProcess::ProcessError error) {
+            if (error != QProcess::FailedToStart || !m_isCapturing ||
+                process != m_process) {
+              return;
+            }
+            m_isCapturing = false;
+            m_process = nullptr;
+            m_timeoutTimer = nullptr;
+            timeout->stop();
+            process->deleteLater();
+            timeout->deleteLater();
+            emit captureFailed(
+                QStringLiteral("grim process could not be started."),
+                CaptureErrorCode::PortalUnavailable);
+          });
+
+  connect(process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
+          this,
+          [this, process, timeout](int exitCode, QProcess::ExitStatus status) {
+            if (!m_isCapturing || process != m_process) {
+              return;
+            }
+            m_isCapturing = false;
+            m_process = nullptr;
+            m_timeoutTimer = nullptr;
+            timeout->stop();
+
+            const QByteArray stderrOutput = process->readAllStandardError();
+            const QByteArray imageData = process->readAllStandardOutput();
+            process->deleteLater();
+            timeout->deleteLater();
+
+            if (status != QProcess::NormalExit || exitCode != 0) {
+              emit captureFailed(QStringLiteral("grim capture failed: ") +
+                                     QString::fromUtf8(stderrOutput).trimmed(),
+                                 CaptureErrorCode::Unknown);
+              return;
+            }
+
+            QImage image;
+            if (!image.loadFromData(imageData, "PNG") || image.isNull()) {
+              emit captureFailed(
+                  QStringLiteral("Invalid image stream returned by grim."),
+                  CaptureErrorCode::InvalidImage);
+              return;
+            }
+            emit captureReady(image, image.rect());
+          });
+
+  process->start(
+      QStringLiteral("grim"),
+      {QStringLiteral("-t"), QStringLiteral("png"), QStringLiteral("-")});
+  timeout->start(6000);
 }
 
 } // namespace ro_screenshot

@@ -2,6 +2,7 @@
 
 #include "IScreenshotProvider.hpp"
 #include <QProcess>
+#include <QTimer>
 
 namespace ro_screenshot {
 
@@ -18,7 +19,9 @@ public:
   void cancel() override;
 
 private:
-  bool executeGrim(const QStringList &args, const QRect &targetRect);
+  QProcess *m_process{nullptr};
+  QTimer *m_timeoutTimer{nullptr};
+  bool m_isCapturing{false};
 };
 
 } // namespace ro_screenshot

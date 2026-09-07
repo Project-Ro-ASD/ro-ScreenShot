@@ -178,6 +178,24 @@ int main(int argc, char *argv[]) {
     return static_cast<int>(StructuredExitCode::InvalidArguments);
   }
 
+  if (parser.isSet(formatOption)) {
+    const QString format = parser.value(formatOption).toLower();
+    if (format != QStringLiteral("png") && format != QStringLiteral("jpg") &&
+        format != QStringLiteral("jpeg") && format != QStringLiteral("webp")) {
+      qCritical("--format must be one of: png, jpg, jpeg, webp.");
+      return static_cast<int>(StructuredExitCode::InvalidArguments);
+    }
+  }
+
+  if (parser.isSet(qualityOption)) {
+    bool qualityIsValid = false;
+    const int quality = parser.value(qualityOption).toInt(&qualityIsValid);
+    if (!qualityIsValid || quality < 1 || quality > 100) {
+      qCritical("--quality must be an integer between 1 and 100.");
+      return static_cast<int>(StructuredExitCode::InvalidArguments);
+    }
+  }
+
   const QString captureAction =
       parser.isSet(copyOnlyOption)
           ? QStringLiteral("copy")
@@ -249,11 +267,8 @@ int main(int argc, char *argv[]) {
     settingsManager.setImageFormat(parser.value(formatOption));
   }
   if (parser.isSet(qualityOption)) {
-    bool qOk = false;
-    int qVal = parser.value(qualityOption).toInt(&qOk);
-    if (qOk && qVal >= 1 && qVal <= 100) {
-      settingsManager.setJpegQuality(qVal);
-    }
+    const int qVal = parser.value(qualityOption).toInt();
+    settingsManager.setJpegQuality(qVal);
   }
 
   LibraryManager libraryManager(&settingsManager);
@@ -407,6 +422,7 @@ int main(int argc, char *argv[]) {
           sniperWindowObject = sniperComponent.create();
         }
         if (sniperWindowObject) {
+          QMetaObject::invokeMethod(sniperWindowObject, "prepareForNewFrame");
           QQuickWindow *win = qobject_cast<QQuickWindow *>(sniperWindowObject);
           if (win) {
             win->setProperty("sourceFrameWidth", frameWidth);

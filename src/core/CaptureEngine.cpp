@@ -267,10 +267,24 @@ void CaptureEngine::handleProviderCaptureReady(const QImage &image,
     m_cachedDesktopFrame = image;
     m_imageWriter->setCachedImage(image);
 
-    // Save frozen frame to temporary file for QML Overlay
-    m_imageWriter->writeImageAtomically(image, m_frozenFramePath,
-                                        QStringLiteral("PNG"), -1);
+    // Give every overlay session a new URL. Rewriting the same path leaves a
+    // QML Image displaying its already-decoded frame, even with cache=false.
+    const QString previousFrozenFramePath = m_frozenFramePath;
+    const QString nextFrozenFramePath = m_imageWriter->createTempFilePath(
+        QStringLiteral("frozen_frame"), QStringLiteral(".png"));
+    const SaveResult frozenFrameResult = m_imageWriter->writeImageAtomically(
+        image, nextFrozenFramePath, QStringLiteral("PNG"), -1);
+    if (!frozenFrameResult.success) {
+      m_imageWriter->cleanupFile(nextFrozenFramePath);
+      failCapture(tr("Seçim önizlemesi hazırlanamadı: %1")
+                      .arg(frozenFrameResult.errorMessage),
+                  frozenFrameResult.errorCode);
+      return;
+    }
+
+    m_frozenFramePath = nextFrozenFramePath;
     emit frozenFrameChanged();
+    m_imageWriter->cleanupFile(previousFrozenFramePath);
 
     emit openSniperOverlay(m_frozenFramePath, image.width(), image.height());
     return;
