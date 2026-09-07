@@ -9,8 +9,12 @@ Window {
     flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
     color: "transparent"
     visible: screenRecorderEngine ? screenRecorderEngine.isRecording : false
-    width: 320
-    height: 56
+    width: 344
+    height: 62
+    property real dragStartX: 0
+    property real dragStartY: 0
+    property real windowStartX: 0
+    property real windowStartY: 0
 
     // Default position at bottom center
     x: (Screen.width - width) / 2
@@ -19,17 +23,28 @@ Window {
     Rectangle {
         id: hudCard
         anchors.fill: parent
-        radius: 28
-        color: "#1E293B"
-        border.color: "#334155"
+        radius: 18
+        color: "#1B1F2A"
+        border.color: "#454D60"
         border.width: 1
 
         // Drag area for movable HUD
         MouseArea {
             id: dragArea
             anchors.fill: parent
-            drag.target: hudWindow
             cursorShape: Qt.SizeAllCursor
+            onPressed: function (mouse) {
+                hudWindow.dragStartX = mouse.x;
+                hudWindow.dragStartY = mouse.y;
+                hudWindow.windowStartX = hudWindow.x;
+                hudWindow.windowStartY = hudWindow.y;
+            }
+            onPositionChanged: function (mouse) {
+                if (pressed) {
+                    hudWindow.x = hudWindow.windowStartX + mouse.x - hudWindow.dragStartX;
+                    hudWindow.y = hudWindow.windowStartY + mouse.y - hudWindow.dragStartY;
+                }
+            }
         }
 
         RowLayout {
@@ -40,22 +55,32 @@ Window {
 
             // Recording Pulsing Dot
             Rectangle {
-                width: 12
-                height: 12
+                Layout.preferredWidth: 12
+                Layout.preferredHeight: 12
                 radius: 6
-                color: "#EF4444"
+                color: "#D85467"
                 SequentialAnimation on opacity {
                     loops: Animation.Infinite
                     running: screenRecorderEngine ? screenRecorderEngine.isRecording && !screenRecorderEngine.isPaused : false
-                    NumberAnimation { from: 1.0; to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
-                    NumberAnimation { from: 0.3; to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+                    NumberAnimation {
+                        from: 1.0
+                        to: 0.3
+                        duration: 600
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        from: 0.3
+                        to: 1.0
+                        duration: 600
+                        easing.type: Easing.InOutQuad
+                    }
                 }
             }
 
             // Duration Label
             Text {
                 text: screenRecorderEngine ? screenRecorderEngine.formattedDuration : "00:00"
-                color: "#F8FAFC"
+                color: "#F5F6FA"
                 font.pixelSize: 15
                 font.bold: true
                 font.family: "Monospace"
@@ -64,22 +89,28 @@ Window {
 
             // Live VU Meter Bar
             Rectangle {
-                width: 36
-                height: 8
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 8
                 radius: 4
-                color: "#334155"
+                color: "#303746"
                 Layout.alignment: Qt.AlignVCenter
 
                 Rectangle {
                     height: parent.height
                     radius: 4
                     width: parent.width * (screenRecorderEngine ? screenRecorderEngine.audioLevel : 0.0)
-                    color: width > 26 ? "#EF4444" : (width > 16 ? "#F59E0B" : "#10B981")
-                    Behavior on width { NumberAnimation { duration: 80 } }
+                    color: width > 26 ? "#D85467" : (width > 16 ? "#D79A32" : "#20B58A")
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 80
+                        }
+                    }
                 }
             }
 
-            Item { Layout.fillWidth: true }
+            Item {
+                Layout.fillWidth: true
+            }
 
             // Mic Toggle
             Button {
@@ -88,7 +119,7 @@ Window {
                 Layout.preferredHeight: 32
                 background: Rectangle {
                     radius: 16
-                    color: (screenRecorderEngine && screenRecorderEngine.micEnabled) ? "#3B82F6" : "#334155"
+                    color: (screenRecorderEngine && screenRecorderEngine.micEnabled) ? "#5A5FE8" : "#303746"
                 }
                 contentItem: Text {
                     text: (screenRecorderEngine && screenRecorderEngine.micEnabled) ? "🎙" : "🔇"
@@ -110,7 +141,7 @@ Window {
                 Layout.preferredHeight: 32
                 background: Rectangle {
                     radius: 16
-                    color: "#334155"
+                    color: "#303746"
                 }
                 contentItem: Text {
                     text: (screenRecorderEngine && screenRecorderEngine.isPaused) ? "▶" : "⏸"
@@ -137,7 +168,7 @@ Window {
                 Layout.preferredHeight: 32
                 background: Rectangle {
                     radius: 16
-                    color: "#EF4444"
+                    color: "#C4475D"
                 }
                 contentItem: Text {
                     text: "⏹"

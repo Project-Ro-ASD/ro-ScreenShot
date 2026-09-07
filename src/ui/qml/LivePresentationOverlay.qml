@@ -20,22 +20,26 @@ Window {
         anchors.bottomMargin: 48
         anchors.horizontalCenter: parent.horizontalCenter
         visible: presentationEngine ? (presentationEngine.currentKeystroke !== "" && presentationEngine.isKeystrokeOverlayActive) : false
-        height: 48
-        radius: 24
-        color: "#0F172ACC"
-        border.color: "#38BDF8"
-        border.width: 2
-        width: keyText.implicitWidth + 32
+        height: 52
+        radius: 15
+        color: "#E01B1F2A"
+        border.color: "#777CFF"
+        border.width: 1
+        width: keyText.implicitWidth + 38
 
         Text {
             id: keyText
             anchors.centerIn: parent
             text: presentationEngine ? presentationEngine.currentKeystroke : ""
-            color: "#38BDF8"
+            color: "#F5F6FA"
             font.pixelSize: 18
             font.bold: true
         }
 
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 150
+            }
+        }
     }
 }

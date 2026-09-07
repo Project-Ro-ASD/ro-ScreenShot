@@ -5,6 +5,7 @@ import QtQuick.Effects
 
 Item {
     id: dialogRoot
+    RoMotion { id: motion }
 
     property string title: qsTr("Onay")
     property string message: ""
@@ -13,34 +14,40 @@ Item {
     property bool isDestructive: false
     property var colors: null
 
-    signal accepted()
-    signal rejected()
+    signal accepted
+    signal rejected
 
     anchors.fill: parent
     visible: opacity > 0.0
     opacity: 0.0
 
     Behavior on opacity {
-        NumberAnimation { duration: 150 }
+        NumberAnimation {
+            duration: motion.standard
+            easing.type: Easing.OutCubic
+        }
     }
 
     function open(dialogTitle, dialogMessage, destructive, onConfirm) {
-        if (dialogTitle !== undefined) title = dialogTitle
-        if (dialogMessage !== undefined) message = dialogMessage
-        if (destructive !== undefined) isDestructive = destructive
+        if (dialogTitle !== undefined)
+            title = dialogTitle;
+        if (dialogMessage !== undefined)
+            message = dialogMessage;
+        if (destructive !== undefined)
+            isDestructive = destructive;
         if (onConfirm) {
-            var handler = function() {
-                dialogRoot.accepted.disconnect(handler)
-                onConfirm()
-            }
-            dialogRoot.accepted.connect(handler)
+            var handler = function () {
+                dialogRoot.accepted.disconnect(handler);
+                onConfirm();
+            };
+            dialogRoot.accepted.connect(handler);
         }
-        opacity = 1.0
-        confirmBtn.forceActiveFocus()
+        opacity = 1.0;
+        confirmBtn.forceActiveFocus();
     }
 
     function close() {
-        opacity = 0.0
+        opacity = 0.0;
     }
 
     // Modal background dimmer
@@ -52,8 +59,8 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                dialogRoot.rejected()
-                dialogRoot.close()
+                dialogRoot.rejected();
+                dialogRoot.close();
             }
         }
     }
@@ -61,13 +68,15 @@ Item {
     // Dialog card
     Rectangle {
         id: card
+        scale: dialogRoot.opacity > 0 ? 1.0 : motion.dialogHiddenScale
         width: Math.min(dialogRoot.width - 40, 420)
         implicitHeight: contentCol.implicitHeight + 40
         anchors.centerIn: parent
-        radius: 12
-        color: (dialogRoot.colors && dialogRoot.colors.card) ? dialogRoot.colors.card : "#131D31"
-        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : "#334155"
+        radius: 18
+        color: (dialogRoot.colors && dialogRoot.colors.card) ? dialogRoot.colors.card : "#1B1F2A"
+        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : "#454D60"
         border.width: 1
+        Behavior on scale { NumberAnimation { duration: motion.standard; easing.type: Easing.OutBack } }
 
         MouseArea {
             anchors.fill: parent
@@ -87,13 +96,13 @@ Item {
                 Rectangle {
                     width: 32
                     height: 32
-                    radius: 8
-                    color: dialogRoot.isDestructive ? "#FEE2E2" : "#EFF4FF"
+                    radius: 10
+                    color: dialogRoot.isDestructive ? "#F6E7EB" : (dialogRoot.colors ? dialogRoot.colors.accentSoft : "#ECECFF")
 
                     Text {
                         anchors.centerIn: parent
                         text: dialogRoot.isDestructive ? "!" : "i"
-                        color: dialogRoot.isDestructive ? "#DC2626" : "#2563EB"
+                        color: dialogRoot.isDestructive ? "#C4475D" : (dialogRoot.colors ? dialogRoot.colors.accent : "#5A5FE8")
                         font.pixelSize: 16
                         font.bold: true
                     }
@@ -116,20 +125,24 @@ Item {
                 Layout.fillWidth: true
             }
 
-            Item { Layout.preferredHeight: 4 }
+            Item {
+                Layout.preferredHeight: 4
+            }
 
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 Button {
                     text: dialogRoot.cancelText
                     focusPolicy: Qt.StrongFocus
                     onClicked: {
-                        dialogRoot.rejected()
-                        dialogRoot.close()
+                        dialogRoot.rejected();
+                        dialogRoot.close();
                     }
                     contentItem: Text {
                         text: parent.text
@@ -142,9 +155,9 @@ Item {
                     background: Rectangle {
                         implicitWidth: 90
                         implicitHeight: 36
-                        color: parent.hovered ? (dialogRoot.colors ? dialogRoot.colors.border : "#334155") : "transparent"
-                        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : "#334155"
-                        radius: 6
+                        color: parent.hovered ? (dialogRoot.colors ? dialogRoot.colors.cardHover : "#303746") : "transparent"
+                        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : "#454D60"
+                        radius: 9
                     }
                 }
 
@@ -153,8 +166,8 @@ Item {
                     text: dialogRoot.confirmText
                     focusPolicy: Qt.StrongFocus
                     onClicked: {
-                        dialogRoot.accepted()
-                        dialogRoot.close()
+                        dialogRoot.accepted();
+                        dialogRoot.close();
                     }
                     contentItem: Text {
                         text: parent.text
@@ -167,9 +180,8 @@ Item {
                     background: Rectangle {
                         implicitWidth: 110
                         implicitHeight: 36
-                        color: dialogRoot.isDestructive ? (parent.hovered ? "#DC2626" : "#EF4444")
-                                                        : (parent.hovered ? "#1D4ED8" : "#2563EB")
-                        radius: 6
+                        color: dialogRoot.isDestructive ? (parent.hovered ? "#A7344B" : "#C4475D") : (parent.hovered ? "#474BCE" : "#5A5FE8")
+                        radius: 9
                     }
                 }
             }
@@ -177,11 +189,11 @@ Item {
     }
 
     Keys.onEscapePressed: {
-        dialogRoot.rejected()
-        dialogRoot.close()
+        dialogRoot.rejected();
+        dialogRoot.close();
     }
     Keys.onReturnPressed: {
-        dialogRoot.accepted()
-        dialogRoot.close()
+        dialogRoot.accepted();
+        dialogRoot.close();
     }
 }

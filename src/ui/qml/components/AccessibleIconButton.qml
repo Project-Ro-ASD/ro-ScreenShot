@@ -4,6 +4,7 @@ import QtQuick.Effects
 
 Button {
     id: control
+    RoMotion { id: motion }
 
     property string iconSource: ""
     property int iconSize: 18
@@ -52,6 +53,6 @@ Button {
 
     ToolTip.visible: control.hovered && tooltipText.length > 0
     ToolTip.text: control.tooltipText
-    ToolTip.delay: 350
-    ToolTip.timeout: 4000
+    ToolTip.delay: motion.tooltipDelay
+    ToolTip.timeout: motion.tooltipTimeout
 }

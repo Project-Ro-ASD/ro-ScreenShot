@@ -5,6 +5,7 @@ import QtQuick.Effects
 
 Item {
     id: snackbarRoot
+    RoMotion { id: motion }
 
     property var colors: null
     property var messageQueue: []
@@ -83,8 +84,8 @@ Item {
         opacity: snackbarRoot.isShowing ? 1.0 : 0.0
         y: snackbarRoot.isShowing ? 0 : 20
 
-        Behavior on opacity { NumberAnimation { duration: 180 } }
-        Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: motion.standard } }
+        Behavior on y { NumberAnimation { duration: motion.standard; easing.type: Easing.OutCubic } }
 
         RowLayout {
             anchors.fill: parent

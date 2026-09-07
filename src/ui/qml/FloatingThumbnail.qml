@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 Window {
     id: toastWindow
-    width: 320
-    height: 92
+    width: 360
+    height: 124
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SubWindow
     color: "transparent"
 
@@ -14,59 +14,158 @@ Window {
     property bool hasFile: imagePath.length > 0
 
     x: Screen.virtualX + Screen.desktopAvailableWidth - width - 24
-    y: Screen.virtualY + Screen.desktopAvailableHeight - height - 48
+    y: Screen.virtualY + Screen.desktopAvailableHeight - height - 40
 
-    Shortcut { sequence: "Escape"; onActivated: toastWindow.dismiss() }
-    Timer { id: hideTimer; interval: 4500; repeat: false; onTriggered: toastWindow.dismiss() }
+    Shortcut {
+        sequence: "Escape"
+        onActivated: toastWindow.dismiss()
+    }
+    Timer {
+        id: hideTimer
+        interval: 5200
+        repeat: false
+        onTriggered: toastWindow.dismiss()
+    }
 
     function showToast(path, name) {
-        imagePath = path || ""
-        fileName = name || qsTr("Screenshot")
-        hasFile = imagePath.length > 0
-        visible = true
-        hideTimer.restart()
+        imagePath = path || "";
+        fileName = name || qsTr("Screenshot");
+        hasFile = imagePath.length > 0;
+        visible = true;
+        hideTimer.restart();
     }
-    function dismiss() { hideTimer.stop(); visible = false }
+    function dismiss() {
+        hideTimer.stop();
+        visible = false;
+    }
 
     Rectangle {
         anchors.fill: parent
-        color: "#111827"
-        border.color: "#2A3448"
+        radius: 18
+        color: "#1B1F2A"
+        border.color: "#41485A"
         border.width: 1
-        radius: 12
 
-        MouseArea { anchors.fill: parent; hoverEnabled: true; onEntered: hideTimer.stop(); onExited: hideTimer.restart() }
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onEntered: hideTimer.stop()
+            onExited: hideTimer.restart()
+        }
 
         RowLayout {
-            anchors.fill: parent; anchors.margins: 10; spacing: 10
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
             Rectangle {
-                Layout.preferredWidth: 68; Layout.preferredHeight: 68
-                radius: 8; color: "#1F2937"; border.color: "#2A3448"; border.width: 1; clip: true
-                Image { anchors.fill: parent; source: toastWindow.imagePath ? ("file://" + toastWindow.imagePath) : ""; fillMode: Image.PreserveAspectCrop; asynchronous: true }
+                Layout.preferredWidth: 100
+                Layout.preferredHeight: 100
+                radius: 12
+                color: "#292E3A"
+                border.color: "#454D60"
+                border.width: 1
+                clip: true
+                Image {
+                    anchors.fill: parent
+                    source: toastWindow.imagePath ? "file://" + toastWindow.imagePath : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                }
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.margins: 7
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: "#20B58A"
+                }
             }
             ColumnLayout {
-                Layout.fillWidth: true; spacing: 2
+                Layout.fillWidth: true
+                spacing: 5
                 RowLayout {
-                    Layout.fillWidth: true; spacing: 6
-                    Rectangle { width: 7; height: 7; radius: 3.5; color: "#10B981" }
-                    Text { text: qsTr("Screenshot ready"); color: "#F9FAFB"; font.pixelSize: 12; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
-                    Text { text: "✕"; color: "#9CA3AF"; font.pixelSize: 12; MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: toastWindow.dismiss() } }
+                    Layout.fillWidth: true
+                    Text {
+                        text: qsTr("Capture complete")
+                        color: "#F5F6FA"
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                    }
+                    Button {
+                        text: "×"
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        onClicked: toastWindow.dismiss()
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#9EA7B9"
+                            font.pixelSize: 20
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            radius: 8
+                            color: parent.hovered ? "#303746" : "transparent"
+                        }
+                    }
                 }
-                Text { text: toastWindow.fileName; color: "#9CA3AF"; font.pixelSize: 11; elide: Text.ElideMiddle; Layout.fillWidth: true }
+                Text {
+                    text: toastWindow.fileName
+                    color: "#AAB2C2"
+                    font.pixelSize: 11
+                    elide: Text.ElideMiddle
+                    Layout.fillWidth: true
+                }
+                Item {
+                    Layout.fillHeight: true
+                }
                 RowLayout {
-                    spacing: 6; Layout.topMargin: 4
+                    spacing: 7
                     Button {
                         text: qsTr("Copy")
-                        onClicked: { captureEngine.copyImageToClipboard(toastWindow.imagePath); toastWindow.dismiss() }
-                        contentItem: Text { text: parent.text; color: "#FFFFFF"; font.pixelSize: 11; font.bold: true; horizontalAlignment: Text.AlignHCenter }
-                        background: Rectangle { implicitWidth: 62; implicitHeight: 26; color: parent.hovered ? "#1D4ED8" : "#2563EB"; radius: 6 }
+                        onClicked: {
+                            captureEngine.copyImageToClipboard(toastWindow.imagePath);
+                            toastWindow.dismiss();
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#FFFFFF"
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            implicitWidth: 68
+                            implicitHeight: 30
+                            radius: 9
+                            color: parent.hovered ? "#474BCE" : "#5A5FE8"
+                        }
                     }
                     Button {
                         visible: toastWindow.hasFile
-                        text: qsTr("Show in folder")
-                        onClicked: { libraryManager.openInFolder(0); toastWindow.dismiss() }
-                        contentItem: Text { text: parent.text; color: "#D1D5DB"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                        background: Rectangle { implicitWidth: 96; implicitHeight: 26; color: parent.hovered ? "#2A3448" : "#1F2937"; radius: 6 }
+                        text: qsTr("Open folder")
+                        onClicked: {
+                            libraryManager.openInFolder(0);
+                            toastWindow.dismiss();
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#D9DDEA"
+                            font.pixelSize: 11
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            implicitWidth: 92
+                            implicitHeight: 30
+                            radius: 9
+                            color: parent.hovered ? "#303746" : "#262B36"
+                            border.color: "#454D60"
+                            border.width: 1
+                        }
                     }
                 }
             }

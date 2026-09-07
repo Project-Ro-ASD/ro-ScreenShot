@@ -168,6 +168,7 @@ set_source_files_properties(src/ui/qml/components/DevKitDialog.qml PROPERTIES QT
 set_source_files_properties(src/ui/qml/components/VaultDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/VaultDialog.qml")
 set_source_files_properties(src/ui/qml/components/RoCard.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoCard.qml")
 set_source_files_properties(src/ui/qml/components/RoButton.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoButton.qml")
+set_source_files_properties(src/ui/qml/components/RoMotion.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoMotion.qml")
 set_source_files_properties(src/ui/qml/components/RoNavItem.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoNavItem.qml")
 set_source_files_properties(src/ui/qml/components/RoListRow.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoListRow.qml")
 set_source_files_properties(src/ui/qml/components/RoCaptureCard.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoCaptureCard.qml")
@@ -226,6 +227,7 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/components/VaultDialog.qml
         src/ui/qml/components/RoCard.qml
         src/ui/qml/components/RoButton.qml
+        src/ui/qml/components/RoMotion.qml
         src/ui/qml/components/RoNavItem.qml
         src/ui/qml/components/RoListRow.qml
         src/ui/qml/components/RoCaptureCard.qml
