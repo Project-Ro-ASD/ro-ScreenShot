@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+RoDialog {
     id: pdfDialog
     title: "PDF Raporu ve Kılavuz Üretici"
     modal: true
@@ -14,22 +14,15 @@ Dialog {
     property int selectedCount: 0
     signal generateRequested(string title, string notes, string outputPath)
 
-    background: Rectangle {
-        color: "#0F172A"
-        radius: 12
-        border.color: "#334155"
-        border.width: 1
-    }
-
     header: Rectangle {
         height: 52
-        color: "#1E293B"
-        radius: 12
+        color: pdfDialog.shellColor
+        radius: pdfDialog.surfaceRadius
 
         Text {
             anchors.centerIn: parent
             text: "📑 PDF Raporu Oluştur (" + selectedCount + " Görsel)"
-            color: "#F8FAFC"
+            color: pdfDialog.textColor
             font.pixelSize: 16
             font.bold: true
         }
@@ -40,7 +33,7 @@ Dialog {
 
         Text {
             text: "Rapor Başlığı:"
-            color: "#94A3B8"
+            color: pdfDialog.mutedTextColor
             font.pixelSize: 13
         }
 
@@ -49,21 +42,21 @@ Dialog {
             Layout.fillWidth: true
             text: "ro-ScreenShot Hata & Arayüz Raporu"
             color: "white"
-            background: Rectangle { color: "#1E293B"; radius: 6; border.color: "#334155" }
+            background: Rectangle { color: pdfDialog.shellColor; radius: 8; border.color: pdfDialog.borderColor }
         }
 
         Text {
             text: "Açıklama / Notlar:"
-            color: "#94A3B8"
+            color: pdfDialog.mutedTextColor
             font.pixelSize: 13
         }
 
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 90
-            color: "#1E293B"
+            color: pdfDialog.shellColor
             radius: 6
-            border.color: "#334155"
+            border.color: pdfDialog.borderColor
 
             ScrollView {
                 anchors.fill: parent
@@ -82,7 +75,7 @@ Dialog {
 
         Text {
             text: "Kayıt Dosyası:"
-            color: "#94A3B8"
+            color: pdfDialog.mutedTextColor
             font.pixelSize: 13
         }
 
@@ -91,16 +84,16 @@ Dialog {
             Layout.fillWidth: true
             text: "/tmp/ro_screenshot_report.pdf"
             color: "white"
-            background: Rectangle { color: "#1E293B"; radius: 6; border.color: "#334155" }
+            background: Rectangle { color: pdfDialog.shellColor; radius: 8; border.color: pdfDialog.borderColor }
         }
     }
 
     footer: DialogButtonBox {
-        background: Rectangle { color: "#1E293B"; radius: 12 }
+        background: Rectangle { color: pdfDialog.shellColor; radius: pdfDialog.surfaceRadius }
         Button {
             text: "İptal"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 6; color: "#334155" }
+            background: Rectangle { radius: 8; color: pdfDialog.elevatedColor }
             contentItem: Text { text: "İptal"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
         Button {

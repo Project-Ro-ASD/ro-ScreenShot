@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+RoDialog {
     id: mockupDialog
     title: "Görsel Giydirme & Mockup Çerçevesi"
     modal: true
@@ -16,22 +16,15 @@ Dialog {
     property int framePadding: 48
     signal exportRequested(int row, int preset, int padding)
 
-    background: Rectangle {
-        color: "#0F172A"
-        radius: 12
-        border.color: "#334155"
-        border.width: 1
-    }
-
     header: Rectangle {
         height: 52
-        color: "#1E293B"
-        radius: 12
+        color: mockupDialog.shellColor
+        radius: mockupDialog.surfaceRadius
 
         Text {
             anchors.centerIn: parent
             text: "🎨 Sosyal Medya & Mockup Çerçevesi"
-            color: "#F8FAFC"
+            color: mockupDialog.textColor
             font.pixelSize: 16
             font.bold: true
         }
@@ -42,7 +35,7 @@ Dialog {
 
         Text {
             text: "Arka Plan Gradyanı Seçin:"
-            color: "#94A3B8"
+            color: mockupDialog.mutedTextColor
             font.pixelSize: 13
         }
 
@@ -81,7 +74,7 @@ Dialog {
 
         Text {
             text: "Kenar Boşluğu (Padding): " + paddingSlider.value.toFixed(0) + "px"
-            color: "#94A3B8"
+            color: mockupDialog.mutedTextColor
             font.pixelSize: 13
         }
 
@@ -97,11 +90,11 @@ Dialog {
     }
 
     footer: DialogButtonBox {
-        background: Rectangle { color: "#1E293B"; radius: 12 }
+        background: Rectangle { color: mockupDialog.shellColor; radius: mockupDialog.surfaceRadius }
         Button {
             text: "İptal"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 6; color: "#334155" }
+            background: Rectangle { radius: 8; color: mockupDialog.elevatedColor }
             contentItem: Text { text: "İptal"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
         Button {

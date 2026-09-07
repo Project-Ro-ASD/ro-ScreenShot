@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+RoDialog {
     id: diffDialog
     title: "Görsel Karşılaştırma / Diff Modu"
     modal: true
@@ -16,17 +16,10 @@ Dialog {
     property real splitRatio: 0.5
     property var diffStats: ({})
 
-    background: Rectangle {
-        color: "#0F172A"
-        radius: 12
-        border.color: "#334155"
-        border.width: 1
-    }
-
     header: Rectangle {
         height: 52
-        color: "#1E293B"
-        radius: 12
+        color: diffDialog.shellColor
+        radius: diffDialog.surfaceRadius
 
         RowLayout {
             anchors.fill: parent
@@ -35,7 +28,7 @@ Dialog {
 
             Text {
                 text: "🔍 Görsel Karşılaştırma (Diff)"
-                color: "#F8FAFC"
+                color: diffDialog.textColor
                 font.pixelSize: 16
                 font.bold: true
                 Layout.fillWidth: true
@@ -43,7 +36,7 @@ Dialog {
 
             Text {
                 text: diffStats.similarityPercent ? "Benzerlik: %" + diffStats.similarityPercent.toFixed(1) : ""
-                color: "#38BDF8"
+                color: diffDialog.accentColor
                 font.bold: true
                 font.pixelSize: 14
             }
@@ -92,14 +85,14 @@ Dialog {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: 2
-                color: "#38BDF8"
+                color: diffDialog.accentColor
 
                 Rectangle {
                     anchors.centerIn: parent
                     width: 28
                     height: 28
                     radius: 14
-                    color: "#38BDF8"
+                    color: diffDialog.accentColor
                     border.color: "white"
                     border.width: 2
 
@@ -129,11 +122,11 @@ Dialog {
     }
 
     footer: DialogButtonBox {
-        background: Rectangle { color: "#1E293B"; radius: 12 }
+        background: Rectangle { color: diffDialog.shellColor; radius: diffDialog.surfaceRadius }
         Button {
             text: "Kapat"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 6; color: "#334155" }
+            background: Rectangle { radius: 8; color: diffDialog.elevatedColor }
             contentItem: Text { text: "Kapat"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
     }

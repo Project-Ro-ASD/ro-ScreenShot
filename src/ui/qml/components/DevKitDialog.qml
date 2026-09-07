@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+RoDialog {
     id: devKitDialog
     title: "Tasarımcı & Geliştirici Araç Kiti"
     modal: true
@@ -14,22 +14,15 @@ Dialog {
     property var paletteData: []
     property string extractedTableText: ""
 
-    background: Rectangle {
-        color: "#0F172A"
-        radius: 12
-        border.color: "#334155"
-        border.width: 1
-    }
-
     header: Rectangle {
         height: 52
-        color: "#1E293B"
-        radius: 12
+        color: devKitDialog.shellColor
+        radius: devKitDialog.surfaceRadius
 
         Text {
             anchors.centerIn: parent
             text: "🛠️ Tasarımcı & Geliştirici Araç Kiti"
-            color: "#F8FAFC"
+            color: devKitDialog.textColor
             font.pixelSize: 16
             font.bold: true
         }
@@ -40,7 +33,7 @@ Dialog {
 
         Text {
             text: "🎨 Tailwind CSS Renk Paleti:"
-            color: "#38BDF8"
+            color: devKitDialog.accentColor
             font.bold: true
             font.pixelSize: 14
         }
@@ -81,7 +74,7 @@ Dialog {
 
         Text {
             text: "📊 Görselden Çıkarılan Tablo (Markdown / CSV / JSON):"
-            color: "#38BDF8"
+            color: devKitDialog.accentColor
             font.bold: true
             font.pixelSize: 14
         }
@@ -89,9 +82,9 @@ Dialog {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#1E293B"
+            color: devKitDialog.shellColor
             radius: 6
-            border.color: "#334155"
+            border.color: devKitDialog.borderColor
 
             ScrollView {
                 anchors.fill: parent
@@ -101,7 +94,7 @@ Dialog {
                 TextEdit {
                     text: extractedTableText
                     readOnly: true
-                    color: "#F8FAFC"
+                    color: devKitDialog.textColor
                     font.family: "Monospace"
                     font.pixelSize: 12
                     wrapMode: TextEdit.Wrap
@@ -112,7 +105,7 @@ Dialog {
     }
 
     footer: DialogButtonBox {
-        background: Rectangle { color: "#1E293B"; radius: 12 }
+        background: Rectangle { color: devKitDialog.shellColor; radius: devKitDialog.surfaceRadius }
         Button {
             text: "Panoya Kopyala"
             DialogButtonBox.buttonRole: DialogButtonBox.ActionRole
@@ -127,7 +120,7 @@ Dialog {
         Button {
             text: "Kapat"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 6; color: "#334155" }
+            background: Rectangle { radius: 8; color: devKitDialog.elevatedColor }
             contentItem: Text { text: "Kapat"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
     }

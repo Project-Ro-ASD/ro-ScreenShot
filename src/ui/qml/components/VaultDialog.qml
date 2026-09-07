@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Dialog {
+RoDialog {
     id: vaultDialog
     title: "🔒 Şifreli Gizlilik Kasası (AES-256)"
     modal: true
@@ -17,22 +17,15 @@ Dialog {
     signal unlockRequested(string password)
     signal lockRequested()
 
-    background: Rectangle {
-        color: "#0F172A"
-        radius: 12
-        border.color: "#334155"
-        border.width: 1
-    }
-
     header: Rectangle {
         height: 52
-        color: "#1E293B"
-        radius: 12
+        color: vaultDialog.shellColor
+        radius: vaultDialog.surfaceRadius
 
         Text {
             anchors.centerIn: parent
             text: "🔒 Şifreli Gizlilik Kasası (AES-256)"
-            color: "#F8FAFC"
+            color: vaultDialog.textColor
             font.pixelSize: 16
             font.bold: true
         }
@@ -55,7 +48,7 @@ Dialog {
             echoMode: TextInput.Password
             placeholderText: "Kasa Parolası..."
             color: "white"
-            background: Rectangle { color: "#1E293B"; radius: 6; border.color: "#334155" }
+            background: Rectangle { color: vaultDialog.shellColor; radius: 8; border.color: vaultDialog.borderColor }
             onAccepted: {
                 vaultDialog.unlockRequested(passField.text);
             }
@@ -72,19 +65,19 @@ Dialog {
             visible: isUnlocked
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#1E293B"
+            color: vaultDialog.shellColor
             radius: 8
 
             Text {
                 anchors.centerIn: parent
                 text: "Kasa aktif ve güvenli. Seçilen görseller şifrelenerek saklanmaktadır."
-                color: "#94A3B8"
+                color: vaultDialog.mutedTextColor
             }
         }
     }
 
     footer: DialogButtonBox {
-        background: Rectangle { color: "#1E293B"; radius: 12 }
+        background: Rectangle { color: vaultDialog.shellColor; radius: vaultDialog.surfaceRadius }
         Button {
             text: isUnlocked ? "Kasayı Kilitle" : "Kilidi Aç"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
@@ -101,7 +94,7 @@ Dialog {
         Button {
             text: "Kapat"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 6; color: "#334155" }
+            background: Rectangle { radius: 8; color: vaultDialog.elevatedColor }
             contentItem: Text { text: "Kapat"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
     }
