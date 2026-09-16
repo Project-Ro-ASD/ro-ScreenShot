@@ -14,6 +14,25 @@ bool WlrScreencopyProvider::isAvailable() const {
   return !QStandardPaths::findExecutable(QStringLiteral("grim")).isEmpty();
 }
 
+CaptureErrorCode
+WlrScreencopyProvider::classifyGrimError(const QString &standardError) {
+  const QString normalized = standardError.trimmed().toLower();
+  if (normalized.contains(
+          QStringLiteral("doesn't support the screen capture protocol")) ||
+      normalized.contains(
+          QStringLiteral("does not support the screen capture protocol")) ||
+      normalized.contains(QStringLiteral("screencopy protocol")) ||
+      normalized.contains(QStringLiteral("unsupported protocol"))) {
+    return CaptureErrorCode::PortalUnavailable;
+  }
+  if (normalized.contains(QStringLiteral("permission denied")) ||
+      normalized.contains(QStringLiteral("access denied")) ||
+      normalized.contains(QStringLiteral("not authorized"))) {
+    return CaptureErrorCode::PermissionDenied;
+  }
+  return CaptureErrorCode::Unknown;
+}
+
 void WlrScreencopyProvider::cancel() {
   if (!m_isCapturing) {
     return;
@@ -94,9 +113,11 @@ void WlrScreencopyProvider::capture(CaptureMode mode,
             timeout->deleteLater();
 
             if (status != QProcess::NormalExit || exitCode != 0) {
-              emit captureFailed(QStringLiteral("grim capture failed: ") +
-                                     QString::fromUtf8(stderrOutput).trimmed(),
-                                 CaptureErrorCode::Unknown);
+              const QString error = QString::fromUtf8(stderrOutput).trimmed();
+              emit captureFailed(
+                  tr("grim ekran yakalama işlemi başarısız oldu: %1")
+                      .arg(error.isEmpty() ? tr("Bilinmeyen hata") : error),
+                  classifyGrimError(error));
               return;
             }
 

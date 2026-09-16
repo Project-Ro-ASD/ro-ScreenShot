@@ -18,6 +18,8 @@ public:
   void capture(CaptureMode mode, const QVariantMap &options = {}) override;
   void cancel() override;
 
+  static CaptureErrorCode classifyGrimError(const QString &standardError);
+
 private:
   QProcess *m_process{nullptr};
   QTimer *m_timeoutTimer{nullptr};

@@ -1,5 +1,6 @@
 #include "XdgPortalProvider.hpp"
 #include <QDBusConnection>
+#include <QDBusError>
 #include <QDBusInterface>
 #include <QDBusMessage>
 #include <QDBusPendingReply>
@@ -118,41 +119,53 @@ void XdgPortalProvider::capture(CaptureMode mode,
       portal.asyncCall(QStringLiteral("Screenshot"), parentWindow, options),
       this);
 
-  connect(m_activeWatcher, &QDBusPendingCallWatcher::finished, this,
-          [this](QDBusPendingCallWatcher *watcher) {
-            QDBusPendingReply<QDBusObjectPath> reply = *watcher;
-            cleanupPendingCall();
+  connect(
+      m_activeWatcher, &QDBusPendingCallWatcher::finished, this,
+      [this](QDBusPendingCallWatcher *watcher) {
+        QDBusPendingReply<QDBusObjectPath> reply = *watcher;
+        cleanupPendingCall();
 
-            if (reply.isError()) {
-              disconnectPortalResponse();
-              m_timeoutTimer->stop();
-              m_isCapturing = false;
-              emit captureFailed(tr("Portal isteği başarısız oldu: %1")
-                                     .arg(reply.error().message()),
-                                 CaptureErrorCode::PortalUnavailable);
-              return;
-            }
+        if (reply.isError()) {
+          disconnectPortalResponse();
+          m_timeoutTimer->stop();
+          m_isCapturing = false;
+          const QDBusError error = reply.error();
+          const bool permissionDenied =
+              error.type() == QDBusError::AccessDenied ||
+              error.name().contains(QStringLiteral("AccessDenied"),
+                                    Qt::CaseInsensitive) ||
+              error.name().contains(QStringLiteral("NotAllowed"),
+                                    Qt::CaseInsensitive);
+          emit captureFailed(
+              permissionDenied
+                  ? tr("Ekran yakalama izni reddedildi: %1")
+                        .arg(error.message())
+                  : tr("Portal isteği başarısız oldu: %1").arg(error.message()),
+              permissionDenied ? CaptureErrorCode::PermissionDenied
+                               : CaptureErrorCode::PortalUnavailable);
+          return;
+        }
 
-            // Race guard: If fast portal already completed and emitted
-            // Response, m_isCapturing is already false.
-            if (!m_isCapturing) {
-              return;
-            }
+        // Race guard: If fast portal already completed and emitted
+        // Response, m_isCapturing is already false.
+        if (!m_isCapturing) {
+          return;
+        }
 
-            const QString returnedPath = reply.value().path();
-            if (!returnedPath.isEmpty() &&
-                returnedPath != m_pendingPortalRequestPath) {
-              disconnectPortalResponse();
-              m_pendingPortalRequestPath = returnedPath;
-              if (!connectPortalResponse(m_pendingPortalRequestPath)) {
-                m_timeoutTimer->stop();
-                m_isCapturing = false;
-                emit captureFailed(
-                    tr("Güncellenmiş portal istek yoluna bağlanılamadı."),
-                    CaptureErrorCode::PortalUnavailable);
-              }
-            }
-          });
+        const QString returnedPath = reply.value().path();
+        if (!returnedPath.isEmpty() &&
+            returnedPath != m_pendingPortalRequestPath) {
+          disconnectPortalResponse();
+          m_pendingPortalRequestPath = returnedPath;
+          if (!connectPortalResponse(m_pendingPortalRequestPath)) {
+            m_timeoutTimer->stop();
+            m_isCapturing = false;
+            emit captureFailed(
+                tr("Güncellenmiş portal istek yoluna bağlanılamadı."),
+                CaptureErrorCode::PortalUnavailable);
+          }
+        }
+      });
 }
 
 void XdgPortalProvider::cancel() {

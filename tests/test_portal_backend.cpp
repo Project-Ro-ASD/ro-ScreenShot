@@ -1,4 +1,5 @@
 #include "core/Types.hpp"
+#include "core/platform/WlrScreencopyProvider.hpp"
 #include "core/platform/XdgPortalProvider.hpp"
 #include <QSignalSpy>
 #include <QTest>
@@ -18,6 +19,18 @@ private slots:
              QStringLiteral("wayland:test-handle-123"));
 
     portal.setTimeoutDurationMs(500);
+  }
+
+  void testGrimUnsupportedProtocolIsRecoverable() {
+    QCOMPARE(WlrScreencopyProvider::classifyGrimError(QStringLiteral(
+                 "compositor doesn't support the screen capture protocol")),
+             CaptureErrorCode::PortalUnavailable);
+    QCOMPARE(WlrScreencopyProvider::classifyGrimError(
+                 QStringLiteral("permission denied")),
+             CaptureErrorCode::PermissionDenied);
+    QCOMPARE(WlrScreencopyProvider::classifyGrimError(
+                 QStringLiteral("unexpected failure")),
+             CaptureErrorCode::Unknown);
   }
 
   void testPortalTimeoutHandling() {

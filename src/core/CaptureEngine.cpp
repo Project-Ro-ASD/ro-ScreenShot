@@ -190,6 +190,8 @@ void CaptureEngine::startCaptureWorkflow(CaptureMode mode, int delaySeconds,
   m_pendingMode = mode;
   m_pendingAction = action;
   m_pendingLastRegion = isLastRegion;
+  m_portalFallbackAttempted = false;
+  m_currentProvider = nullptr;
 
   emit isCapturingChanged();
   emit captureUiShouldHide();
@@ -208,12 +210,14 @@ void CaptureEngine::executeCapture(CaptureMode mode) {
   }
 
   emit captureProgress(30, tr("Ekran görüntüsü alınıyor..."));
+  m_currentProvider = provider;
   provider->capture(mode);
 }
 
 void CaptureEngine::handleProviderCaptureReady(const QImage &image,
                                                const QRect &sourceRect) {
   Q_UNUSED(sourceRect)
+  m_currentProvider = nullptr;
 
   if (image.isNull()) {
     failCapture(tr("Sağlayıcı geçersiz görsel döndürdü."),
@@ -303,6 +307,29 @@ void CaptureEngine::handleProviderCaptureReady(const QImage &image,
 
 void CaptureEngine::handleProviderCaptureFailed(const QString &errorMessage,
                                                 CaptureErrorCode errorCode) {
+  const bool wlrCanFallback =
+      sender() == m_wlrProvider && !m_portalFallbackAttempted &&
+      (errorCode == CaptureErrorCode::PortalUnavailable ||
+       errorCode == CaptureErrorCode::PermissionDenied);
+  if (wlrCanFallback) {
+    m_portalFallbackAttempted = true;
+    if (m_portalProvider && m_portalProvider->isAvailable()) {
+      m_currentProvider = m_portalProvider;
+      emit captureProgress(
+          35, tr("Compositor protokolü kullanılamıyor; güvenli ekran yakalama "
+                 "portalına geçiliyor..."));
+      m_portalProvider->capture(m_pendingMode);
+      return;
+    }
+
+    failCapture(
+        tr("%1 XDG Desktop Portal ekran görüntüsü servisi de kullanılamıyor. "
+           "Oturum portalını ve ekran yakalama izinlerini kontrol edin.")
+            .arg(errorMessage),
+        CaptureErrorCode::PortalUnavailable);
+    return;
+  }
+
   failCapture(errorMessage, errorCode);
 }
 
@@ -313,6 +340,8 @@ void CaptureEngine::failCapture(const QString &message, CaptureErrorCode code) {
   m_pendingLastRegion = false;
   m_pendingMonitorIndex = -1;
   m_pendingAction.clear();
+  m_currentProvider = nullptr;
+  m_portalFallbackAttempted = false;
   emit isCapturingChanged();
   emit captureError(message);
   emit captureErrorCode(message, code);
@@ -408,7 +437,7 @@ void CaptureEngine::processPolygonSelected(const QVariantList &points,
 }
 
 void CaptureEngine::cancelCapture() {
-  IScreenshotProvider *provider = activeProvider();
+  IScreenshotProvider *provider = m_currentProvider;
   if (provider) {
     provider->cancel();
   }
@@ -417,6 +446,8 @@ void CaptureEngine::cancelCapture() {
   m_isCapturing = false;
   m_pendingAction.clear();
   m_pendingMonitorIndex = -1;
+  m_currentProvider = nullptr;
+  m_portalFallbackAttempted = false;
   emit isCapturingChanged();
   emit captureCancelled();
   emit captureUiMayRestore();

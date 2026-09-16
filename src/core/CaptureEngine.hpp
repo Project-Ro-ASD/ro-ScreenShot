@@ -122,8 +122,10 @@ private:
   WlrScreencopyProvider *m_wlrProvider{nullptr};
   XdgPortalProvider *m_portalProvider{nullptr};
   X11FallbackProvider *m_x11Provider{nullptr};
+  IScreenshotProvider *m_currentProvider{nullptr};
 
   bool m_isCapturing{false};
+  bool m_portalFallbackAttempted{false};
   QString m_lastCapturedFilePath;
   QString m_frozenFramePath;
   QImage m_cachedDesktopFrame;
