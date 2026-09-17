@@ -58,3 +58,16 @@ jobs:
       - name: Verify Clang-Format
         run: |
           find src tests -type f \( -name "*.cpp" -o -name "*.hpp" \) -print0 | xargs -0 clang-format --dry-run -Werror
+
+  ro-app-gate:
+    name: ro-app-gate
+    if: ${{ always() }}
+    needs: [build]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Enforce final application gate
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          set -euo pipefail
+          [[ "${BUILD_RESULT}" == "success" ]]
