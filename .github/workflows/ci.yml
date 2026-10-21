@@ -36,6 +36,9 @@ jobs:
             qt6-qtwayland-devel \
             qt6-qtmultimedia-devel \
             qt6-qtsvg-devel \
+            qt6-qtimageformats \
+            shadow-utils \
+            util-linux \
             clang-tools-extra \
             desktop-file-utils
 
@@ -57,7 +60,14 @@ jobs:
       - name: Run unit tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          useradd --create-home ro-test
+          chown -R ro-test:ro-test build
+          install -d -m 700 -o ro-test -g ro-test /tmp/ro-screenshot-runtime
+          runuser -u ro-test -- env \
+            QT_QPA_PLATFORM=offscreen \
+            XDG_RUNTIME_DIR=/tmp/ro-screenshot-runtime \
+            ctest --test-dir build --output-on-failure
 
       - name: Verify desktop entry
         run: desktop-file-validate data/org.ro_asd.ro_screenshot.desktop

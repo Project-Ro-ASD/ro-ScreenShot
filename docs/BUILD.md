@@ -27,6 +27,7 @@ sudo dnf install -y \
     qt6-qtbase-devel \
     qt6-qtdeclarative-devel \
     qt6-qtsvg-devel \
+    qt6-qtimageformats \
     qt6-qtwayland-devel \
     xdg-desktop-portal \
     xdg-desktop-portal-kde \
