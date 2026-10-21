@@ -63,10 +63,18 @@ jobs:
         run: |
           useradd --create-home ro-test
           chown -R ro-test:ro-test build
-          install -d -m 700 -o ro-test -g ro-test /tmp/ro-screenshot-runtime
+          install -d -m 700 -o ro-test -g ro-test \
+            /home/ro-test/.local/share \
+            /home/ro-test/.local/share/Trash \
+            /home/ro-test/.local/share/Trash/files \
+            /home/ro-test/.local/share/Trash/info \
+            /home/ro-test/tmp \
+            /tmp/ro-screenshot-runtime
           runuser -u ro-test -- env \
             QT_QPA_PLATFORM=offscreen \
             XDG_RUNTIME_DIR=/tmp/ro-screenshot-runtime \
+            XDG_DATA_HOME=/home/ro-test/.local/share \
+            TMPDIR=/home/ro-test/tmp \
             ctest --test-dir build --output-on-failure
 
       - name: Verify desktop entry
