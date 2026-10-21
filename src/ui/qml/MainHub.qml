@@ -4,7 +4,7 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 import "components"
 
-    ApplicationWindow {
+ApplicationWindow {
     id: root
     visible: true
     width: 1180
@@ -16,45 +16,17 @@ import "components"
     property int currentTab: 0
     readonly property bool hasUiPreferences: UiPreferencesManager !== null
     readonly property bool darkMode: hasUiPreferences && UiPreferencesManager.themeMode === "dark"
-    readonly property var uiColors: palette
+    readonly property var uiColors: RoPalette
+    readonly property var paletteColors: RoPalette
     property string statusMessage: ""
     property bool statusIsError: false
 
-    QtObject {
-        id: palette
-        // Ro system application tokens — shared hierarchy with ro-Control.
-        readonly property color canvas: root.darkMode ? "#1A1625" : "#F4F6F8"
-        readonly property color sidebar: root.darkMode ? "#1F1B2B" : "#FFFFFF"
-        readonly property color shell: root.darkMode ? "#241F33" : "#EAEFF4"
-        readonly property color shellAlt: root.darkMode ? "#1F1B2B" : "#FFFFFF"
-        readonly property color card: root.darkMode ? "#29233B" : "#FFFFFF"
-        readonly property color cardStrong: root.darkMode ? "#342D4A" : "#F1F5F9"
-        readonly property color cardHover: root.darkMode ? "#342D4A" : "#F1F5F9"
-        readonly property color codeBg: root.darkMode ? "#1F1B2B" : "#F1F5F9"
-        readonly property color border: root.darkMode ? "#4D436B" : "#CBD5E1"
-        readonly property color text: root.darkMode ? "#F8FAFC" : "#0F172A"
-        readonly property color textMuted: root.darkMode ? "#CBD5E1" : "#475569"
-        readonly property color textSoft: root.darkMode ? "#94A3B8" : "#64748B"
-        readonly property color placeholder: root.darkMode ? "#94A3B8" : "#64748B"
-        readonly property color muted: root.darkMode ? "#94A3B8" : "#64748B"
-        readonly property color accent: root.darkMode ? "#818CF8" : "#4F46E5"
-        readonly property color accentA: root.darkMode ? "#818CF8" : "#4F46E5"
-        readonly property color accentB: root.darkMode ? "#A5B4FC" : "#6366F1"
-        readonly property color accentC: root.darkMode ? "#312E81" : "#EEF2FF"
-        readonly property color accentHover: root.darkMode ? "#A5B4FC" : "#4338CA"
-        readonly property color accentSoft: root.darkMode ? "#312E81" : "#EEF2FF"
-        readonly property color accentMuted: root.darkMode ? "#4D436B" : "#C7D2FE"
-        readonly property color selected: root.darkMode ? "#312E81" : "#EEF2FF"
-        readonly property color success: root.darkMode ? "#4ADE80" : "#059669"
-        readonly property color warning: root.darkMode ? "#FBBF24" : "#D97706"
-        readonly property color danger: root.darkMode ? "#F87171" : "#DC2626"
-    }
 
-    color: palette.canvas
+    color: paletteColors.canvas
     font.pixelSize: 13
     Material.theme: darkMode ? Material.Dark : Material.Light
-    Material.accent: palette.accent
-    Material.primary: palette.accent
+    Material.accent: paletteColors.accent
+    Material.primary: paletteColors.accent
 
     Shortcut {
         sequence: "Shift+Print"
@@ -131,8 +103,8 @@ import "components"
             Layout.fillWidth: true
             Layout.preferredHeight: 54
             radius: 14
-            color: palette.shell
-            border.color: palette.border
+            color: paletteColors.shell
+            border.color: paletteColors.border
             border.width: 1
             RowLayout {
                 anchors.fill: parent
@@ -148,13 +120,13 @@ import "components"
                 }
                 Text {
                     text: "ro-ScreenShot"
-                    color: palette.text
+                    color: paletteColors.text
                     font.pixelSize: 15
                     font.weight: Font.DemiBold
                 }
                 Text {
                     text: qsTr("Capture workspace")
-                    color: palette.textSoft
+                    color: paletteColors.textSoft
                     font.pixelSize: 12
                     Layout.fillWidth: true
                 }
@@ -162,17 +134,17 @@ import "components"
                     Layout.preferredWidth: 8
                     Layout.preferredHeight: 8
                     radius: 4
-                    color: palette.success
+                    color: paletteColors.success
                 }
                 Text {
                     text: qsTr("Ready")
-                    color: palette.textMuted
+                    color: paletteColors.textMuted
                     font.pixelSize: 12
                 }
                 AccessibleIconButton {
                     iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-theme.svg"
                     tooltipText: qsTr("Change theme")
-                    colors: palette
+                    colors: paletteColors
                     onClicked: {
                         var modes = UiPreferencesManager.availableThemeModes;
                         for (var i = 0; i < modes.length; ++i)
@@ -192,9 +164,9 @@ import "components"
             Rectangle {
                 Layout.preferredWidth: 176
                 Layout.fillHeight: true
-                radius: 18
-                color: palette.sidebar
-                border.color: palette.border
+                radius: RoTokens.radiusLg
+                color: paletteColors.sidebar
+                border.color: paletteColors.border
                 border.width: 1
                 ColumnLayout {
                     anchors.fill: parent
@@ -202,7 +174,7 @@ import "components"
                     spacing: 6
                     Text {
                         text: qsTr("WORKSPACE")
-                        color: palette.placeholder
+                        color: paletteColors.textMuted
                         font.pixelSize: 10
                         font.weight: Font.DemiBold
                         font.letterSpacing: 1.1
@@ -213,7 +185,7 @@ import "components"
                         label: qsTr("Capture")
                         glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-capture.svg"
                         active: root.currentTab === 0
-                        colors: palette
+                        colors: paletteColors
                         onClicked: root.currentTab = 0
                     }
                     NavButton {
@@ -221,14 +193,14 @@ import "components"
                         glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery.svg"
                         badge: libraryManager.count > 0 ? libraryManager.count : 0
                         active: root.currentTab === 1
-                        colors: palette
+                        colors: paletteColors
                         onClicked: root.currentTab = 1
                     }
                     NavButton {
                         label: qsTr("Settings")
                         glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-settings.svg"
                         active: root.currentTab === 2
-                        colors: palette
+                        colors: paletteColors
                         onClicked: root.currentTab = 2
                     }
                     Item {
@@ -237,11 +209,11 @@ import "components"
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
-                        color: palette.border
+                        color: paletteColors.border
                     }
                     Text {
                         text: qsTr("QUICK KEYS")
-                        color: palette.placeholder
+                        color: paletteColors.textMuted
                         font.pixelSize: 10
                         font.weight: Font.DemiBold
                         font.letterSpacing: 1.1
@@ -251,17 +223,17 @@ import "components"
                     KeyHint {
                         title: qsTr("Region")
                         key: "⇧ PrtSc"
-                        colors: palette
+                        colors: paletteColors
                     }
                     KeyHint {
                         title: qsTr("Screen")
                         key: "PrtSc"
-                        colors: palette
+                        colors: paletteColors
                     }
                     KeyHint {
                         title: qsTr("Window")
                         key: "⌥ PrtSc"
-                        colors: palette
+                        colors: paletteColors
                     }
                     Item {
                         Layout.preferredHeight: 4
@@ -287,8 +259,8 @@ import "components"
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 252
                                 radius: 20
-                                color: palette.card
-                                border.color: palette.border
+                                color: paletteColors.card
+                                border.color: paletteColors.border
                                 border.width: 1
                                 clip: true
                                 Rectangle {
@@ -298,7 +270,7 @@ import "components"
                                     y: -parent.height * 0.2
                                     radius: width / 2
                                     rotation: -18
-                                    color: palette.accentSoft
+                                    color: paletteColors.accentSoft
                                     opacity: 0.9
                                 }
                                 RowLayout {
@@ -310,14 +282,14 @@ import "components"
                                         spacing: 8
                                         Text {
                                             text: qsTr("CAPTURE STUDIO")
-                                            color: palette.accent
+                                            color: paletteColors.accent
                                             font.pixelSize: 11
                                             font.weight: Font.DemiBold
                                             font.letterSpacing: 1.5
                                         }
                                         Text {
                                             text: qsTr("Frame exactly what matters.")
-                                            color: palette.text
+                                            color: paletteColors.text
                                             font.pixelSize: 29
                                             font.weight: Font.DemiBold
                                             wrapMode: Text.WordWrap
@@ -325,7 +297,7 @@ import "components"
                                         }
                                         Text {
                                             text: qsTr("Select a region, grab a display, or save a focused window. Your workflow stays one keystroke away.")
-                                            color: palette.textMuted
+                                            color: paletteColors.textMuted
                                             font.pixelSize: 13
                                             wrapMode: Text.WordWrap
                                             Layout.maximumWidth: 470
@@ -336,7 +308,7 @@ import "components"
                                         RoButton {
                                             text: qsTr("New region capture")
                                             variant: "primary"
-                                            colors: palette
+                                            colors: paletteColors
                                             implicitWidth: 188
                                             implicitHeight: 40
                                             onClicked: captureEngine.requestRegionCapture(0)
@@ -350,7 +322,7 @@ import "components"
                                             width: 164
                                             height: 164
                                             radius: 82
-                                            color: palette.accent
+                                            color: paletteColors.accent
                                             opacity: 0.12
                                         }
                                         Rectangle {
@@ -358,8 +330,8 @@ import "components"
                                             width: 126
                                             height: 126
                                             radius: 63
-                                            color: palette.card
-                                            border.color: palette.accent
+                                            color: paletteColors.card
+                                            border.color: paletteColors.accent
                                             border.width: 2
                                         }
                                         Rectangle {
@@ -367,21 +339,21 @@ import "components"
                                             width: 52
                                             height: 52
                                             radius: 26
-                                            color: palette.accent
+                                            color: paletteColors.accent
                                         }
                                         Rectangle {
                                             anchors.centerIn: parent
                                             width: 12
                                             height: 12
-                                            radius: 6
-                                            color: "#FFFFFF"
+                                            radius: RoTokens.radiusXs
+                                            color: RoPalette.selectionText
                                         }
                                     }
                                 }
                             }
                             Text {
                                 text: qsTr("Choose a capture mode")
-                                color: palette.text
+                                color: paletteColors.text
                                 font.pixelSize: 16
                                 font.weight: Font.DemiBold
                                 Layout.topMargin: 4
@@ -396,7 +368,7 @@ import "components"
                                     detail: qsTr("Draw a precise selection with the loupe.")
                                     keyText: "⇧ PrtSc"
                                     glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-crosshair.svg"
-                                    colors: palette
+                                    colors: paletteColors
                                     onClicked: captureEngine.requestRegionCapture(0)
                                 }
                                 ModeCard {
@@ -404,7 +376,7 @@ import "components"
                                     detail: qsTr("Capture every connected display at once.")
                                     keyText: "PrtSc"
                                     glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-fullscreen.svg"
-                                    colors: palette
+                                    colors: paletteColors
                                     onClicked: captureEngine.requestFullscreenCapture(0)
                                 }
                                 ModeCard {
@@ -412,7 +384,7 @@ import "components"
                                     detail: qsTr("Keep the current window in focus.")
                                     keyText: "⌥ PrtSc"
                                     glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-window.svg"
-                                    colors: palette
+                                    colors: paletteColors
                                     onClicked: captureEngine.requestWindowCapture(0)
                                 }
                                 ModeCard {
@@ -420,7 +392,7 @@ import "components"
                                     detail: qsTr("A five-second pause for menus and popovers.")
                                     keyText: "⌃ PrtSc"
                                     glyphSource: "qrc:/qt/qml/ro_screenshot/assets/icon-timer.svg"
-                                    colors: palette
+                                    colors: paletteColors
                                     onClicked: captureEngine.requestRegionCapture(5)
                                 }
                             }
@@ -428,8 +400,8 @@ import "components"
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 52
                                 radius: 13
-                                color: palette.shell
-                                border.color: palette.border
+                                color: paletteColors.shell
+                                border.color: paletteColors.border
                                 border.width: 1
                                 visible: captureEngine.hasLastRegion
                                 RowLayout {
@@ -438,20 +410,20 @@ import "components"
                                     anchors.rightMargin: 10
                                     Text {
                                         text: qsTr("Repeat the last region")
-                                        color: palette.text
+                                        color: paletteColors.text
                                         font.pixelSize: 13
                                         font.weight: Font.DemiBold
                                         Layout.fillWidth: true
                                     }
                                     Text {
                                         text: "⌃⇧R"
-                                        color: palette.textSoft
+                                        color: paletteColors.textSoft
                                         font.family: "monospace"
                                         font.pixelSize: 11
                                     }
                                     RoButton {
                                         text: qsTr("Repeat")
-                                        colors: palette
+                                        colors: paletteColors
                                         implicitWidth: 82
                                         onClicked: captureEngine.requestLastRegionCapture(0)
                                     }
@@ -461,10 +433,10 @@ import "components"
                     }
                 }
                 LibraryView {
-                    colors: palette
+                    colors: paletteColors
                 }
                 SettingsView {
-                    colors: palette
+                    colors: paletteColors
                 }
             }
         }
@@ -478,15 +450,15 @@ import "components"
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 26
         radius: 13
-        color: palette.cardStrong
-        border.color: root.statusIsError ? palette.danger : palette.success
+        color: paletteColors.cardStrong
+        border.color: root.statusIsError ? paletteColors.danger : paletteColors.success
         border.width: 1
         visible: root.statusMessage.length > 0
         opacity: visible ? 1 : 0
         z: 1000
         Behavior on opacity {
             NumberAnimation {
-                duration: 160
+                duration: RoTokens.motionFastMs * RoMotionScale.factor
             }
         }
         RowLayout {
@@ -498,11 +470,11 @@ import "components"
                 Layout.preferredWidth: 8
                 Layout.preferredHeight: 8
                 radius: 4
-                color: root.statusIsError ? palette.danger : palette.success
+                color: root.statusIsError ? paletteColors.danger : paletteColors.success
             }
             Text {
                 text: root.statusMessage
-                color: palette.text
+                color: paletteColors.text
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
@@ -516,7 +488,7 @@ import "components"
         property string glyphSource: ""
         property int badge: 0
         property bool active: false
-        property var colors: null
+        property var colors: RoPalette
         Layout.fillWidth: true
         implicitHeight: 42
         hoverEnabled: true
@@ -524,8 +496,9 @@ import "components"
         Accessible.name: label
         contentItem: RowLayout {
             spacing: 10
-            Image {
-                source: navButton.glyphSource
+            RoIcon {
+                color: navButton.active ? RoPalette.selectionText : RoPalette.textMuted
+                iconSource: navButton.glyphSource
                 sourceSize.width: 17
                 sourceSize.height: 17
                 Layout.preferredWidth: 17
@@ -533,7 +506,7 @@ import "components"
             }
             Text {
                 text: navButton.label
-                color: navButton.active ? "#FFFFFF" : navButton.colors.textMuted
+                color: navButton.active ? RoPalette.selectionText : navButton.colors.textMuted
                 font.pixelSize: 13
                 font.weight: navButton.active ? Font.DemiBold : Font.Normal
                 Layout.fillWidth: true
@@ -543,7 +516,7 @@ import "components"
                 Layout.preferredWidth: Math.max(19, badgeText.implicitWidth + 8)
                 Layout.preferredHeight: 19
                 radius: 9.5
-                color: navButton.active ? "#FFFFFF" : navButton.colors.cardHover
+                color: navButton.active ? RoPalette.selectionText : navButton.colors.cardHover
                 Text {
                     id: badgeText
                     anchors.centerIn: parent
@@ -564,7 +537,7 @@ import "components"
     component KeyHint: RowLayout {
         property string title: ""
         property string key: ""
-        property var colors: null
+        property var colors: RoPalette
         Layout.fillWidth: true
         Layout.leftMargin: 8
         Layout.rightMargin: 8
@@ -587,7 +560,7 @@ import "components"
         property string detail: ""
         property string keyText: ""
         property string glyphSource: ""
-        property var colors: null
+        property var colors: RoPalette
         Layout.fillWidth: true
         Layout.preferredHeight: 112
         hoverEnabled: true
@@ -601,11 +574,11 @@ import "components"
             Rectangle {
                 Layout.preferredWidth: 42
                 Layout.preferredHeight: 42
-                radius: 12
+                radius: RoTokens.radiusMd
                 color: modeButton.colors.accentSoft
-                Image {
+                RoIcon {
                     anchors.centerIn: parent
-                    source: modeButton.glyphSource
+                    iconSource: modeButton.glyphSource
                     sourceSize.width: 21
                     sourceSize.height: 21
                 }

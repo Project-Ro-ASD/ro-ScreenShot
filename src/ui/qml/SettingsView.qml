@@ -6,7 +6,7 @@ import "components"
 
 Item {
     id: root
-    property var colors: ({})
+    property var colors: RoPalette
     property bool isSaveDirValid: settingsManager.saveDirectory.length > 0
 
     FolderDialog {
@@ -50,7 +50,7 @@ Item {
                         Layout.fillWidth: true
                         text: settingsManager.saveDirectory
                         color: colors.text; font.pixelSize: 13
-                        background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: 8 }
+                        background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: RoTokens.radiusSm }
                         onEditingFinished: { settingsManager.saveDirectory = text; snackbar.showMessage(qsTr("Save folder updated."), "success") }
                     }
                     RoButton { text: qsTr("Browse"); variant: "primary"; colors: root.colors; implicitWidth: 92; onClicked: folderDialog.open() }
@@ -72,10 +72,10 @@ Item {
                     Layout.fillWidth: true
                     text: settingsManager.fileNameTemplate
                     color: colors.text; font.pixelSize: 13; font.family: "monospace"
-                    background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: 8 }
+                    background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: RoTokens.radiusSm }
                     onEditingFinished: settingsManager.fileNameTemplate = text
                 }
-                Text { text: qsTr("Preview: %1").arg(settingsManager.previewFileName); color: colors.placeholder; font.pixelSize: 11; font.family: "monospace" }
+                Text { text: qsTr("Preview: %1").arg(settingsManager.previewFileName); color: colors.textMuted; font.pixelSize: 11; font.family: "monospace" }
                 RowLayout {
                     Layout.fillWidth: true; spacing: 6
                     Text { text: qsTr("Format"); color: colors.textMuted; font.pixelSize: 12; Layout.preferredWidth: 60 }
@@ -85,7 +85,7 @@ Item {
                             text: modelData.toUpperCase()
                             checkable: true; checked: settingsManager.imageFormat === modelData
                             onClicked: settingsManager.imageFormat = modelData
-                            contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; font.bold: parent.checked; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            contentItem: Text { text: parent.text; color: parent.checked ? RoPalette.card : colors.textSoft; font.pixelSize: 11; font.bold: parent.checked; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { implicitWidth: 64; implicitHeight: 30; color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
                         }
                     }
@@ -146,7 +146,7 @@ Item {
                             text: modelData.label
                             checkable: true; checked: UiPreferencesManager.themeMode === modelData.code
                             onClicked: UiPreferencesManager.setThemeMode(modelData.code)
-                            contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            contentItem: Text { text: parent.text; color: parent.checked ? RoPalette.card : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
                         }
                     }
@@ -164,14 +164,14 @@ Item {
                 }
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8
-                    Text { text: qsTr("Manual override"); color: colors.placeholder; font.pixelSize: 11; Layout.preferredWidth: 70 }
+                    Text { text: qsTr("Manual override"); color: colors.textMuted; font.pixelSize: 11; Layout.preferredWidth: 70 }
                     Repeater {
                         model: LanguageManager.availableLanguages
                         delegate: Button {
                             text: modelData.nativeLabel
                             checkable: true; checked: !LanguageManager.followsSystemLanguage && LanguageManager.currentLanguage === modelData.code
                             onClicked: LanguageManager.setCurrentLanguage(modelData.code)
-                            contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            contentItem: Text { text: parent.text; color: parent.checked ? RoPalette.card : colors.textSoft; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { implicitWidth: 76; implicitHeight: 30; color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : colors.codeBg); border.color: parent.checked ? "transparent" : colors.border; radius: 7 }
                         }
                     }

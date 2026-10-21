@@ -7,7 +7,7 @@ Item {
 
     property string status: "info" // "success", "error", "warning", "info"
     property string text: ""
-    property var colors: null
+    property var colors: RoPalette
     property int textSize: 12
 
     implicitWidth: layout.implicitWidth
@@ -15,10 +15,10 @@ Item {
     visible: text.length > 0
 
     readonly property color statusColor: {
-        if (status === "success") return (colors && colors.success) ? colors.success : "#10B981"
-        if (status === "error") return (colors && colors.danger) ? colors.danger : "#EF4444"
-        if (status === "warning") return (colors && colors.warning) ? colors.warning : "#F59E0B"
-        return (colors && colors.accentB) ? colors.accentB : "#3B82F6"
+        if (status === "success") return (colors && colors.success) ? colors.success : RoPalette.success
+        if (status === "error") return (colors && colors.danger) ? colors.danger : RoPalette.danger
+        if (status === "warning") return (colors && colors.warning) ? colors.warning : RoPalette.warning
+        return (colors && colors.accentB) ? colors.accentB : RoPalette.accent
     }
 
     readonly property string statusIconText: {
@@ -36,14 +36,14 @@ Item {
         Rectangle {
             width: 16
             height: 16
-            radius: 8
+            radius: RoTokens.radiusSm
             color: root.statusColor
             Layout.alignment: Qt.AlignVCenter
 
             Text {
                 anchors.centerIn: parent
                 text: root.statusIconText
-                color: "#FFFFFF"
+                color: RoPalette.card
                 font.pixelSize: 10
                 font.bold: true
             }
@@ -51,7 +51,7 @@ Item {
 
         Text {
             text: root.text
-            color: (root.colors && root.colors.text) ? root.colors.text : "#F8FAFC"
+            color: (root.colors && root.colors.text) ? root.colors.text : RoPalette.text
             font.pixelSize: root.textSize
             wrapMode: Text.WordWrap
             Layout.fillWidth: true

@@ -1,3 +1,4 @@
+import "components"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -155,33 +156,33 @@ Window {
             y: 0
             width: parent.width
             height: sniperWindow.selY
-            color: "#99000000"
+            color: RoPalette.alpha(RoPalette.scrim, 0.600)
         }
         Rectangle {
             x: 0
             y: sniperWindow.selY + sniperWindow.selH
             width: parent.width
             height: parent.height - (sniperWindow.selY + sniperWindow.selH)
-            color: "#99000000"
+            color: RoPalette.alpha(RoPalette.scrim, 0.600)
         }
         Rectangle {
             x: 0
             y: sniperWindow.selY
             width: sniperWindow.selX
             height: sniperWindow.selH
-            color: "#99000000"
+            color: RoPalette.alpha(RoPalette.scrim, 0.600)
         }
         Rectangle {
             x: sniperWindow.selX + sniperWindow.selW
             y: sniperWindow.selY
             width: parent.width - (sniperWindow.selX + sniperWindow.selW)
             height: sniperWindow.selH
-            color: "#99000000"
+            color: RoPalette.alpha(RoPalette.scrim, 0.600)
         }
     }
     Rectangle {
         anchors.fill: parent
-        color: "#40000000"
+        color: RoPalette.alpha(RoPalette.scrim, 0.251)
         visible: !sniperWindow.hasSelection
     }
 
@@ -193,14 +194,14 @@ Window {
             y: mouseArea.mouseY
             width: parent.width
             height: 1
-            color: "#80FFFFFF"
+            color: RoPalette.alpha(RoPalette.card, 0.502)
         }
         Rectangle {
             x: mouseArea.mouseX
             y: 0
             width: 1
             height: parent.height
-            color: "#80FFFFFF"
+            color: RoPalette.alpha(RoPalette.card, 0.502)
         }
     }
 
@@ -214,13 +215,13 @@ Window {
         width: sniperWindow.selW
         height: sniperWindow.selH
         color: "transparent"
-        border.color: "#FFFFFF"
+        border.color: RoPalette.card
         border.width: 1.5
 
         Rectangle {
             anchors.fill: parent
             color: "transparent"
-            border.color: lockSquare ? "#20B58A" : (lock16to9 ? "#D79A32" : "#777CFF")
+            border.color: lockSquare ? RoPalette.success : (lock16to9 ? RoPalette.warning : RoPalette.accent)
             border.width: 1
             anchors.margins: -1
         }
@@ -231,8 +232,8 @@ Window {
                 width: 9
                 height: 9
                 radius: 3
-                color: "#FFFFFF"
-                border.color: "#777CFF"
+                color: RoPalette.card
+                border.color: RoPalette.accent
                 border.width: 1.5
                 x: (index % 2 === 0 ? -4 : parent.width - 4)
                 y: (index < 2 ? -4 : parent.height - 4)
@@ -244,15 +245,15 @@ Window {
             y: parent.y > 34 ? -30 : 6
             height: 24
             width: dimText.implicitWidth + 16
-            color: "#1B1F2A"
+            color: RoPalette.card
             radius: 7
-            border.color: "#454D60"
+            border.color: RoPalette.border
             border.width: 1
             Text {
                 id: dimText
                 anchors.centerIn: parent
                 text: "%1 × %2".arg(Math.round(sniperWindow.selW * sniperWindow.sourceScaleX)).arg(Math.round(sniperWindow.selH * sniperWindow.sourceScaleY))
-                color: "#F9FAFB"
+                color: RoPalette.text
                 font.pixelSize: 11
                 font.bold: true
                 font.family: "monospace"
@@ -267,9 +268,9 @@ Window {
             y: parent.height + 10 < (sniperWindow.height - sniperWindow.selY - 52) ? parent.height + 10 : parent.height - 44
             height: 58
             width: toolRow.implicitWidth + 20
-            color: "#F0161922"
+            color: RoPalette.card
             radius: 14
-            border.color: "#5B647A"
+            border.color: RoPalette.controlBorder
             border.width: 1
             RowLayout {
                 id: toolRow
@@ -278,10 +279,10 @@ Window {
                 ColumnLayout {
                     spacing: 1
                     Layout.leftMargin: 4
-                    Text { text: qsTr("Selection"); color: "#F5F6FA"; font.pixelSize: 11; font.weight: Font.DemiBold }
-                    Text { text: dimText.text; color: "#9EA7B9"; font.pixelSize: 10; font.family: "monospace" }
+                    Text { text: qsTr("Selection"); color: RoPalette.text; font.pixelSize: 11; font.weight: Font.DemiBold }
+                    Text { text: dimText.text; color: RoPalette.textMuted; font.pixelSize: 10; font.family: "monospace" }
                 }
-                Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 30; color: "#454D60" }
+                Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 30; color: RoPalette.border }
                 Button {
                     id: copyAction
                     text: qsTr("Copy")
@@ -292,13 +293,13 @@ Window {
                     onClicked: sniperWindow.confirmCapture("copy")
                     contentItem: RowLayout {
                         spacing: 6
-                        Text { text: "▣"; color: "#CDD1FF"; font.pixelSize: 14 }
-                        Text { text: copyAction.text; color: "#F5F6FA"; font.pixelSize: 12; font.weight: Font.DemiBold }
+                        Text { text: "▣"; color: RoPalette.accentSoft; font.pixelSize: 14 }
+                        Text { text: copyAction.text; color: RoPalette.text; font.pixelSize: 12; font.weight: Font.DemiBold }
                     }
                     background: Rectangle {
                         radius: 10
-                        color: copyAction.hovered ? "#303746" : "#262B36"
-                        border.color: copyAction.activeFocus ? "#8C91FF" : "#4B5366"
+                        color: copyAction.hovered ? RoPalette.cardHover : RoPalette.cardStrong
+                        border.color: copyAction.activeFocus ? RoPalette.accent : RoPalette.border
                         border.width: copyAction.activeFocus ? 2 : 1
                     }
                 }
@@ -312,13 +313,13 @@ Window {
                     onClicked: sniperWindow.confirmCapture("save")
                     contentItem: RowLayout {
                         spacing: 6
-                        Text { text: "↓"; color: "#FFFFFF"; font.pixelSize: 15; font.weight: Font.DemiBold }
-                        Text { text: saveAction.text; color: "#FFFFFF"; font.pixelSize: 12; font.weight: Font.DemiBold }
+                        Text { text: "↓"; color: RoPalette.selectionText; font.pixelSize: 15; font.weight: Font.DemiBold }
+                        Text { text: saveAction.text; color: RoPalette.selectionText; font.pixelSize: 12; font.weight: Font.DemiBold }
                     }
                     background: Rectangle {
                         radius: 10
-                        color: saveAction.hovered ? "#474BCE" : "#5A5FE8"
-                        border.color: saveAction.activeFocus ? "#C9CBFF" : "transparent"
+                        color: saveAction.hovered ? RoPalette.accentHover : RoPalette.accent
+                        border.color: saveAction.activeFocus ? RoPalette.accentSoft : "transparent"
                         border.width: saveAction.activeFocus ? 2 : 0
                     }
                 }
@@ -337,19 +338,19 @@ Window {
                     }
                     contentItem: RowLayout {
                         spacing: 5
-                        Text { text: "◌"; color: "#CDD1FF"; font.pixelSize: 15 }
-                        Text { text: gifAction.text; color: "#CDD1FF"; font.pixelSize: 11
+                        Text { text: "◌"; color: RoPalette.accentSoft; font.pixelSize: 15 }
+                        Text { text: gifAction.text; color: RoPalette.accentSoft; font.pixelSize: 11
                         font.bold: true
                         }
                     }
                     background: Rectangle {
                         radius: 10
-                        color: gifAction.hovered ? "#2E3355" : "transparent"
-                        border.color: gifAction.activeFocus ? "#8C91FF" : "#4B5366"
+                        color: gifAction.hovered ? RoPalette.cardHover : "transparent"
+                        border.color: gifAction.activeFocus ? RoPalette.accent : RoPalette.border
                         border.width: gifAction.activeFocus ? 2 : 1
                     }
                 }
-                Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 30; color: "#454D60" }
+                Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 30; color: RoPalette.border }
                 Button {
                     id: cancelAction
                     text: "×"
@@ -360,15 +361,15 @@ Window {
                     onClicked: captureEngine.cancelCapture()
                     contentItem: Text {
                         text: cancelAction.text
-                        color: "#AAB2C2"
+                        color: RoPalette.textMuted
                         font.pixelSize: 20
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
                         radius: 10
-                        color: cancelAction.hovered ? "#39303A" : "transparent"
-                        border.color: cancelAction.activeFocus ? "#C4475D" : "transparent"
+                        color: cancelAction.hovered ? RoPalette.cardHover : "transparent"
+                        border.color: cancelAction.activeFocus ? RoPalette.danger : "transparent"
                         border.width: cancelAction.activeFocus ? 2 : 0
                     }
                 }
@@ -384,8 +385,8 @@ Window {
         width: 136
         height: 136
         radius: 68
-        color: "#1B1F2A"
-        border.color: "#777CFF"
+        color: RoPalette.card
+        border.color: RoPalette.accent
         border.width: 2
         clip: true
         x: (mouseArea.mouseX + 20 + width > sniperWindow.width) ? mouseArea.mouseX - width - 20 : mouseArea.mouseX + 20
@@ -404,13 +405,13 @@ Window {
                 anchors.centerIn: parent
                 width: parent.width
                 height: 1
-                color: "#60FFFFFF"
+                color: RoPalette.alpha(RoPalette.card, 0.376)
             }
             Rectangle {
                 anchors.centerIn: parent
                 width: 1
                 height: parent.height
-                color: "#60FFFFFF"
+                color: RoPalette.alpha(RoPalette.card, 0.376)
             }
             Rectangle {
                 anchors.bottom: parent.bottom
@@ -419,12 +420,12 @@ Window {
                 height: 20
                 width: Math.min(parent.width - 16, hexLabel.implicitWidth + 14)
                 radius: 5
-                color: "#E5111827"
+                color: RoPalette.alpha(RoPalette.text, 0.898)
                 Text {
                     id: hexLabel
                     anchors.centerIn: parent
                     text: sniperWindow.sampledColor
-                    color: "#F9FAFB"
+                    color: RoPalette.text
                     font.pixelSize: 10
                     font.bold: true
                     font.family: "monospace"
@@ -441,8 +442,8 @@ Window {
         height: 30
         width: hintRow.implicitWidth + 28
         radius: 15
-        color: "#E01B1F2A"
-        border.color: "#454D60"
+        color: RoPalette.alpha(RoPalette.card, 0.878)
+        border.color: RoPalette.border
         border.width: 1
         visible: !sniperWindow.hasSelection
         RowLayout {
@@ -451,7 +452,7 @@ Window {
             spacing: 12
             Text {
                 text: qsTr("Drag to select  ·  Enter confirm  ·  C copy color  ·  Esc cancel")
-                color: "#D1D5DB"
+                color: RoPalette.textMuted
                 font.pixelSize: 11
             }
         }
@@ -464,8 +465,8 @@ Window {
         height: 32
         width: modeRow.implicitWidth + 24
         radius: 16
-        color: "#E01B1F2A"
-        border.color: "#454D60"
+        color: RoPalette.alpha(RoPalette.card, 0.878)
+        border.color: RoPalette.border
         border.width: 1
         RowLayout {
             id: modeRow
@@ -475,17 +476,17 @@ Window {
                 width: 7
                 height: 7
                 radius: 4
-                color: sniperWindow.lockSquare ? "#20B58A" : (sniperWindow.lock16to9 ? "#D79A32" : "#777CFF")
+                color: sniperWindow.lockSquare ? RoPalette.success : (sniperWindow.lock16to9 ? RoPalette.warning : RoPalette.accent)
             }
             Text {
                 text: sniperWindow.lockSquare ? qsTr("Square selection") : (sniperWindow.lock16to9 ? qsTr("16:9 selection") : qsTr("Precision selection"))
-                color: "#F5F6FA"
+                color: RoPalette.text
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
             }
             Text {
                 text: qsTr("Esc to cancel")
-                color: "#AAB2C2"
+                color: RoPalette.textMuted
                 font.pixelSize: 10
             }
         }

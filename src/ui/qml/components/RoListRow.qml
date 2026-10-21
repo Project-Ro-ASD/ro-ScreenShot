@@ -5,16 +5,23 @@ import "."
 // Clean studio tool row: icon, title, subtitle, chevron. No emoji.
 Rectangle {
     id: root
+    opacity: enabled ? 1 : RoTokens.opacityDisabled
+    activeFocusOnTab: true
+    Accessible.role: Accessible.Button
+    Accessible.name: root.title
+    Keys.onSpacePressed: clicked()
+    Keys.onReturnPressed: clicked()
+    Keys.onEnterPressed: clicked()
     property string title: ""
     property string subtitle: ""
     property string iconSource: ""
-    property var colors: null
+    property var colors: RoPalette
     signal clicked()
 
     implicitHeight: 64
-    radius: 10
-    color: hoverMouse.containsMouse ? (colors ? colors.cardHover : "#F2F4F7") : (colors ? colors.card : "#FFFFFF")
-    border.color: hoverMouse.containsMouse ? (colors ? colors.accentMuted : "#BFDBFE") : (colors ? colors.border : "#E6E8EC")
+    radius: RoTokens.radiusMd
+    color: hoverMouse.containsMouse ? (colors ? colors.cardHover : RoPalette.cardHover) : (colors ? colors.card : RoPalette.card)
+    border.color: hoverMouse.containsMouse ? (colors ? colors.accentMuted : RoPalette.accentMuted) : (colors ? colors.border : RoPalette.border)
     border.width: 1
 
     MouseArea {
@@ -22,7 +29,16 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: { root.forceActiveFocus(); root.clicked(); }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: parent.radius
+        color: "transparent"
+        border.width: RoTokens.focusRingWidth
+        border.color: RoPalette.accent
+        visible: root.activeFocus
     }
 
     RowLayout {
@@ -34,11 +50,11 @@ Rectangle {
         Rectangle {
             Layout.preferredWidth: 34
             Layout.preferredHeight: 34
-            radius: 8
-            color: colors ? colors.accentSoft : "#EFF6FF"
-            Image {
+            radius: RoTokens.radiusSm
+            color: colors ? colors.accentSoft : RoPalette.accentSoft
+            RoIcon {
                 anchors.centerIn: parent
-                source: root.iconSource
+                iconSource: root.iconSource
                 sourceSize.width: 17
                 sourceSize.height: 17
                 visible: root.iconSource.length > 0
@@ -47,7 +63,8 @@ Rectangle {
                 anchors.centerIn: parent
                 visible: root.iconSource.length === 0
                 text: root.title.length > 0 ? root.title.charAt(0).toUpperCase() : "•"
-                color: colors ? colors.accent : "#2563EB"
+                color: colors ? colors.accent : RoPalette.accent
+
                 font.pixelSize: 14
                 font.bold: true
             }
@@ -57,7 +74,8 @@ Rectangle {
             spacing: 1
             Text {
                 text: root.title
-                color: colors ? colors.text : "#111827"
+                color: colors ? colors.text : RoPalette.text
+
                 font.pixelSize: 13
                 font.bold: true
                 elide: Text.ElideRight
@@ -65,7 +83,8 @@ Rectangle {
             }
             Text {
                 text: root.subtitle
-                color: colors ? colors.textSoft : "#6B7280"
+                color: colors ? colors.textSoft : RoPalette.textMuted
+
                 font.pixelSize: 11
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -73,7 +92,7 @@ Rectangle {
         }
         Text {
             text: "›"
-            color: hoverMouse.containsMouse ? (colors ? colors.accent : "#2563EB") : (colors ? colors.placeholder : "#9CA3AF")
+            color: hoverMouse.containsMouse ? (colors ? colors.accent : RoPalette.accent) : (colors ? colors.placeholder : RoPalette.placeholder)
             font.pixelSize: 18
         }
     }

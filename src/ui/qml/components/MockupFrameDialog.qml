@@ -57,7 +57,7 @@ RoDialog {
                     height: 56
                     radius: 28
                     border.width: selectedPreset === modelData.idx ? 3 : 1
-                    border.color: selectedPreset === modelData.idx ? "#38BDF8" : "#475569"
+                    border.color: selectedPreset === modelData.idx ? RoPalette.accent : RoPalette.border
 
                     gradient: Gradient {
                         GradientStop { position: 0.0; color: modelData.c1 }
@@ -94,13 +94,13 @@ RoDialog {
         Button {
             text: "İptal"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 8; color: mockupDialog.elevatedColor }
+            background: Rectangle { radius: RoTokens.radiusSm; color: mockupDialog.elevatedColor }
             contentItem: Text { text: "İptal"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
         Button {
             text: "Mockup Olarak Kaydet"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            background: Rectangle { radius: 6; color: "#3B82F6" }
+            background: Rectangle { radius: RoTokens.radiusXs; color: RoPalette.accent }
             contentItem: Text { text: "Mockup Olarak Kaydet"; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter }
             onClicked: {
                 mockupDialog.exportRequested(itemRow, selectedPreset, framePadding);

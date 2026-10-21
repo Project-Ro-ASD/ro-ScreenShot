@@ -7,7 +7,7 @@ import "editor"
 Item {
     id: root
 
-    property var colors: ({})
+    property var colors: RoPalette
     property int selectedIndex: -1
     property var selectedItem: selectedIndex >= 0 ? libraryManager.getItem(selectedIndex) : null
     property bool isRenameOpen: false
@@ -73,10 +73,10 @@ Item {
 
                     Rectangle {
                         Layout.preferredWidth: 220; Layout.preferredHeight: 34
-                        color: colors.codeBg; border.color: searchField.activeFocus ? colors.accent : colors.border; border.width: 1; radius: 8
+                        color: colors.codeBg; border.color: searchField.activeFocus ? colors.accent : colors.border; border.width: 1; radius: RoTokens.radiusSm
                         RowLayout {
                             anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 8; spacing: 6
-                            Image { source: "qrc:/qt/qml/ro_screenshot/assets/icon-search.svg"; sourceSize.width: 13; sourceSize.height: 13; Layout.preferredWidth: 13; Layout.preferredHeight: 13; opacity: 0.6 }
+                            RoIcon { iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-search.svg"; sourceSize.width: 13; sourceSize.height: 13; Layout.preferredWidth: 13; Layout.preferredHeight: 13; opacity: 0.6 }
                             TextField {
                                 id: searchField
                                 Layout.fillWidth: true
@@ -108,7 +108,7 @@ Item {
                                 checkable: true
                                 checked: libraryManager.dateFilter === modelData.filter
                                 onClicked: libraryManager.dateFilter = modelData.filter
-                                contentItem: Text { text: parent.text; color: parent.checked ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; font.bold: parent.checked; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                contentItem: Text { text: parent.text; color: parent.checked ? RoPalette.card : colors.textSoft; font.pixelSize: 11; font.bold: parent.checked; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                                 background: Rectangle { implicitWidth: 62; implicitHeight: 30; color: parent.checked ? colors.accent : (parent.hovered ? colors.cardHover : "transparent"); radius: 7 }
                             }
                         }
@@ -126,7 +126,7 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    Text { text: qsTr("%1 items · %2").arg(libraryManager.count).arg(libraryManager.totalStorageSize); color: colors.placeholder; font.pixelSize: 11 }
+                    Text { text: qsTr("%1 items · %2").arg(libraryManager.count).arg(libraryManager.totalStorageSize); color: colors.textMuted; font.pixelSize: 11 }
 
                     AccessibleIconButton {
                         iconSource: "assets/icon-refresh.svg"; iconSize: 15; colors: root.colors
@@ -142,7 +142,7 @@ Item {
                 visible: libraryManager.selectedCount > 0
                 clip: true
                 color: colors.accentSoft
-                Behavior on Layout.preferredHeight { NumberAnimation { duration: 140 } }
+                Behavior on Layout.preferredHeight { NumberAnimation { duration: RoTokens.motionFastMs * RoMotionScale.factor } }
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16; spacing: 10
                     Text { text: qsTr("%1 selected").arg(libraryManager.selectedCount); color: colors.accent; font.pixelSize: 12; font.bold: true }
@@ -169,9 +169,9 @@ Item {
                     anchors.centerIn: parent; spacing: 8
                     visible: libraryManager.count === 0 && !libraryManager.isScanning
                     width: 320
-                    Image { source: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery-empty.svg"; sourceSize.width: 44; sourceSize.height: 44; Layout.alignment: Qt.AlignHCenter; opacity: 0.6 }
+                    RoIcon { iconSource: "qrc:/qt/qml/ro_screenshot/assets/icon-gallery-empty.svg"; sourceSize.width: 44; sourceSize.height: 44; Layout.alignment: Qt.AlignHCenter; opacity: 0.6 }
                     Text { text: libraryManager.searchQuery.length > 0 ? qsTr("No results for \"%1\"").arg(libraryManager.searchQuery) : qsTr("No screenshots yet"); color: colors.text; font.pixelSize: 15; font.bold: true; Layout.alignment: Qt.AlignHCenter }
-                    Text { text: qsTr("Use Region or Fullscreen capture to get started."); color: colors.placeholder; font.pixelSize: 12; Layout.alignment: Qt.AlignHCenter; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Text { text: qsTr("Use Region or Fullscreen capture to get started."); color: colors.textMuted; font.pixelSize: 12; Layout.alignment: Qt.AlignHCenter; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     RoButton { visible: libraryManager.searchQuery.length > 0; text: qsTr("Clear search"); colors: root.colors; Layout.alignment: Qt.AlignHCenter; onClicked: searchField.text = "" }
                 }
 
@@ -200,7 +200,7 @@ Item {
                             anchors.fill: parent; anchors.margins: 8; spacing: 6
                             Rectangle {
                                 Layout.fillWidth: true; Layout.fillHeight: true
-                                color: colors.codeBg; radius: 6; clip: true
+                                color: colors.codeBg; radius: RoTokens.radiusXs; clip: true
                                 Image { anchors.fill: parent; source: model.thumbnailUrl; fillMode: Image.PreserveAspectFit; asynchronous: true; cache: true }
                                 Rectangle {
                                     anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 6
@@ -209,20 +209,20 @@ Item {
                                     border.color: model.isSelected ? "transparent" : colors.border
                                     border.width: 1
                                     visible: itemMouse.containsMouse || model.isSelected
-                                    Text { anchors.centerIn: parent; text: "✓"; color: model.isSelected ? "#FFFFFF" : colors.textSoft; font.pixelSize: 11; font.bold: true }
+                                    Text { anchors.centerIn: parent; text: "✓"; color: model.isSelected ? RoPalette.card : colors.textSoft; font.pixelSize: 11; font.bold: true }
                                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: libraryManager.toggleSelection(index) }
                                 }
                                 Rectangle {
                                     anchors.bottom: parent.bottom; anchors.right: parent.right; anchors.margins: 6
                                     implicitWidth: formatText.implicitWidth + 10; height: 17; radius: 4
-                                    color: "#111827"; opacity: 0.8
-                                    Text { id: formatText; anchors.centerIn: parent; text: model.format; color: "#FFFFFF"; font.pixelSize: 9; font.bold: true; font.family: "monospace" }
+                                    color: RoPalette.text; opacity: 0.8
+                                    Text { id: formatText; anchors.centerIn: parent; text: model.format; color: RoPalette.card; font.pixelSize: 9; font.bold: true; font.family: "monospace" }
                                 }
                             }
                             Text { text: model.fileName; color: colors.text; font.pixelSize: 11; font.bold: true; elide: Text.ElideMiddle; Layout.fillWidth: true }
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: model.formattedDate; color: colors.placeholder; font.pixelSize: 10; Layout.fillWidth: true; elide: Text.ElideRight }
+                                Text { text: model.formattedDate; color: colors.textMuted; font.pixelSize: 10; Layout.fillWidth: true; elide: Text.ElideRight }
                                 Text { text: model.formattedSize; color: colors.textSoft; font.pixelSize: 10; font.family: "monospace" }
                             }
                         }
@@ -238,7 +238,7 @@ Item {
             color: colors.card
             visible: (root.selectedItem && libraryManager.selectedCount <= 1) !== null
             clip: true
-            Behavior on Layout.preferredWidth { NumberAnimation { duration: 140 } }
+            Behavior on Layout.preferredWidth { NumberAnimation { duration: RoTokens.motionFastMs * RoMotionScale.factor } }
             Rectangle { anchors.left: parent.left; width: 1; height: parent.height; color: colors.border }
 
             ColumnLayout {
@@ -251,18 +251,18 @@ Item {
                 }
                 Rectangle {
                     Layout.fillWidth: true; Layout.preferredHeight: 150
-                    color: colors.codeBg; radius: 8; border.color: colors.border; border.width: 1; clip: true
+                    color: colors.codeBg; radius: RoTokens.radiusSm; border.color: colors.border; border.width: 1; clip: true
                     Image { anchors.fill: parent; source: root.selectedItem ? root.selectedItem.thumbnailUrl : ""; fillMode: Image.PreserveAspectFit; asynchronous: true }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onDoubleClicked: if (root.selectedItem) annotationEditor.open(root.selectedItem.filePath) }
                 }
                 Text { text: root.selectedItem ? root.selectedItem.fileName : ""; color: colors.text; font.pixelSize: 12; font.bold: true; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true }
                 GridLayout {
                     Layout.fillWidth: true; columns: 2; rowSpacing: 8; columnSpacing: 12
-                    Text { text: qsTr("Size"); color: colors.placeholder; font.pixelSize: 11 }
+                    Text { text: qsTr("Size"); color: colors.textMuted; font.pixelSize: 11 }
                     Text { text: root.selectedItem ? root.selectedItem.formattedSize : ""; color: colors.textMuted; font.pixelSize: 11; Layout.alignment: Qt.AlignRight }
-                    Text { text: qsTr("Resolution"); color: colors.placeholder; font.pixelSize: 11 }
+                    Text { text: qsTr("Resolution"); color: colors.textMuted; font.pixelSize: 11 }
                     Text { text: root.selectedItem ? root.selectedItem.resolution : ""; color: colors.textMuted; font.pixelSize: 11; Layout.alignment: Qt.AlignRight }
-                    Text { text: qsTr("Date"); color: colors.placeholder; font.pixelSize: 11 }
+                    Text { text: qsTr("Date"); color: colors.textMuted; font.pixelSize: 11 }
                     Text { text: root.selectedItem ? root.selectedItem.formattedDate : ""; color: colors.textMuted; font.pixelSize: 11; Layout.alignment: Qt.AlignRight }
                 }
                 Item { Layout.fillHeight: true }
@@ -278,7 +278,7 @@ Item {
                     RoButton { Layout.fillWidth: true; text: qsTr("Move to trash"); variant: "dangerGhost"; colors: root.colors; onClicked: if (root.selectedIndex >= 0) root.trashSingleItem(root.selectedIndex) }
                     Text {
                         text: qsTr("Delete permanently...")
-                        color: colors.placeholder; font.pixelSize: 11; Layout.alignment: Qt.AlignHCenter
+                        color: colors.textMuted; font.pixelSize: 11; Layout.alignment: Qt.AlignHCenter
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.selectedIndex >= 0) root.requestPermanentDelete(root.selectedIndex) }
                     }
                 }
@@ -287,20 +287,20 @@ Item {
     }
 
     Rectangle {
-        anchors.fill: parent; color: "#000000"; opacity: root.isRenameOpen ? 0.5 : 0.0; visible: opacity > 0.0
-        Behavior on opacity { NumberAnimation { duration: 140 } }
+        anchors.fill: parent; color: RoPalette.scrim; opacity: root.isRenameOpen ? 0.5 : 0.0; visible: opacity > 0.0
+        Behavior on opacity { NumberAnimation { duration: RoTokens.motionFastMs * RoMotionScale.factor } }
         MouseArea { anchors.fill: parent; onClicked: root.isRenameOpen = false }
     }
     Rectangle {
         width: 360; implicitHeight: renameCol.implicitHeight + 40
-        anchors.centerIn: parent; radius: 12; color: colors.card; border.color: colors.border; border.width: 1
+        anchors.centerIn: parent; radius: RoTokens.radiusMd; color: colors.card; border.color: colors.border; border.width: 1
         visible: root.isRenameOpen; z: 500
         ColumnLayout {
             id: renameCol; anchors.fill: parent; anchors.margins: 20; spacing: 12
             Text { text: qsTr("Rename file"); color: colors.text; font.pixelSize: 14; font.bold: true }
             TextField {
                 id: renameField; Layout.fillWidth: true; text: root.newFileNameInput; color: colors.text; font.pixelSize: 13
-                background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: 8 }
+                background: Rectangle { implicitHeight: 36; color: colors.codeBg; border.color: colors.border; radius: RoTokens.radiusSm }
                 onAccepted: {
                     var res = libraryManager.renameItem(root.selectedIndex, text)
                     if (res.success) { root.isRenameOpen = false; snackbar.showMessage(qsTr("File renamed."), "success") }
