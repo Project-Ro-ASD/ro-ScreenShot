@@ -1,3 +1,4 @@
+import "components"
 import QtQuick
 import QtQuick.Window
 
@@ -22,8 +23,8 @@ Window {
         visible: presentationEngine ? (presentationEngine.currentKeystroke !== "" && presentationEngine.isKeystrokeOverlayActive) : false
         height: 52
         radius: 15
-        color: "#E01B1F2A"
-        border.color: "#777CFF"
+        color: RoPalette.alpha(RoPalette.card, 0.878)
+        border.color: RoPalette.accent
         border.width: 1
         width: keyText.implicitWidth + 38
 
@@ -31,14 +32,14 @@ Window {
             id: keyText
             anchors.centerIn: parent
             text: presentationEngine ? presentationEngine.currentKeystroke : ""
-            color: "#F5F6FA"
+            color: RoPalette.text
             font.pixelSize: 18
             font.bold: true
         }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 150
+                duration: RoTokens.motionFastMs * RoMotionScale.factor
             }
         }
     }

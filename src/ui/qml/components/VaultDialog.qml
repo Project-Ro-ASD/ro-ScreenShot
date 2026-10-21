@@ -36,7 +36,7 @@ RoDialog {
 
         Text {
             text: isUnlocked ? "🔓 Kasa Açık (Şifrelenmiş Ekran Görüntüleri)" : "🔒 Kasayı Açmak İçin Parolanızı Girin:"
-            color: isUnlocked ? "#10B981" : "#94A3B8"
+            color: isUnlocked ? RoPalette.success : RoPalette.textMuted
             font.bold: true
             font.pixelSize: 14
         }
@@ -48,7 +48,7 @@ RoDialog {
             echoMode: TextInput.Password
             placeholderText: "Kasa Parolası..."
             color: "white"
-            background: Rectangle { color: vaultDialog.shellColor; radius: 8; border.color: vaultDialog.borderColor }
+            background: Rectangle { color: vaultDialog.shellColor; radius: RoTokens.radiusSm; border.color: vaultDialog.borderColor }
             onAccepted: {
                 vaultDialog.unlockRequested(passField.text);
             }
@@ -57,7 +57,7 @@ RoDialog {
         Text {
             visible: statusText !== ""
             text: statusText
-            color: "#EF4444"
+            color: RoPalette.danger
             font.pixelSize: 12
         }
 
@@ -66,7 +66,7 @@ RoDialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: vaultDialog.shellColor
-            radius: 8
+            radius: RoTokens.radiusSm
 
             Text {
                 anchors.centerIn: parent
@@ -81,7 +81,7 @@ RoDialog {
         Button {
             text: isUnlocked ? "Kasayı Kilitle" : "Kilidi Aç"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            background: Rectangle { radius: 6; color: isUnlocked ? "#EF4444" : "#3B82F6" }
+            background: Rectangle { radius: RoTokens.radiusXs; color: isUnlocked ? RoPalette.danger : RoPalette.accent }
             contentItem: Text { text: isUnlocked ? "Kasayı Kilitle" : "Kilidi Aç"; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter }
             onClicked: {
                 if (isUnlocked) {
@@ -94,7 +94,7 @@ RoDialog {
         Button {
             text: "Kapat"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 8; color: vaultDialog.elevatedColor }
+            background: Rectangle { radius: RoTokens.radiusSm; color: vaultDialog.elevatedColor }
             contentItem: Text { text: "Kapat"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
     }

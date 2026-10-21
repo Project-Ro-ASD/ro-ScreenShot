@@ -1,3 +1,4 @@
+import "components"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -23,9 +24,9 @@ Window {
     Rectangle {
         id: hudCard
         anchors.fill: parent
-        radius: 18
-        color: "#1B1F2A"
-        border.color: "#454D60"
+        radius: RoTokens.radiusLg
+        color: RoPalette.card
+        border.color: RoPalette.border
         border.width: 1
 
         // Drag area for movable HUD
@@ -57,11 +58,11 @@ Window {
             Rectangle {
                 Layout.preferredWidth: 12
                 Layout.preferredHeight: 12
-                radius: 6
-                color: "#D85467"
+                radius: RoTokens.radiusXs
+                color: RoPalette.danger
                 SequentialAnimation on opacity {
                     loops: Animation.Infinite
-                    running: screenRecorderEngine ? screenRecorderEngine.isRecording && !screenRecorderEngine.isPaused : false
+                    running: RoMotionScale.factor > 0 && screenRecorderEngine ? screenRecorderEngine.isRecording && !screenRecorderEngine.isPaused : false
                     NumberAnimation {
                         from: 1.0
                         to: 0.3
@@ -80,7 +81,7 @@ Window {
             // Duration Label
             Text {
                 text: screenRecorderEngine ? screenRecorderEngine.formattedDuration : "00:00"
-                color: "#F5F6FA"
+                color: RoPalette.text
                 font.pixelSize: 15
                 font.bold: true
                 font.family: "Monospace"
@@ -92,14 +93,14 @@ Window {
                 Layout.preferredWidth: 36
                 Layout.preferredHeight: 8
                 radius: 4
-                color: "#303746"
+                color: RoPalette.cardHover
                 Layout.alignment: Qt.AlignVCenter
 
                 Rectangle {
                     height: parent.height
                     radius: 4
                     width: parent.width * (screenRecorderEngine ? screenRecorderEngine.audioLevel : 0.0)
-                    color: width > 26 ? "#D85467" : (width > 16 ? "#D79A32" : "#20B58A")
+                    color: width > 26 ? RoPalette.danger : (width > 16 ? RoPalette.warning : RoPalette.success)
                     Behavior on width {
                         NumberAnimation {
                             duration: 80
@@ -119,7 +120,7 @@ Window {
                 Layout.preferredHeight: 32
                 background: Rectangle {
                     radius: 16
-                    color: (screenRecorderEngine && screenRecorderEngine.micEnabled) ? "#5A5FE8" : "#303746"
+                    color: (screenRecorderEngine && screenRecorderEngine.micEnabled) ? RoPalette.accent : RoPalette.cardHover
                 }
                 contentItem: Text {
                     text: (screenRecorderEngine && screenRecorderEngine.micEnabled) ? "🎙" : "🔇"
@@ -141,7 +142,7 @@ Window {
                 Layout.preferredHeight: 32
                 background: Rectangle {
                     radius: 16
-                    color: "#303746"
+                    color: RoPalette.cardHover
                 }
                 contentItem: Text {
                     text: (screenRecorderEngine && screenRecorderEngine.isPaused) ? "▶" : "⏸"
@@ -168,7 +169,7 @@ Window {
                 Layout.preferredHeight: 32
                 background: Rectangle {
                     radius: 16
-                    color: "#C4475D"
+                    color: RoPalette.danger
                 }
                 contentItem: Text {
                     text: "⏹"

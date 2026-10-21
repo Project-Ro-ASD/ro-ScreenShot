@@ -26,6 +26,7 @@ sudo dnf install -y \
     ninja-build \
     qt6-qtbase-devel \
     qt6-qtdeclarative-devel \
+    qt6-qtsvg-devel \
     qt6-qtwayland-devel \
     xdg-desktop-portal \
     xdg-desktop-portal-kde \
@@ -69,7 +70,7 @@ ctest --test-dir build --output-on-failure
 
 Expected output:
 ```
-100% tests passed, 0 tests failed out of 10
+100% tests passed, 0 tests failed out of 11
 ```
 
 ---

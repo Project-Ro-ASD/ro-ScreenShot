@@ -42,7 +42,7 @@ RoDialog {
             Layout.fillWidth: true
             text: "ro-ScreenShot Hata & Arayüz Raporu"
             color: "white"
-            background: Rectangle { color: pdfDialog.shellColor; radius: 8; border.color: pdfDialog.borderColor }
+            background: Rectangle { color: pdfDialog.shellColor; radius: RoTokens.radiusSm; border.color: pdfDialog.borderColor }
         }
 
         Text {
@@ -55,7 +55,7 @@ RoDialog {
             Layout.fillWidth: true
             Layout.preferredHeight: 90
             color: pdfDialog.shellColor
-            radius: 6
+            radius: RoTokens.radiusXs
             border.color: pdfDialog.borderColor
 
             ScrollView {
@@ -84,7 +84,7 @@ RoDialog {
             Layout.fillWidth: true
             text: "/tmp/ro_screenshot_report.pdf"
             color: "white"
-            background: Rectangle { color: pdfDialog.shellColor; radius: 8; border.color: pdfDialog.borderColor }
+            background: Rectangle { color: pdfDialog.shellColor; radius: RoTokens.radiusSm; border.color: pdfDialog.borderColor }
         }
     }
 
@@ -93,13 +93,13 @@ RoDialog {
         Button {
             text: "İptal"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 8; color: pdfDialog.elevatedColor }
+            background: Rectangle { radius: RoTokens.radiusSm; color: pdfDialog.elevatedColor }
             contentItem: Text { text: "İptal"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
         Button {
             text: "PDF Oluştur"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            background: Rectangle { radius: 6; color: "#3B82F6" }
+            background: Rectangle { radius: RoTokens.radiusXs; color: RoPalette.accent }
             contentItem: Text { text: "PDF Oluştur"; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter }
             onClicked: {
                 pdfDialog.generateRequested(titleField.text, notesField.text, pathField.text);

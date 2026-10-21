@@ -48,8 +48,8 @@ RoDialog {
             id: canvasArea
             anchors.fill: parent
             anchors.margins: 12
-            color: "#020617"
-            radius: 8
+            color: RoPalette.cardStrong
+            radius: RoTokens.radiusSm
             clip: true
 
             // Image B (Background / Right)
@@ -126,7 +126,7 @@ RoDialog {
         Button {
             text: "Kapat"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 8; color: diffDialog.elevatedColor }
+            background: Rectangle { radius: RoTokens.radiusSm; color: diffDialog.elevatedColor }
             contentItem: Text { text: "Kapat"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
     }

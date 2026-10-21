@@ -45,8 +45,8 @@ RoDialog {
                 Rectangle {
                     width: 72
                     height: 64
-                    radius: 8
-                    color: modelData.hex || "#334155"
+                    radius: RoTokens.radiusSm
+                    color: modelData.hex || RoPalette.cardStrong
                     border.color: "white"
                     border.width: 1
 
@@ -83,7 +83,7 @@ RoDialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: devKitDialog.shellColor
-            radius: 6
+            radius: RoTokens.radiusXs
             border.color: devKitDialog.borderColor
 
             ScrollView {
@@ -109,7 +109,7 @@ RoDialog {
         Button {
             text: "Panoya Kopyala"
             DialogButtonBox.buttonRole: DialogButtonBox.ActionRole
-            background: Rectangle { radius: 6; color: "#3B82F6" }
+            background: Rectangle { radius: RoTokens.radiusXs; color: RoPalette.accent }
             contentItem: Text { text: "Panoya Kopyala"; color: "white"; horizontalAlignment: Text.AlignHCenter }
             onClicked: {
                 if (captureEngine) {
@@ -120,7 +120,7 @@ RoDialog {
         Button {
             text: "Kapat"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            background: Rectangle { radius: 8; color: devKitDialog.elevatedColor }
+            background: Rectangle { radius: RoTokens.radiusSm; color: devKitDialog.elevatedColor }
             contentItem: Text { text: "Kapat"; color: "white"; horizontalAlignment: Text.AlignHCenter }
         }
     }

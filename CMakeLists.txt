@@ -57,6 +57,8 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Qml
     DBus
     Multimedia
+    QuickControls2
+    Svg
 )
 
 if(BUILD_TESTING)
@@ -167,6 +169,11 @@ set_source_files_properties(src/ui/qml/components/PdfExportDialog.qml PROPERTIES
 set_source_files_properties(src/ui/qml/components/MockupFrameDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/MockupFrameDialog.qml")
 set_source_files_properties(src/ui/qml/components/DevKitDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/DevKitDialog.qml")
 set_source_files_properties(src/ui/qml/components/VaultDialog.qml PROPERTIES QT_RESOURCE_ALIAS "components/VaultDialog.qml")
+set_source_files_properties(src/ui/qml/components/RoMotionScale.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoMotionScale.qml" QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(src/ui/qml/components/RoIcon.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoIcon.qml")
+set_source_files_properties(src/ui/qml/components/RoPalette.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoPalette.qml" QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(src/ui/qml/components/RoTokens.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoTokens.qml" QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(src/ui/qml/components/Palettes.js PROPERTIES QT_RESOURCE_ALIAS "components/Palettes.js")
 set_source_files_properties(src/ui/qml/components/RoCard.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoCard.qml")
 set_source_files_properties(src/ui/qml/components/RoButton.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoButton.qml")
 set_source_files_properties(src/ui/qml/components/RoMotion.qml PROPERTIES QT_RESOURCE_ALIAS "components/RoMotion.qml")
@@ -227,6 +234,11 @@ qt_add_qml_module(ro-screenshot
         src/ui/qml/components/MockupFrameDialog.qml
         src/ui/qml/components/DevKitDialog.qml
         src/ui/qml/components/VaultDialog.qml
+        src/ui/qml/components/RoMotionScale.qml
+        src/ui/qml/components/RoIcon.qml
+        src/ui/qml/components/RoPalette.qml
+        src/ui/qml/components/RoTokens.qml
+        src/ui/qml/components/Palettes.js
         src/ui/qml/components/RoCard.qml
         src/ui/qml/components/RoButton.qml
         src/ui/qml/components/RoMotion.qml
@@ -261,6 +273,8 @@ target_link_libraries(ro-screenshot PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Quick
+    Qt6::QuickControls2
+    Qt6::Svg
     Qt6::Qml
     Qt6::DBus
     Qt6::Multimedia
