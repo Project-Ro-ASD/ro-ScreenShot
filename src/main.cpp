@@ -14,6 +14,7 @@
 #include "core/advanced/SystemTrayManager.hpp"
 #include "core/advanced/VaultManager.hpp"
 #include "core/shortcuts/ShortcutManager.hpp"
+#include "ui/ThemeIconProvider.hpp"
 
 #include <QBuffer>
 #include <QCommandLineOption>
@@ -33,6 +34,7 @@
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQmlError>
+#include <QQuickStyle>
 #include <QQuickWindow>
 #include <QTimer>
 #include <QTranslator>
@@ -46,6 +48,8 @@ int main(int argc, char *argv[]) {
       QStringLiteral("qt.multimedia.ffmpeg*=false\n"
                      "qt.multimedia*=false"));
 
+  if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE"))
+    QQuickStyle::setStyle(QStringLiteral("Material"));
   QGuiApplication app(argc, argv);
   app.setApplicationName("ro-screenshot");
   app.setApplicationDisplayName("ro-ScreenShot");
@@ -295,6 +299,8 @@ int main(int argc, char *argv[]) {
 
   QTranslator translator;
   QQmlApplicationEngine engine;
+  engine.addImageProvider(QStringLiteral("ro-theme-icon"),
+                          new ThemeIconProvider);
 
   LanguageManager languageManager(&app, &engine, &translator);
   qmlRegisterSingletonInstance("ro_screenshot", 1, 0, "LanguageManager",

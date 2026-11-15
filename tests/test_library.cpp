@@ -56,7 +56,7 @@ private slots:
     QCOMPARE(library.count(), 2);
 
     // Test deletion (moves to trash)
-    QVERIFY(library.deleteItem(0));
+    QVERIFY2(library.deleteItem(0), qPrintable(library.errorMessage()));
     QVERIFY(library.waitForScan());
     QCOMPARE(library.count(), 1);
   }

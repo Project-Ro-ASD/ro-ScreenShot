@@ -1,3 +1,4 @@
+import "../components"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -6,18 +7,18 @@ Rectangle {
     id: editorRoot
 
     property string imagePath: ""
-    property var colors: null
+    property var colors: RoPalette
 
     signal closed()
     signal saved(string newPath)
 
     anchors.fill: parent
-    color: (colors && colors.window) ? colors.window : "#F7F8FA"
+    color: (colors && colors.window) ? colors.window : RoPalette.canvas
     visible: opacity > 0.0
     opacity: 0.0
     z: 1000
 
-    Behavior on opacity { NumberAnimation { duration: 150 } }
+    Behavior on opacity { NumberAnimation { duration: RoTokens.motionFastMs * RoMotionScale.factor } }
 
     function open(filePath) {
         imagePath = filePath
@@ -33,8 +34,8 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            Text { text: qsTr("Annotate"); color: (editorRoot.colors && editorRoot.colors.text) ? editorRoot.colors.text : "#111827"; font.pixelSize: 16; font.bold: true; Layout.fillWidth: true }
-            Text { text: editorRoot.imagePath.split("/").pop(); color: (editorRoot.colors && editorRoot.colors.placeholder) ? editorRoot.colors.placeholder : "#9CA3AF"; font.pixelSize: 11; elide: Text.ElideMiddle; Layout.preferredWidth: 300; horizontalAlignment: Text.AlignRight }
+            Text { text: qsTr("Annotate"); color: (editorRoot.colors && editorRoot.colors.text) ? editorRoot.colors.text : RoPalette.text; font.pixelSize: 16; font.bold: true; Layout.fillWidth: true }
+            Text { text: editorRoot.imagePath.split("/").pop(); color: (editorRoot.colors && editorRoot.colors.placeholder) ? editorRoot.colors.placeholder : RoPalette.placeholder; font.pixelSize: 11; elide: Text.ElideMiddle; Layout.preferredWidth: 300; horizontalAlignment: Text.AlignRight }
         }
 
         EditorToolbar {
@@ -61,10 +62,10 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: (editorRoot.colors && editorRoot.colors.card) ? editorRoot.colors.card : "#FFFFFF"
-            border.color: (editorRoot.colors && editorRoot.colors.border) ? editorRoot.colors.border : "#E6E8EC"
+            color: (editorRoot.colors && editorRoot.colors.card) ? editorRoot.colors.card : RoPalette.card
+            border.color: (editorRoot.colors && editorRoot.colors.border) ? editorRoot.colors.border : RoPalette.border
             border.width: 1
-            radius: 12
+            radius: RoTokens.radiusMd
             clip: true
             EditorCanvas {
                 id: canvas

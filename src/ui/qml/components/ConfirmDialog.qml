@@ -12,7 +12,7 @@ Item {
     property string confirmText: qsTr("Onayla")
     property string cancelText: qsTr("İptal")
     property bool isDestructive: false
-    property var colors: null
+    property var colors: RoPalette
 
     signal accepted
     signal rejected
@@ -53,7 +53,7 @@ Item {
     // Modal background dimmer
     Rectangle {
         anchors.fill: parent
-        color: "#000000"
+        color: RoPalette.scrim
         opacity: 0.65
 
         MouseArea {
@@ -72,9 +72,9 @@ Item {
         width: Math.min(dialogRoot.width - 40, 420)
         implicitHeight: contentCol.implicitHeight + 40
         anchors.centerIn: parent
-        radius: 18
-        color: (dialogRoot.colors && dialogRoot.colors.card) ? dialogRoot.colors.card : "#1B1F2A"
-        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : "#454D60"
+        radius: RoTokens.radiusLg
+        color: (dialogRoot.colors && dialogRoot.colors.card) ? dialogRoot.colors.card : RoPalette.card
+        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : RoPalette.border
         border.width: 1
         Behavior on scale { NumberAnimation { duration: motion.standard; easing.type: Easing.OutBack } }
 
@@ -97,12 +97,12 @@ Item {
                     width: 32
                     height: 32
                     radius: 10
-                    color: dialogRoot.isDestructive ? "#F6E7EB" : (dialogRoot.colors ? dialogRoot.colors.accentSoft : "#ECECFF")
+                    color: dialogRoot.isDestructive ? RoPalette.dangerSoft : (dialogRoot.colors ? dialogRoot.colors.accentSoft : RoPalette.accentSoft)
 
                     Text {
                         anchors.centerIn: parent
                         text: dialogRoot.isDestructive ? "!" : "i"
-                        color: dialogRoot.isDestructive ? "#C4475D" : (dialogRoot.colors ? dialogRoot.colors.accent : "#5A5FE8")
+                        color: dialogRoot.isDestructive ? RoPalette.danger : (dialogRoot.colors ? dialogRoot.colors.accent : RoPalette.accent)
                         font.pixelSize: 16
                         font.bold: true
                     }
@@ -110,7 +110,7 @@ Item {
 
                 Text {
                     text: dialogRoot.title
-                    color: (dialogRoot.colors && dialogRoot.colors.text) ? dialogRoot.colors.text : "#F8FAFC"
+                    color: (dialogRoot.colors && dialogRoot.colors.text) ? dialogRoot.colors.text : RoPalette.text
                     font.pixelSize: 16
                     font.bold: true
                     Layout.fillWidth: true
@@ -119,7 +119,7 @@ Item {
 
             Text {
                 text: dialogRoot.message
-                color: (dialogRoot.colors && dialogRoot.colors.textMuted) ? dialogRoot.colors.textMuted : "#CBD5E1"
+                color: (dialogRoot.colors && dialogRoot.colors.textMuted) ? dialogRoot.colors.textMuted : RoPalette.textMuted
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
@@ -146,7 +146,7 @@ Item {
                     }
                     contentItem: Text {
                         text: parent.text
-                        color: (dialogRoot.colors && dialogRoot.colors.textSoft) ? dialogRoot.colors.textSoft : "#94A3B8"
+                        color: (dialogRoot.colors && dialogRoot.colors.textSoft) ? dialogRoot.colors.textSoft : RoPalette.textMuted
                         font.pixelSize: 13
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -155,8 +155,8 @@ Item {
                     background: Rectangle {
                         implicitWidth: 90
                         implicitHeight: 36
-                        color: parent.hovered ? (dialogRoot.colors ? dialogRoot.colors.cardHover : "#303746") : "transparent"
-                        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : "#454D60"
+                        color: parent.hovered ? (dialogRoot.colors ? dialogRoot.colors.cardHover : RoPalette.cardHover) : "transparent"
+                        border.color: (dialogRoot.colors && dialogRoot.colors.border) ? dialogRoot.colors.border : RoPalette.border
                         radius: 9
                     }
                 }
@@ -171,7 +171,7 @@ Item {
                     }
                     contentItem: Text {
                         text: parent.text
-                        color: "#FFFFFF"
+                        color: dialogRoot.isDestructive ? RoPalette.dangerText : RoPalette.selectionText
                         font.pixelSize: 13
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -180,7 +180,7 @@ Item {
                     background: Rectangle {
                         implicitWidth: 110
                         implicitHeight: 36
-                        color: dialogRoot.isDestructive ? (parent.hovered ? "#A7344B" : "#C4475D") : (parent.hovered ? "#474BCE" : "#5A5FE8")
+                        color: dialogRoot.isDestructive ? (parent.hovered ? RoPalette.danger : RoPalette.danger) : (parent.hovered ? RoPalette.accentHover : RoPalette.accent)
                         radius: 9
                     }
                 }

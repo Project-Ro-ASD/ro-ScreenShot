@@ -1,3 +1,4 @@
+import "../components"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -10,7 +11,7 @@ Rectangle {
     property real strokeWidth: 3.0
     property bool canUndo: false
     property bool canRedo: false
-    property var colors: null
+    property var colors: RoPalette
 
     signal toolSelected(int tool)
     signal colorSelected(color col)
@@ -22,8 +23,8 @@ Rectangle {
     signal closeRequested
 
     height: 48
-    color: (colors && colors.card) ? colors.card : "#FFFFFF"
-    border.color: (colors && colors.border) ? colors.border : "#E6E8EC"
+    color: (colors && colors.card) ? colors.card : RoPalette.card
+    border.color: (colors && colors.border) ? colors.border : RoPalette.border
     border.width: 1
     radius: 10
 
@@ -105,7 +106,7 @@ Rectangle {
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: parent.checked ? "#FFFFFF" : ((toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#6B7280")
+                    color: parent.checked ? RoPalette.selectionText : ((toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : RoPalette.textMuted)
                     font.pixelSize: 12
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
@@ -115,7 +116,7 @@ Rectangle {
                     implicitWidth: 30
                     implicitHeight: 30
                     radius: 7
-                    color: parent.checked ? ((toolbar.colors && toolbar.colors.accent) ? toolbar.colors.accent : "#2563EB") : (parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent")
+                    color: parent.checked ? ((toolbar.colors && toolbar.colors.accent) ? toolbar.colors.accent : RoPalette.accent) : (parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : RoPalette.cardHover) : "transparent")
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: modelData.label
@@ -126,7 +127,7 @@ Rectangle {
         Rectangle {
             width: 1
             height: 22
-            color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#E6E8EC"
+            color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : RoPalette.border
         }
 
         RowLayout {
@@ -138,7 +139,7 @@ Rectangle {
                     height: 18
                     radius: 9
                     color: modelData
-                    border.color: toolbar.selectedColor == modelData ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : "#111827") : ((toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#E6E8EC")
+                    border.color: toolbar.selectedColor == modelData ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : RoPalette.text) : ((toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : RoPalette.border)
                     border.width: toolbar.selectedColor == modelData ? 2 : 1
                     MouseArea {
                         anchors.fill: parent
@@ -156,7 +157,7 @@ Rectangle {
         Rectangle {
             width: 1
             height: 22
-            color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : "#E6E8EC"
+            color: (toolbar.colors && toolbar.colors.border) ? toolbar.colors.border : RoPalette.border
         }
 
         Button {
@@ -165,7 +166,7 @@ Rectangle {
             onClicked: toolbar.undoRequested()
             contentItem: Text {
                 text: parent.text
-                color: parent.enabled ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : "#111827") : "#9CA3AF"
+                color: parent.enabled ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : RoPalette.text) : RoPalette.placeholder
                 font.pixelSize: 15
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -174,7 +175,7 @@ Rectangle {
                 implicitWidth: 30
                 implicitHeight: 30
                 radius: 7
-                color: parent.hovered && parent.enabled ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent"
+                color: parent.hovered && parent.enabled ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : RoPalette.cardHover) : "transparent"
             }
             ToolTip.visible: hovered
             ToolTip.text: qsTr("Undo")
@@ -186,7 +187,7 @@ Rectangle {
             onClicked: toolbar.redoRequested()
             contentItem: Text {
                 text: parent.text
-                color: parent.enabled ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : "#111827") : "#9CA3AF"
+                color: parent.enabled ? ((toolbar.colors && toolbar.colors.text) ? toolbar.colors.text : RoPalette.text) : RoPalette.placeholder
                 font.pixelSize: 15
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -195,7 +196,7 @@ Rectangle {
                 implicitWidth: 30
                 implicitHeight: 30
                 radius: 7
-                color: parent.hovered && parent.enabled ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent"
+                color: parent.hovered && parent.enabled ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : RoPalette.cardHover) : "transparent"
             }
             ToolTip.visible: hovered
             ToolTip.text: qsTr("Redo")
@@ -206,7 +207,7 @@ Rectangle {
             onClicked: toolbar.clearRequested()
             contentItem: Text {
                 text: parent.text
-                color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#6B7280"
+                color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : RoPalette.textMuted
                 font.pixelSize: 12
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -215,7 +216,7 @@ Rectangle {
                 implicitWidth: 52
                 implicitHeight: 30
                 radius: 7
-                color: parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent"
+                color: parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : RoPalette.cardHover) : "transparent"
             }
         }
 
@@ -228,7 +229,7 @@ Rectangle {
             onClicked: toolbar.saveRequested()
             contentItem: Text {
                 text: parent.text
-                color: "#FFFFFF"
+                color: RoPalette.card
                 font.bold: true
                 font.pixelSize: 12
                 horizontalAlignment: Text.AlignHCenter
@@ -238,7 +239,7 @@ Rectangle {
                 implicitWidth: 84
                 implicitHeight: 34
                 radius: 10
-                color: parent.hovered ? "#474BCE" : "#5A5FE8"
+                color: parent.hovered ? RoPalette.accentHover : RoPalette.accent
             }
         }
         Button {
@@ -246,7 +247,7 @@ Rectangle {
             onClicked: toolbar.closeRequested()
             contentItem: Text {
                 text: parent.text
-                color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : "#6B7280"
+                color: (toolbar.colors && toolbar.colors.textSoft) ? toolbar.colors.textSoft : RoPalette.textMuted
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -254,8 +255,8 @@ Rectangle {
             background: Rectangle {
                 implicitWidth: 32
                 implicitHeight: 32
-                radius: 8
-                color: parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : "#F2F4F7") : "transparent"
+                radius: RoTokens.radiusSm
+                color: parent.hovered ? ((toolbar.colors && toolbar.colors.cardHover) ? toolbar.colors.cardHover : RoPalette.cardHover) : "transparent"
             }
         }
     }

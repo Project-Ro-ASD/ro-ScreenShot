@@ -7,7 +7,7 @@ Item {
     id: snackbarRoot
     RoMotion { id: motion }
 
-    property var colors: null
+    property var colors: RoPalette
     property var messageQueue: []
     property bool isShowing: false
     property string currentText: ""
@@ -72,13 +72,13 @@ Item {
     Rectangle {
         id: bg
         anchors.fill: parent
-        radius: 8
-        color: (snackbarRoot.colors && snackbarRoot.colors.cardStrong) ? snackbarRoot.colors.cardStrong : "#1E293B"
+        radius: RoTokens.radiusSm
+        color: (snackbarRoot.colors && snackbarRoot.colors.cardStrong) ? snackbarRoot.colors.cardStrong : RoPalette.card
         border.color: {
-            if (currentType === "success") return (snackbarRoot.colors && snackbarRoot.colors.success) ? snackbarRoot.colors.success : "#10B981"
-            if (currentType === "error") return (snackbarRoot.colors && snackbarRoot.colors.danger) ? snackbarRoot.colors.danger : "#EF4444"
-            if (currentType === "warning") return (snackbarRoot.colors && snackbarRoot.colors.warning) ? snackbarRoot.colors.warning : "#F59E0B"
-            return (snackbarRoot.colors && snackbarRoot.colors.accentB) ? snackbarRoot.colors.accentB : "#3B82F6"
+            if (currentType === "success") return (snackbarRoot.colors && snackbarRoot.colors.success) ? snackbarRoot.colors.success : RoPalette.success
+            if (currentType === "error") return (snackbarRoot.colors && snackbarRoot.colors.danger) ? snackbarRoot.colors.danger : RoPalette.danger
+            if (currentType === "warning") return (snackbarRoot.colors && snackbarRoot.colors.warning) ? snackbarRoot.colors.warning : RoPalette.warning
+            return (snackbarRoot.colors && snackbarRoot.colors.accentB) ? snackbarRoot.colors.accentB : RoPalette.accent
         }
         border.width: 1.5
         opacity: snackbarRoot.isShowing ? 1.0 : 0.0
@@ -95,7 +95,7 @@ Item {
 
             Text {
                 text: snackbarRoot.currentText
-                color: (snackbarRoot.colors && snackbarRoot.colors.text) ? snackbarRoot.colors.text : "#F8FAFC"
+                color: (snackbarRoot.colors && snackbarRoot.colors.text) ? snackbarRoot.colors.text : RoPalette.text
                 font.pixelSize: 13
                 font.bold: true
                 elide: Text.ElideRight
@@ -114,14 +114,14 @@ Item {
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "#38BDF8"
+                    color: RoPalette.accent
                     font.pixelSize: 12
                     font.bold: true
                 }
                 background: Rectangle {
                     implicitWidth: 60
                     implicitHeight: 28
-                    color: parent.hovered ? "#0F172A" : "transparent"
+                    color: parent.hovered ? RoPalette.cardStrong : "transparent"
                     radius: 4
                 }
             }
@@ -132,7 +132,7 @@ Item {
                 onClicked: snackbarRoot.dismiss()
                 contentItem: Text {
                     text: "✕"
-                    color: (snackbarRoot.colors && snackbarRoot.colors.textSoft) ? snackbarRoot.colors.textSoft : "#94A3B8"
+                    color: (snackbarRoot.colors && snackbarRoot.colors.textSoft) ? snackbarRoot.colors.textSoft : RoPalette.textMuted
                     font.pixelSize: 12
                 }
                 background: Item {

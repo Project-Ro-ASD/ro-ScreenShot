@@ -9,6 +9,8 @@ namespace ro_screenshot {
 class UiPreferencesManager : public QObject {
   Q_OBJECT
 
+  Q_PROPERTY(
+      qreal animationDurationFactor READ animationDurationFactor CONSTANT)
   Q_PROPERTY(QString themeMode READ themeMode WRITE setThemeMode NOTIFY
                  themeModeChanged)
   Q_PROPERTY(bool sidebarCollapsed READ isSidebarCollapsed WRITE
@@ -19,6 +21,7 @@ public:
   explicit UiPreferencesManager(QObject *parent = nullptr);
 
   QString themeMode() const;
+  qreal animationDurationFactor() const;
   bool isSidebarCollapsed() const;
   QVariantList availableThemeModes() const;
 

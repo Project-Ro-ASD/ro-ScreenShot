@@ -4,17 +4,24 @@ import QtQuick.Layouts
 // Capture card: icon badge + title + description + shortcut chip.
 Rectangle {
     id: root
+    opacity: enabled ? 1 : RoTokens.opacityDisabled
+    activeFocusOnTab: true
+    Accessible.role: Accessible.Button
+    Accessible.name: root.title
+    Keys.onSpacePressed: clicked()
+    Keys.onReturnPressed: clicked()
+    Keys.onEnterPressed: clicked()
     property string title: ""
     property string description: ""
     property string shortcut: ""
     property string iconSource: ""
-    property var colors: null
+    property var colors: RoPalette
     signal clicked()
 
     implicitHeight: 118
-    radius: 12
-    color: cardMouse.containsMouse ? (colors ? colors.cardHover : "#F2F4F7") : (colors ? colors.card : "#FFFFFF")
-    border.color: cardMouse.containsMouse ? (colors ? colors.accent : "#2563EB") : (colors ? colors.border : "#E6E8EC")
+    radius: RoTokens.radiusMd
+    color: cardMouse.containsMouse ? (colors ? colors.cardHover : RoPalette.cardHover) : (colors ? colors.card : RoPalette.card)
+    border.color: cardMouse.containsMouse ? (colors ? colors.accent : RoPalette.accent) : (colors ? colors.border : RoPalette.border)
     border.width: cardMouse.containsMouse ? 1.5 : 1
 
     MouseArea {
@@ -22,7 +29,16 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: { root.forceActiveFocus(); root.clicked(); }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: parent.radius
+        color: "transparent"
+        border.width: RoTokens.focusRingWidth
+        border.color: RoPalette.accent
+        visible: root.activeFocus
     }
 
     RowLayout {
@@ -34,11 +50,11 @@ Rectangle {
             Layout.preferredWidth: 44
             Layout.preferredHeight: 44
             Layout.alignment: Qt.AlignTop
-            radius: 10
-            color: colors ? colors.accentSoft : "#EFF6FF"
-            Image {
+            radius: RoTokens.radiusSm
+            color: colors ? colors.accentSoft : RoPalette.accentSoft
+            RoIcon {
                 anchors.centerIn: parent
-                source: root.iconSource
+                iconSource: root.iconSource
                 sourceSize.width: 22
                 sourceSize.height: 22
             }
@@ -48,14 +64,16 @@ Rectangle {
             spacing: 4
             Text {
                 text: root.title
-                color: colors ? colors.text : "#111827"
+                color: colors ? colors.text : RoPalette.text
+
                 font.pixelSize: 14
                 font.bold: true
                 font.weight: Font.DemiBold
             }
             Text {
                 text: root.description
-                color: colors ? colors.textSoft : "#6B7280"
+                color: colors ? colors.textSoft : RoPalette.textMuted
+
                 font.pixelSize: 12
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
@@ -68,17 +86,17 @@ Rectangle {
                 implicitWidth: chipText.implicitWidth + 14
                 height: 20
                 radius: 5
-                color: colors ? colors.codeBg : "#F2F4F7"
-                border.color: colors ? colors.border : "#E6E8EC"
+                color: colors ? colors.codeBg : RoPalette.cardHover
+                border.color: colors ? colors.border : RoPalette.border
                 border.width: 1
                 Text {
                     id: chipText
                     anchors.centerIn: parent
                     text: root.shortcut
-                    color: colors ? colors.textMuted : "#4B5563"
+                    color: colors ? colors.textMuted : RoPalette.textMuted
                     font.pixelSize: 10
                     font.bold: true
-                    font.family: "monospace"
+
                 }
             }
         }

@@ -4,14 +4,14 @@ import QtQuick.Controls
 Dialog {
     id: root
 
-    property var colors: null
-    property int surfaceRadius: 14
-    readonly property color shellColor: colors && colors.shellAlt ? colors.shellAlt : "#1F1B2B"
-    readonly property color elevatedColor: colors && colors.cardStrong ? colors.cardStrong : "#342D4A"
-    readonly property color borderColor: colors && colors.border ? colors.border : "#4D436B"
-    readonly property color textColor: colors && colors.text ? colors.text : "#F8FAFC"
-    readonly property color mutedTextColor: colors && colors.textMuted ? colors.textMuted : "#CBD5E1"
-    readonly property color accentColor: colors && colors.accent ? colors.accent : "#818CF8"
+    property var colors: RoPalette
+    property int surfaceRadius: RoTokens.radiusLg
+    readonly property color shellColor: colors && colors.shellAlt ? colors.shellAlt : RoPalette.text
+    readonly property color elevatedColor: colors && colors.cardStrong ? colors.cardStrong : RoPalette.cardStrong
+    readonly property color borderColor: colors && colors.border ? colors.border : RoPalette.border
+    readonly property color textColor: colors && colors.text ? colors.text : RoPalette.text
+    readonly property color mutedTextColor: colors && colors.textMuted ? colors.textMuted : RoPalette.textMuted
+    readonly property color accentColor: colors && colors.accent ? colors.accent : RoPalette.accent
 
     modal: true
     focus: true
@@ -36,13 +36,13 @@ Dialog {
 
     background: Rectangle {
         radius: root.surfaceRadius
-        color: root.colors && root.colors.card ? root.colors.card : "#29233B"
+        color: root.colors && root.colors.card ? root.colors.card : RoPalette.text
         border.color: root.borderColor
         border.width: 1
     }
 
     Overlay.modal: Rectangle {
-        color: "#000000"
+        color: RoPalette.scrim
         opacity: 0.46
     }
 }

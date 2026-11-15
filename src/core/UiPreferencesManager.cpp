@@ -4,8 +4,10 @@
 #include <QGuiApplication>
 #include <QPalette>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QStyleHints>
 #include <QtGlobal>
+#include <cmath>
 
 namespace ro_screenshot {
 namespace {
@@ -58,6 +60,21 @@ UiPreferencesManager::UiPreferencesManager(QObject *parent) : QObject(parent) {
   m_themeMode = normalizeThemeMode(savedThemeMode);
   m_sidebarCollapsed =
       settings.value(QStringLiteral("ui/sidebarCollapsed"), false).toBool();
+}
+
+qreal UiPreferencesManager::animationDurationFactor() const {
+  const auto paths = QStandardPaths::locateAll(
+      QStandardPaths::GenericConfigLocation, QStringLiteral("kdeglobals"));
+  for (const auto &path : paths) {
+    QSettings settings(path, QSettings::IniFormat);
+    const QString key = QStringLiteral("KDE/AnimationDurationFactor");
+    if (!settings.contains(key))
+      continue;
+    bool ok = false;
+    const qreal value = settings.value(key).toDouble(&ok);
+    return ok && std::isfinite(value) && value >= 0 ? value : 1;
+  }
+  return 1;
 }
 
 QString UiPreferencesManager::themeMode() const { return m_themeMode; }

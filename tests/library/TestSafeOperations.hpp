@@ -64,7 +64,7 @@ public:
     QCOMPARE(library.count(), 1);
 
     // Delete (moves to Trash)
-    QVERIFY(library.deleteItem(0));
+    QVERIFY2(library.deleteItem(0), qPrintable(library.errorMessage()));
     QVERIFY(library.waitForScan());
     QCOMPARE(library.count(), 0);
     QVERIFY(library.canUndoTrash());

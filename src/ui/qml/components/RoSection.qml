@@ -6,12 +6,12 @@ Rectangle {
     id: root
     property string title: ""
     property string iconSource: ""
-    property var colors: null
+    property var colors: RoPalette
     default property alias content: body.data
 
-    radius: 12
-    color: colors ? colors.card : "#FFFFFF"
-    border.color: colors ? colors.border : "#E6E8EC"
+    radius: RoTokens.radiusMd
+    color: colors ? colors.card : RoPalette.card
+    border.color: colors ? colors.border : RoPalette.border
     border.width: 1
     implicitHeight: layout.implicitHeight + 32
 
@@ -29,11 +29,11 @@ Rectangle {
             Rectangle {
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
-                radius: 7
-                color: root.colors ? root.colors.accentSoft : "#EFF6FF"
-                Image {
+                radius: RoTokens.radiusSm
+                color: root.colors ? root.colors.accentSoft : RoPalette.accentSoft
+                RoIcon {
                     anchors.centerIn: parent
-                    source: root.iconSource
+                    iconSource: root.iconSource
                     sourceSize.width: 15
                     sourceSize.height: 15
                     visible: root.iconSource.length > 0
@@ -41,7 +41,8 @@ Rectangle {
             }
             Text {
                 text: root.title
-                color: root.colors ? root.colors.text : "#111827"
+                color: root.colors ? root.colors.text : RoPalette.text
+
                 font.pixelSize: 14
                 font.bold: true
                 font.weight: Font.DemiBold

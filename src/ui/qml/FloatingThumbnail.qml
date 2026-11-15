@@ -1,3 +1,4 @@
+import "components"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -41,9 +42,9 @@ Window {
 
     Rectangle {
         anchors.fill: parent
-        radius: 18
-        color: "#1B1F2A"
-        border.color: "#41485A"
+        radius: RoTokens.radiusLg
+        color: RoPalette.card
+        border.color: RoPalette.border
         border.width: 1
 
         MouseArea {
@@ -60,9 +61,9 @@ Window {
             Rectangle {
                 Layout.preferredWidth: 100
                 Layout.preferredHeight: 100
-                radius: 12
-                color: "#292E3A"
-                border.color: "#454D60"
+                radius: RoTokens.radiusMd
+                color: RoPalette.cardStrong
+                border.color: RoPalette.border
                 border.width: 1
                 clip: true
                 Image {
@@ -78,7 +79,7 @@ Window {
                     width: 8
                     height: 8
                     radius: 4
-                    color: "#20B58A"
+                    color: RoPalette.success
                 }
             }
             ColumnLayout {
@@ -88,7 +89,7 @@ Window {
                     Layout.fillWidth: true
                     Text {
                         text: qsTr("Capture complete")
-                        color: "#F5F6FA"
+                        color: RoPalette.text
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
@@ -100,20 +101,20 @@ Window {
                         onClicked: toastWindow.dismiss()
                         contentItem: Text {
                             text: parent.text
-                            color: "#9EA7B9"
+                            color: RoPalette.textMuted
                             font.pixelSize: 20
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
                         background: Rectangle {
-                            radius: 8
-                            color: parent.hovered ? "#303746" : "transparent"
+                            radius: RoTokens.radiusSm
+                            color: parent.hovered ? RoPalette.cardHover : "transparent"
                         }
                     }
                 }
                 Text {
                     text: toastWindow.fileName
-                    color: "#AAB2C2"
+                    color: RoPalette.textMuted
                     font.pixelSize: 11
                     elide: Text.ElideMiddle
                     Layout.fillWidth: true
@@ -131,7 +132,7 @@ Window {
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "#FFFFFF"
+                            color: RoPalette.selectionText
                             font.pixelSize: 11
                             font.weight: Font.DemiBold
                             horizontalAlignment: Text.AlignHCenter
@@ -141,7 +142,7 @@ Window {
                             implicitWidth: 68
                             implicitHeight: 30
                             radius: 9
-                            color: parent.hovered ? "#474BCE" : "#5A5FE8"
+                            color: parent.hovered ? RoPalette.accentHover : RoPalette.accent
                         }
                     }
                     Button {
@@ -153,7 +154,7 @@ Window {
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "#D9DDEA"
+                            color: RoPalette.textMuted
                             font.pixelSize: 11
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -162,8 +163,8 @@ Window {
                             implicitWidth: 92
                             implicitHeight: 30
                             radius: 9
-                            color: parent.hovered ? "#303746" : "#262B36"
-                            border.color: "#454D60"
+                            color: parent.hovered ? RoPalette.cardHover : RoPalette.cardStrong
+                            border.color: RoPalette.border
                             border.width: 1
                         }
                     }

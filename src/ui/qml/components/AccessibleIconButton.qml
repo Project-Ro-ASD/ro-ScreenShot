@@ -4,17 +4,18 @@ import QtQuick.Effects
 
 Button {
     id: control
+    opacity: enabled ? 1 : RoTokens.opacityDisabled
     RoMotion { id: motion }
 
     property string iconSource: ""
     property int iconSize: 18
-    property color iconColor: colors ? (colors.textSoft || "#94A3B8") : "#94A3B8"
-    property color hoverColor: colors ? (colors.cardStrong || "#1E293B") : "#1E293B"
-    property color pressedColor: colors ? (colors.border || "#334155") : "#334155"
-    property color focusBorderColor: colors ? (colors.accentB || "#3B82F6") : "#3B82F6"
-    property var colors: null
+    property color iconColor: colors ? (colors.textSoft || RoPalette.textMuted) : RoPalette.textMuted
+    property color hoverColor: colors ? (colors.cardStrong || RoPalette.cardStrong) : RoPalette.cardStrong
+    property color pressedColor: colors ? (colors.border || RoPalette.border) : RoPalette.border
+    property color focusBorderColor: colors ? (colors.accentB || RoPalette.accent) : RoPalette.accent
+    property var colors: RoPalette
     property string tooltipText: ""
-    property int buttonRadius: 6
+    property int buttonRadius: RoTokens.radiusSm
 
     implicitWidth: 36
     implicitHeight: 36
@@ -27,9 +28,10 @@ Button {
 
     contentItem: Item {
         anchors.fill: parent
-        Image {
+        RoIcon {
+            color: control.iconColor
             anchors.centerIn: parent
-            source: control.iconSource.indexOf(":") > 0
+            iconSource: control.iconSource.indexOf(":") > 0
                     ? control.iconSource
                     : (control.iconSource.indexOf("assets/") === 0
                        ? "../" + control.iconSource

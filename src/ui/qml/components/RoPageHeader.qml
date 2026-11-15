@@ -8,7 +8,7 @@ ColumnLayout {
     property string subtitle: ""
     property string statusText: ""
     property bool statusActive: true
-    property var colors: null
+    property var colors: RoPalette
 
     spacing: 2
 
@@ -21,14 +21,16 @@ ColumnLayout {
             spacing: 2
             Text {
                 text: root.title
-                color: root.colors ? root.colors.text : "#111827"
+                color: root.colors ? root.colors.text : RoPalette.text
+
                 font.pixelSize: 20
                 font.bold: true
                 font.weight: Font.DemiBold
             }
             Text {
                 text: root.subtitle
-                color: root.colors ? root.colors.textSoft : "#6B7280"
+                color: root.colors ? root.colors.textSoft : RoPalette.textMuted
+
                 font.pixelSize: 13
                 visible: root.subtitle.length > 0
             }
@@ -39,8 +41,8 @@ ColumnLayout {
             height: 26
             implicitWidth: statusRow.implicitWidth + 18
             radius: 13
-            color: root.colors ? root.colors.card : "#FFFFFF"
-            border.color: root.colors ? root.colors.border : "#E6E8EC"
+            color: root.colors ? root.colors.card : RoPalette.card
+            border.color: root.colors ? root.colors.border : RoPalette.border
             border.width: 1
             RowLayout {
                 id: statusRow
@@ -48,11 +50,12 @@ ColumnLayout {
                 spacing: 6
                 Rectangle {
                     width: 7; height: 7; radius: 3.5
-                    color: root.statusActive ? "#059669" : "#9CA3AF"
+                    color: root.statusActive ? (root.colors ? root.colors.success : RoPalette.success) : (root.colors ? root.colors.muted : RoPalette.placeholder)
                 }
                 Text {
                     text: root.statusText
-                    color: root.colors ? root.colors.textMuted : "#4B5563"
+                    color: root.colors ? root.colors.textMuted : RoPalette.textMuted
+
                     font.pixelSize: 11
                     font.bold: true
                 }

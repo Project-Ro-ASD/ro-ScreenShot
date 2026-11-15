@@ -6,18 +6,18 @@ Rectangle {
     RoMotion { id: motion }
     property bool hovered: false
     property bool selected: false
-    property var colors: null
-    property int radiusValue: 14
+    property var colors: RoPalette
+    property int radiusValue: RoTokens.radiusMd
 
     radius: radiusValue
     color: {
-        if (!colors) return "#FFFFFF"
+        if (!colors) return RoPalette.card
         if (selected) return colors.accentSoft
         if (hovered) return colors.cardHover
         return colors.card
     }
     border.color: {
-        if (!colors) return "#E6E8EC"
+        if (!colors) return RoPalette.border
         if (selected) return colors.accent
         if (hovered) return colors.accentMuted
         return colors.border
